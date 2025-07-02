@@ -11,7 +11,8 @@ import { useData } from "@/contexts/data-context"
 import { RefreshCw, Truck, Users, LogIn, LogOut, Clock } from "lucide-react"
 
 export function GaritaDashboard() {
-  const user = AuthService.getCurrentUser()
+  type UserRole = "admin" | "system_admin" | "company_admin" | "garita"
+  const user = AuthService.getCurrentUser() as (ReturnType<typeof AuthService.getCurrentUser> & { role: UserRole }) | null
   const isGarita = user?.role === "garita"
   const { operations, clients, drivers, companies, updateOperation } = useData()
   const [processingOperation, setProcessingOperation] = useState<string | null>(null)
