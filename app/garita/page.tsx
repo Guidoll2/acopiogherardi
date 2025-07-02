@@ -68,7 +68,13 @@ export default function GaritaPage() {
 
   useEffect(() => {
     const currentUser = AuthService.getCurrentUser()
-    if (!currentUser || currentUser.role !== "garita") {
+    // Allow any string for role to avoid type overlap error
+    if (
+      !currentUser ||
+      !["garita", "admin", "system_admin", "company_admin"].includes(
+        (currentUser as { role?: string }).role ?? ""
+      )
+    ) {
       router.push("/login")
       return
     }
