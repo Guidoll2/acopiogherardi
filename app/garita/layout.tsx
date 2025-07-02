@@ -21,8 +21,9 @@ export default function GaritaLayout({
       return
     }
 
-    // Solo usuarios con rol 'garita' pueden acceder
-    if (user.role !== "garita") {
+    // Solo usuarios con rol permitido pueden acceder
+    const allowedRoles = ["system_admin", "admin", "company_admin"] as const;
+    if (!allowedRoles.includes(user.role)) {
       router.push("/dashboard")
       return
     }
