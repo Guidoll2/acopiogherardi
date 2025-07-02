@@ -1,103 +1,193 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { AuthService } from "@/lib/auth"
+import { useData } from "@/contexts/data-context"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { BarChart3, Users, Truck, Warehouse } from "lucide-react"
+import { GaritaDashboard } from "@/components/dashboard/garita-dashboard"
+import { OperatorDashboard } from "@/components/dashboard/operator-dashboard"
+
+export default function DashboardPage() {
+  const router = useRouter()
+  type UserRole = "system_admin" | "admin" | "company_admin" | "garita" | "operator" | undefined
+  type User = {
+    role: UserRole
+    full_name?: string
+    name?: string
+    // add other user properties as needed
+  }
+  const user = AuthService.getCurrentUser() as User
+  const { operations, clients, drivers, silos } = useData()
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/login")
+      return
+    }
+  }, [user, router])
+
+  // Redirigir según el rol del usuario
+  if (user?.role === "garita") {
+    return <GaritaDashboard />
+  }
+
+  if (user?.role === "operator") {
+    return <OperatorDashboard />
+  }
+
+  // Dashboard para admin, supervisor, company_admin, system_admin
+  const stats = [
+    {
+      title: "Operaciones Hoy",
+      value:
+        operations?.filter((op) => {
+          const today = new Date().toDateString()
+          return new Date(op.created_at || "").toDateString() === today
+        }).length || 0,
+      description: "Operaciones registradas hoy",
+      icon: BarChart3,
+    },
+    {
+      title: "Clientes Activos",
+      value: clients?.filter((client) => client.status === "active").length || 0,
+      description: "Clientes con estado activo",
+      icon: Users,
+    },
+    {
+      title: "Conductores",
+      value: drivers?.length || 0,
+      description: "Conductores disponibles",
+      icon: Truck,
+    },
+    {
+      title: "Silos",
+      value: silos?.length || 0,
+      description: "Silos operativos",
+      icon: Warehouse,
+    },
+  ]
+
+  const recentOperations = operations?.slice(0, 5) || []
+  const activeSilos = silos?.slice(0, 2) || []
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <p className="text-gray-600">Bienvenido, {user?.full_name || user?.name}</p>
+      </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat) => (
+          <Card key={stat.title}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+              <stat.icon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stat.value}</div>
+              <p className="text-xs text-muted-foreground">{stat.description}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Recent Operations and Silo Status */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Operaciones Recientes</CardTitle>
+            <p className="text-sm text-muted-foreground">Últimas operaciones registradas</p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {recentOperations.length > 0 ? (
+                recentOperations.map((operation) => (
+                  <div key={operation.id} className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{operation.operation_type}</p>
+                      <p className="text-sm text-muted-foreground">{operation.quantity} toneladas</p>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {operation.created_at ? new Date(operation.created_at).toLocaleDateString() : "Invalid Date"}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Salida</p>
+                      <p className="text-sm text-muted-foreground">toneladas</p>
+                    </div>
+                    <div className="text-sm text-muted-foreground">Invalid Date</div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Salida</p>
+                      <p className="text-sm text-muted-foreground">toneladas</p>
+                    </div>
+                    <div className="text-sm text-muted-foreground">Invalid Date</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Estado de Silos</CardTitle>
+            <p className="text-sm text-muted-foreground">Capacidad y stock actual</p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {activeSilos.length > 0 ? (
+                activeSilos.map((silo) => (
+                  <div key={silo.id} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{silo.name}</span>
+                      <span className="text-sm text-muted-foreground">/{silo.capacity || 1000} t</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-green-600 h-2 rounded-full"
+                        style={{
+                          width: `${Math.min(((silo.current_stock || 0) / (silo.capacity || 1000)) * 100, 100)}%`,
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Silo A1</span>
+                      <span className="text-sm text-muted-foreground">/1000 t</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-green-600 h-2 rounded-full w-full"></div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Silo B2</span>
+                      <span className="text-sm text-muted-foreground">/1500 t</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-green-600 h-2 rounded-full w-full"></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
-  );
+  )
 }
