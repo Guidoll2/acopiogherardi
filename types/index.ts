@@ -8,7 +8,7 @@ export interface User {
   address: string
   created_at: string
   updated_at: string
-  role: "system_admin" | "admin" | "company_admin" // <-- agrega esta línea
+  role: "system_admin" | "admin" | "company_admin" | "garita"// <-- agrega esta línea
   is_active: boolean
   company_id?: string
 }
