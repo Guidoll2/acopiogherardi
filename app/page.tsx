@@ -73,14 +73,14 @@ export default function DashboardPage() {
   const activeSilos = silos?.slice(0, 2) || []
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-gray-600">Bienvenido, {user?.full_name || user?.name}</p>
+        <p className="text-gray-100">Bienvenido, {user?.full_name || user?.name}</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 text-gray-700">
         {stats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -96,14 +96,14 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Operations and Silo Status */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 text-gray-700">
         <Card>
           <CardHeader>
             <CardTitle>Operaciones Recientes</CardTitle>
             <p className="text-sm text-muted-foreground">Últimas operaciones registradas</p>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-4 text-gray-700">
               {recentOperations.length > 0 ? (
                 recentOperations.map((operation) => (
                   <div key={operation.id} className="flex items-center justify-between">
@@ -138,7 +138,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="text-gray-700">
           <CardHeader>
             <CardTitle>Estado de Silos</CardTitle>
             <p className="text-sm text-muted-foreground">Capacidad y stock actual</p>

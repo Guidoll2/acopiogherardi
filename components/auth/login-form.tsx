@@ -71,12 +71,12 @@ export function LoginForm() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Iniciar Sesión</CardTitle>
-            <CardDescription>Ingrese sus credenciales para acceder al sistema</CardDescription>
+            <CardTitle className="text-gray-700">Iniciar Sesión</CardTitle>
+            <CardDescription className="text-gray-700">Ingrese sus credenciales para acceder al sistema</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-2 text-gray-700">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -87,7 +87,7 @@ export function LoginForm() {
                   required
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 text-gray-700">
                 <Label htmlFor="password">Contraseña</Label>
                 <div className="relative">
                   <Input
@@ -125,9 +125,9 @@ export function LoginForm() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Usuarios Demo</CardTitle>
+            <CardTitle className="text-sm text-gray-700">Usuarios Demo</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2 text-gray-700">
             {demoUsers.map((user, index) => (
               <div key={index} className="text-xs bg-gray-50 p-2 rounded">
                 <div className="font-medium">{user.role}</div>

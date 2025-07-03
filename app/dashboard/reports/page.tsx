@@ -188,7 +188,7 @@ export default function ReportsPage() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-gray-700">
             <Filter className="h-5 w-5" />
             Filtros de Reporte
           </CardTitle>

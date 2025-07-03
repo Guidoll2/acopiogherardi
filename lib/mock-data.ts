@@ -220,8 +220,8 @@ export const operations: Operation[] = [
     status: "completed",
     entry_time: "2024-01-15T08:30:00Z",
     exit_time: "2024-01-15T10:15:00Z",
-    created_at: "2024-01-15T08:30:00Z",
-    updated_at: "2024-01-15T10:15:00Z",
+    createdAt: "2024-01-15T08:30:00Z",
+    updatedAt: "2024-01-15T10:15:00Z",
   },
   {
     id: "2",
@@ -236,11 +236,11 @@ export const operations: Operation[] = [
     net_weight: 18000,
     humidity: 13.2,
     impurities: 1.8,
-    status: "in_progress",
+    status: "pendiente",
     entry_time: "2024-01-15T14:20:00Z",
     exit_time: null,
-    created_at: "2024-01-15T14:20:00Z",
-    updated_at: "2024-01-15T14:20:00Z",
+    createdAt: "2024-01-15T14:20:00Z",
+    updatedAt: "2024-01-15T14:20:00Z",
   },
 ]
 

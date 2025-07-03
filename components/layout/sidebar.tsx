@@ -42,6 +42,7 @@ export function Sidebar() {
           href: "/system-admin",
           icon: Shield,
           roles: ["system_admin"],
+          
         },
       ]
     }
@@ -153,7 +154,7 @@ export function Sidebar() {
             )}
           </div>
           <div>
-            <h2 className="text-lg font-semibold">{getTitle(user?.role)}</h2>
+            <h2 className="text-lg font-semibold text-gray-700">{getTitle(user?.role)}</h2>
             <p className="text-xs text-gray-500">{getSubtitle(user?.role)}</p>
           </div>
         </div>
@@ -175,7 +176,7 @@ export function Sidebar() {
       </nav>
 
       {/* User info and logout */}
-      <div className="p-4 border-t mt-auto">
+      <div className="p-4 border-t mt-auto text-gray-700">
         {user && (
           <div className="mb-3">
             <p className="text-sm font-medium">{user.full_name || user.name}</p>

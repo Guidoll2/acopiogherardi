@@ -133,14 +133,14 @@ export default function SystemAdminPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 text-gray-700">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Panel de Administración del Sistema</h2>
-            <p className="text-muted-foreground">Gestión completa de empresas, usuarios y planes</p>
+            <h2 className="text-3xl font-bold tracking-tight text-gray-700">Panel de Administración del Sistema</h2>
+            <p className="text-muted-foreground text-gray-700">Gestión completa de empresas, usuarios y planes</p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => setCreateAdminOpen(true)} className="bg-green-600 hover:bg-green-700">
+            <Button onClick={() => setCreateAdminOpen(true)} className="bg-green-600 hover:bg-green-700 ">
               <UserPlus className="mr-2 h-4 w-4" />
               Nuevo Admin
             </Button>
@@ -169,7 +169,7 @@ export default function SystemAdminPage() {
           ))}
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 text-gray-700">
           {/* Gestión de empresas */}
           <Card className="col-span-5">
             <CardHeader className="flex flex-row items-center justify-between">

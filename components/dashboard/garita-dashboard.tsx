@@ -90,7 +90,7 @@ export function GaritaDashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 text-red-400">
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Control de Garita</h2>
