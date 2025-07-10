@@ -1,3 +1,5 @@
+{/**
+
 import type { User, Client, Driver, Silo, Cereal, Operation, AccountMovement } from "@/types"
 
 // Empresas del sistema (para administrador del sistema)
@@ -70,7 +72,7 @@ export const users: User[] = [
     full_name: "María González",
     phone: "+54 11 3456-7890",
     address: "Córdoba, Córdoba",
-    role: "supervisor",
+    role: "company_admin",
     is_active: true,
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z",
@@ -307,3 +309,4 @@ export const accountMovements: AccountMovement[] = [
     created_at: "2024-01-18T11:30:00Z",
   },
 ]
+ */}

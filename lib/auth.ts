@@ -1,11 +1,19 @@
 "use client"
 
-import { users, demoCredentials } from "./mock-data"
 import type { User } from "@/types"
 
 interface LoginCredentials {
   email: string
   password: string
+}
+
+interface RegisterData {
+  email: string
+  password: string
+  full_name: string
+  phone?: string
+  role: User["role"]
+  company_id?: string
 }
 
 interface AuthUser extends User {
@@ -15,42 +23,82 @@ interface AuthUser extends User {
 export class AuthService {
   private static readonly STORAGE_KEY = "grain_auth_user"
 
-  static login(credentials: LoginCredentials): AuthUser | null {
-    console.log("Intentando login con:", credentials.email)
+  static async login(credentials: LoginCredentials): Promise<AuthUser | null> {
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentials),
+      })
 
-    // Verificar credenciales demo
-    const demoUser = demoCredentials.find(
-      (cred) => cred.email === credentials.email && cred.password === credentials.password,
-    )
+      const data = await response.json()
 
-    console.log("Usuario demo encontrado:", demoUser)
-
-    if (demoUser) {
-      // Buscar usuario completo en la base de datos
-      const fullUser = users.find((user) => user.email === demoUser.email)
-      console.log("Usuario completo encontrado:", fullUser)
-
-      if (fullUser) {
-        const authUser: AuthUser = {
-          ...fullUser,
-          role: demoUser.role as User["role"], // Usar el rol de las credenciales demo
-        }
-
-        // Guardar en localStorage
-        if (typeof window !== "undefined") {
-          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(authUser))
-        }
-
-        return authUser
+      if (!response.ok) {
+        console.error("Error en login:", data.error)
+        return null
       }
-    }
 
-    return null
+      const authUser: AuthUser = {
+        id: data.user._id,
+        email: data.user.email,
+        full_name: data.user.full_name,
+        phone: data.user.phone || "",
+        address: data.user.address || "",
+        role: data.user.role,
+        is_active: data.user.is_active,
+        created_at: data.user.created_at,
+        updated_at: data.user.updated_at,
+        company_id: data.user.company_id,
+      }
+
+      // Guardar en localStorage para el cliente
+      if (typeof window !== "undefined") {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(authUser))
+      }
+
+      return authUser
+    } catch (error) {
+      console.error("Error en login:", error)
+      return null
+    }
   }
 
-  static logout(): void {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(this.STORAGE_KEY)
+  static async register(userData: RegisterData): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return { success: false, error: data.error }
+      }
+
+      return { success: true }
+    } catch (error) {
+      console.error("Error en registro:", error)
+      return { success: false, error: "Error de conexión" }
+    }
+  }
+
+  static async logout(): Promise<void> {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+      })
+    } catch (error) {
+      console.error("Error en logout:", error)
+    } finally {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(this.STORAGE_KEY)
+      }
     }
   }
 
