@@ -4,11 +4,15 @@ import connectDB from "@/app/mongoDB/db"
 import User from "@/app/mongoDB/models/user"
 
 // POST /api/users/[id]/reset-password - Resetear contraseña de usuario
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     await connectDB()
     
     const { newPassword } = await request.json()
+    const resolvedParams = await params
     
     if (!newPassword || newPassword.length < 6) {
       return NextResponse.json(
@@ -18,7 +22,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
     
     // Verificar que el usuario existe
-    const user = await User.findById(params.id)
+    const user = await User.findById(resolvedParams.id)
     if (!user) {
       return NextResponse.json(
         { error: "Usuario no encontrado" },
@@ -30,7 +34,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const hashedPassword = await bcrypt.hash(newPassword, 12)
 
     // Actualizar contraseña
-    await User.findByIdAndUpdate(params.id, {
+    await User.findByIdAndUpdate(resolvedParams.id, {
       password: hashedPassword,
       updated_at: new Date().toISOString()
     })
