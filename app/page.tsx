@@ -19,7 +19,7 @@ export default function HomePage() {
     // Usuario autenticado, redirigir al dashboard apropiado según su rol
     if (user.role === "garita") {
       router.push("/garita")
-    } else if (user.role === "operator") {
+    } else if (user.role === "admin" || user.role === "company_admin") {
       router.push("/dashboard")
     } else {
       router.push("/dashboard")

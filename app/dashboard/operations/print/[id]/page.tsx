@@ -92,7 +92,7 @@ export default function NewOperationPage() {
   estimated_quantity: Number.parseFloat(formData.estimated_quantity) || 0,
   scheduled_date: formData.scheduled_date && formData.scheduled_time
     ? new Date(formData.scheduled_date + "T" + formData.scheduled_time).toISOString()
-    : undefined,
+    : new Date().toISOString(),
   notes: formData.notes,
   status: "pendiente" as
     | "pendiente"
@@ -106,7 +106,12 @@ export default function NewOperationPage() {
   tare_weight: 0,
   gross_weight: 0,
   net_weight: 0,
-  company_id: "1", // <-- AGREGÁ ESTA LÍNEA
+  moisture: 0,
+  impurities: 0,
+  test_weight: 0,
+  estimated_duration: 0,
+  createdAt: new Date().toISOString(),
+  company_id: "1",
 }
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000))
