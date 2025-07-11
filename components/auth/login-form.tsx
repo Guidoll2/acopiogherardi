@@ -59,14 +59,6 @@ export function LoginForm() {
     }
     // NO establecer setLoading(false) aquí si hubo redirección exitosa
   }
-
-  const demoUsers = [
-    { email: "admin@sistema.com", password: "admin123", role: "system_admin" },
-    { email: "admin@acopio.com", password: "admin123", role: "company_admin" },
-    { email: "supervisor@acopio.com", password: "super123", role: "admin" },
-    { email: "operador@acopio.com", password: "oper123", role: "admin" },
-    { email: "garita@acopio.com", password: "garita123", role: "admin" },
-  ]
     
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100 p-4">
@@ -132,22 +124,6 @@ export function LoginForm() {
                 {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
               </Button>
             </form>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm text-gray-700">Usuarios Demo</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-gray-700">
-            {demoUsers.map((user, index) => (
-              <div key={index} className="text-xs bg-gray-50 p-2 rounded">
-                <div className="font-medium">{user.role}</div>
-                <div className="text-gray-600">
-                  {user.email} / {user.password}
-                </div>
-              </div>
-            ))}
           </CardContent>
         </Card>
       </div>

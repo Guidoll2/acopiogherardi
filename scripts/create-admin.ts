@@ -17,9 +17,9 @@ async function createSystemAdmin() {
 
     // Crear el primer administrador del sistema
     const adminData = {
-      email: "admin@sistema.com",
-      password: await bcrypt.hash("admin123", 12),
-      full_name: "Administrador del Sistema",
+      email: "ignacio.gherardi@gmail.com",
+      password: await bcrypt.hash("Caprichoso", 12),
+      full_name: "Ignacio Gherardi",
       phone: "+54 11 1234-5678",
       role: "system_admin",
       is_active: true,
@@ -31,9 +31,9 @@ async function createSystemAdmin() {
     await systemAdmin.save()
 
     console.log("✅ Administrador del sistema creado exitosamente!")
-    console.log("Email: admin@sistema.com")
-    console.log("Contraseña: admin123")
-    console.log("⚠️  IMPORTANTE: Cambia esta contraseña después del primer login")
+    console.log("Email: ignacio.gherardi@gmail.com")
+    console.log("Contraseña: Caprichoso")
+    console.log("⚠️  IMPORTANTE: Este es el usuario principal del sistema")
 
   } catch (error) {
     console.error("❌ Error creando administrador del sistema:", error)
