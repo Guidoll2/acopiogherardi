@@ -26,26 +26,38 @@ export function LoginForm() {
     setError("")
 
     try {
+      console.log("Iniciando login...")
       const user = await AuthService.login({ email, password })
+      console.log("Resultado del login:", user)
+      
       if (user) {
-        // Redirección específica según el rol
-        if (user.role === "system_admin") {
-          router.push("/system-admin")
-        } else if (user.role === "company_admin") {
-          router.push("/dashboard")
-        } else if (user.role === "admin") {
-          router.push("/dashboard")
-        } else {
-          setError("Rol de usuario no reconocido")
-        }
+        console.log("Usuario logueado, rol:", user.role)
+        console.log("Guardando en localStorage...")
+        
+        // Verificar que se guardó en localStorage
+        const saved = localStorage.getItem("grain_auth_user")
+        console.log("Datos guardados en localStorage:", saved ? "✅ Sí" : "❌ No")
+        
+        // Forzar navegación inmediata sin esperar
+        const targetUrl = user.role === "system_admin" ? "/system-admin" : "/dashboard"
+        console.log("Redirigiendo a:", targetUrl)
+        
+        // Usar window.location para forzar navegación completa
+        console.log("Ejecutando redirección...")
+        window.location.href = targetUrl
+        
+        // Evitar que el loading se desactive
+        return
       } else {
+        console.log("Login falló - usuario es null")
         setError("Credenciales inválidas")
       }
     } catch (err) {
+      console.error("Error en handleSubmit:", err)
       setError("Error al iniciar sesión")
-    } finally {
       setLoading(false)
     }
+    // NO establecer setLoading(false) aquí si hubo redirección exitosa
   }
 
   const demoUsers = [

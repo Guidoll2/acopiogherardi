@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+
 import { useState, useEffect } from "react"
 import {
   Dialog,
@@ -24,7 +25,6 @@ interface CreateAdminDialogProps {
 }
 
 export function CreateAdminDialog({ open, onOpenChange, onAdminCreated }: CreateAdminDialogProps) {
-  const [companies, setCompanies] = useState<Company[]>([])
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
@@ -33,6 +33,7 @@ export function CreateAdminDialog({ open, onOpenChange, onAdminCreated }: Create
     role: "company_admin" as "company_admin" | "admin",
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [companies, setCompanies] = useState<Company[]>([])
 
   // Cargar empresas cuando se abre el diálogo
   useEffect(() => {
@@ -65,8 +66,12 @@ export function CreateAdminDialog({ open, onOpenChange, onAdminCreated }: Create
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ...formData,
-          password: "admin123", // Contraseña temporal
+          email: formData.email,
+          password: "temp123", // Contraseña temporal - debería ser cambiada en el primer login
+          full_name: formData.full_name,
+          phone: formData.phone,
+          role: formData.role,
+          company_id: formData.company_id,
         }),
       })
 
@@ -88,13 +93,6 @@ export function CreateAdminDialog({ open, onOpenChange, onAdminCreated }: Create
         onOpenChange(false)
 
         // Reset form
-        setFormData({
-          full_name: "",
-          email: "",
-          phone: "",
-          company_id: "",
-          role: "company_admin",
-        })
         setFormData({
           full_name: "",
           email: "",

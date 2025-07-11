@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { useData } from "@/contexts/data-context"
+import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BarChart3, Users, Truck, Warehouse } from "lucide-react"
 import { GaritaDashboard } from "@/components/dashboard/garita-dashboard"
@@ -26,6 +27,12 @@ export default function DashboardPage() {
       router.push("/login")
       return
     }
+
+    // Redirigir system_admin al panel de administración del sistema
+    if (user.role === "system_admin") {
+      router.push("/system-admin")
+      return
+    }
   }, [user, router])
 
   // Redirigir según el rol del usuario
@@ -35,6 +42,11 @@ export default function DashboardPage() {
 
   if (user?.role === "operator") {
     return <OperatorDashboard />
+  }
+
+  // Si es system_admin, no debería llegar aquí por el useEffect, pero por si acaso
+  if (user?.role === "system_admin") {
+    return null // o un spinner mientras redirige
   }
 
   // Dashboard para admin, supervisor, company_admin, system_admin
@@ -73,121 +85,123 @@ export default function DashboardPage() {
   const activeSilos = silos?.slice(0, 2) || []
 
   return (
-    <div className="space-y-6 ">
-      <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-gray-100">Bienvenido, {user?.full_name || user?.name}</p>
-      </div>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <p className="text-gray-600">Bienvenido, {user?.full_name || user?.name}</p>
+        </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 text-gray-700">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
+        {/* Stats Cards */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 text-gray-700">
+          {stats.map((stat) => (
+            <Card key={stat.title}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                <stat.icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <p className="text-xs text-muted-foreground">{stat.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Recent Operations and Silo Status */}
+        <div className="grid gap-4 md:grid-cols-2 text-gray-700">
+          <Card>
+            <CardHeader>
+              <CardTitle>Operaciones Recientes</CardTitle>
+              <p className="text-sm text-muted-foreground">Últimas operaciones registradas</p>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">{stat.description}</p>
+              <div className="space-y-4 text-gray-700">
+                {recentOperations.length > 0 ? (
+                  recentOperations.map((operation) => (
+                    <div key={operation.id} className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{operation.operation_type}</p>
+                        <p className="text-sm text-muted-foreground">{operation.quantity} toneladas</p>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {operation.created_at ? new Date(operation.created_at).toLocaleDateString() : "Invalid Date"}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Salida</p>
+                        <p className="text-sm text-muted-foreground">toneladas</p>
+                      </div>
+                      <div className="text-sm text-muted-foreground">Invalid Date</div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Salida</p>
+                        <p className="text-sm text-muted-foreground">toneladas</p>
+                      </div>
+                      <div className="text-sm text-muted-foreground">Invalid Date</div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
 
-      {/* Recent Operations and Silo Status */}
-      <div className="grid gap-4 md:grid-cols-2 text-gray-700">
-        <Card>
-          <CardHeader>
-            <CardTitle>Operaciones Recientes</CardTitle>
-            <p className="text-sm text-muted-foreground">Últimas operaciones registradas</p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4 text-gray-700">
-              {recentOperations.length > 0 ? (
-                recentOperations.map((operation) => (
-                  <div key={operation.id} className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{operation.operation_type}</p>
-                      <p className="text-sm text-muted-foreground">{operation.quantity} toneladas</p>
+          <Card className="text-gray-700">
+            <CardHeader>
+              <CardTitle>Estado de Silos</CardTitle>
+              <p className="text-sm text-muted-foreground">Capacidad y stock actual</p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {activeSilos.length > 0 ? (
+                  activeSilos.map((silo) => (
+                    <div key={silo.id} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{silo.name}</span>
+                        <span className="text-sm text-muted-foreground">/{silo.capacity || 1000} t</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-green-600 h-2 rounded-full"
+                          style={{
+                            width: `${Math.min(((silo.current_stock || 0) / (silo.capacity || 1000)) * 100, 100)}%`,
+                          }}
+                        ></div>
+                      </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {operation.created_at ? new Date(operation.created_at).toLocaleDateString() : "Invalid Date"}
+                  ))
+                ) : (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">Silo A1</span>
+                        <span className="text-sm text-muted-foreground">/1000 t</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-green-600 h-2 rounded-full w-full"></div>
+                      </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Salida</p>
-                      <p className="text-sm text-muted-foreground">toneladas</p>
-                    </div>
-                    <div className="text-sm text-muted-foreground">Invalid Date</div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Salida</p>
-                      <p className="text-sm text-muted-foreground">toneladas</p>
-                    </div>
-                    <div className="text-sm text-muted-foreground">Invalid Date</div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="text-gray-700">
-          <CardHeader>
-            <CardTitle>Estado de Silos</CardTitle>
-            <p className="text-sm text-muted-foreground">Capacidad y stock actual</p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {activeSilos.length > 0 ? (
-                activeSilos.map((silo) => (
-                  <div key={silo.id} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{silo.name}</span>
-                      <span className="text-sm text-muted-foreground">/{silo.capacity || 1000} t</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-green-600 h-2 rounded-full"
-                        style={{
-                          width: `${Math.min(((silo.current_stock || 0) / (silo.capacity || 1000)) * 100, 100)}%`,
-                        }}
-                      ></div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">Silo B2</span>
+                        <span className="text-sm text-muted-foreground">/1500 t</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-green-600 h-2 rounded-full w-full"></div>
+                      </div>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">Silo A1</span>
-                      <span className="text-sm text-muted-foreground">/1000 t</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-green-600 h-2 rounded-full w-full"></div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">Silo B2</span>
-                      <span className="text-sm text-muted-foreground">/1500 t</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-green-600 h-2 rounded-full w-full"></div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }

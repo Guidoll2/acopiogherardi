@@ -2,16 +2,29 @@ export interface User {
   id: string
   email: string
   full_name: string
-  phone: string
-  position?: string  
-  name?: string  
-  address: string
+  phone?: string
+  address?: string
   created_at: string
   updated_at: string
-  role: "system_admin" | "admin" | "company_admin" | "garita"// <-- agrega esta línea
+  role: "system_admin" | "admin" | "company_admin" | "garita"
   is_active: boolean
   company_id?: string
 }
+
+export interface Company {
+  id: string
+  name: string
+  email: string
+  phone: string
+  address: string
+  cuit: string
+  status: "active" | "inactive"
+  subscription_plan: "basic" | "premium" | "enterprise"
+  notes?: string
+  created_at: string
+  updated_at: string
+}
+
 export interface Client {
   id: string
   name: string
@@ -58,42 +71,41 @@ export interface Cereal {
   }
 export interface Operation {
   id: string
-  operation_type: "ingreso" | "egreso"
-  type: "entrada" | "salida"
   client_id: string
   driver_id: string
-  cereal_id: string
-  cereal_type_id?: string
   silo_id: string
-  truck_plate: string
-  gross_weight: number
+  cereal_type_id: string
+  company_id: string
+  operation_type: "ingreso" | "egreso"
+  status: string
+  chassis_plate: string
+  trailer_plate: string
+  quantity: number
   tare_weight: number
+  gross_weight: number
   net_weight: number
-  humidity: number
-  amount: number
+  moisture: number
   impurities: number
-  status:
-    | "pendiente"
-    | "autorizar_acceso"
-    | "balanza_ingreso"
-    | "en_carga_descarga"
-    | "balanza_egreso"
-    | "autorizar_egreso"
-    | "completado"
-  entry_time: string
-  exit_time: string | null
-  createdAt: Date
+  test_weight: number
+  notes: string
+  scheduled_date: string
+  estimated_duration: number
+  created_at: string
+  updated_at: string
+  createdAt: string // For backward compatibility
+  amount?: number // For backward compatibility
+  
+  // Legacy fields for backward compatibility
+  type?: "entrada" | "salida"
+  cereal_id?: string
+  truck_plate?: string
+  humidity?: number
+  entry_time?: string
+  exit_time?: string | null
   updatedAt?: Date
-
-  // Campos adicionales para compatibilidad con actions.ts
   description?: string
-  scheduled_date?: string
-  estimated_duration?: number
-  company_id?: string
   weight_in?: number
   weight_out?: number
-  moisture?: number
-  test_weight?: number
   observations?: string
 }
 

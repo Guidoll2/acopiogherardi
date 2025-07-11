@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useData } from "@/contexts/data-context"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { AuthService } from "@/lib/auth"
-import { User, Building2, Shield, Save } from "lucide-react"
+import { User, Building2, Shield, Save, LogOut } from "lucide-react"
 
 interface ProfileDialogProps {
   open: boolean
@@ -17,6 +19,8 @@ interface ProfileDialogProps {
 }
 
 export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
+  const router = useRouter()
+  const { companies } = useData()
   const [user, setUser] = useState<any>(null)
   const [profileData, setProfileData] = useState({
     full_name: "",
@@ -26,28 +30,73 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
   })
   const [isLoading, setIsLoading] = useState(false)
 
+  // Obtener la empresa del usuario
+  const userCompany = user?.company_id 
+    ? companies.find(company => company.id === user.company_id)
+    : null
+
   useEffect(() => {
     const currentUser = AuthService.getCurrentUser()
     if (currentUser) {
       setUser(currentUser)
       setProfileData({
-        full_name: currentUser.full_name || currentUser.name || "",
+        full_name: currentUser.full_name || "",
         email: currentUser.email || "",
         phone: currentUser.phone || "",
-        position: currentUser.position || "",
+        position: "", // Ya no existe en AuthUser, inicializamos vacío
       })
     }
   }, [])
 
+  const handleLogout = () => {
+    AuthService.logout()
+    onOpenChange(false)
+    router.push("/login")
+  }
+
   const handleSave = async () => {
+    if (!user) return
+    
     setIsLoading(true)
     try {
-      // TODO: Implementar guardado de perfil
       console.log("Guardando perfil:", profileData)
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      // Aquí actualizarías el usuario en el contexto/localStorage
+      
+      // Actualizar perfil a través de la API
+      const response = await fetch(`/api/users/${user.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          full_name: profileData.full_name,
+          email: profileData.email,
+          phone: profileData.phone,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Error al actualizar el perfil")
+      }
+
+      const updatedUser = await response.json()
+      
+      // Actualizar el usuario en el AuthService
+      const currentUser = AuthService.getCurrentUser()
+      if (currentUser) {
+        const newUserData = {
+          ...currentUser,
+          full_name: profileData.full_name,
+          email: profileData.email,
+          phone: profileData.phone,
+        }
+        localStorage.setItem("grain_auth_user", JSON.stringify(newUserData))
+        setUser(newUserData)
+      }
+      
+      console.log("Perfil actualizado exitosamente")
     } catch (error) {
       console.error("Error saving profile:", error)
+      alert("Error al guardar el perfil. Por favor, intenta de nuevo.")
     } finally {
       setIsLoading(false)
     }
@@ -106,11 +155,11 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
               <div className="flex items-center space-x-4 mb-6">
                 <Avatar className="h-16 w-16">
                   <AvatarFallback className="bg-green-600 text-white text-lg">
-                    {getInitials(user.full_name || user.name || "U")}
+                    {getInitials(user.full_name || "U")}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="text-lg font-semibold">{user.full_name || user.name}</h3>
+                  <h3 className="text-lg font-semibold">{user.full_name}</h3>
                   <p className="text-muted-foreground">{user.email}</p>
                   {getRoleBadge(user.role)}
                 </div>
@@ -171,7 +220,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
                     <Building2 className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <p className="text-sm text-muted-foreground">Empresa</p>
-                      <p className="font-medium">Acopio Central S.A.</p>
+                      <p className="font-medium">{userCompany?.name || "Sin empresa asignada"}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -194,11 +243,21 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
             </Card>
           )}
 
-          {/* Botón de guardar */}
-          <Button onClick={handleSave} disabled={isLoading} className="w-full">
-            <Save className="mr-2 h-4 w-4" />
-            {isLoading ? "Guardando..." : "Guardar Cambios"}
-          </Button>
+          {/* Botones de acción */}
+          <div className="flex gap-3">
+            <Button onClick={handleSave} disabled={isLoading} className="flex-1">
+              <Save className="mr-2 h-4 w-4" />
+              {isLoading ? "Guardando..." : "Guardar Cambios"}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleLogout}
+              className="border-red-200 text-red-600 hover:bg-red-50"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Cerrar Sesión
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

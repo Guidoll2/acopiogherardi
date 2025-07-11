@@ -25,6 +25,7 @@ export class AuthService {
 
   static async login(credentials: LoginCredentials): Promise<AuthUser | null> {
     try {
+      console.log("Intentando login con:", credentials.email)
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
@@ -34,6 +35,7 @@ export class AuthService {
       })
 
       const data = await response.json()
+      console.log("Respuesta del servidor:", { status: response.status, data })
 
       if (!response.ok) {
         console.error("Error en login:", data.error)
@@ -52,6 +54,8 @@ export class AuthService {
         updated_at: data.user.updated_at,
         company_id: data.user.company_id,
       }
+
+      console.log("Usuario autenticado:", authUser)
 
       // Guardar en localStorage para el cliente
       if (typeof window !== "undefined") {

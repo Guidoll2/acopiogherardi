@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useData } from "@/contexts/data-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,25 +24,13 @@ import {
 } from "lucide-react"
 
 export default function ReportsPage() {
+  const { clients, cerealTypes, operations } = useData()
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
   const [selectedClient, setSelectedClient] = useState("all")
   const [selectedCereal, setSelectedCereal] = useState("all")
   const [reportType, setReportType] = useState("operations")
   const [isGenerating, setIsGenerating] = useState(false)
-
-  // Mock data
-  const mockClients = [
-    { id: "1", name: "Estancia La Esperanza" },
-    { id: "2", name: "Agropecuaria San Martín" },
-    { id: "3", name: "Cooperativa del Norte" },
-  ]
-
-  const mockCereals = [
-    { id: "1", name: "Soja", code: "SOJ" },
-    { id: "2", name: "Maíz", code: "MAI" },
-    { id: "3", name: "Trigo", code: "TRI" },
-  ]
 
   const mockOperationsData = [
     {
@@ -229,7 +218,7 @@ export default function ReportsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos los clientes</SelectItem>
-                  {mockClients.map((client) => (
+                  {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name}
                     </SelectItem>

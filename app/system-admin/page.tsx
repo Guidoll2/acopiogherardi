@@ -2,31 +2,45 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useData } from "@/contexts/data-context"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { AuthService } from "@/lib/auth"
-import { companies, users, operations } from "@/lib/mock-data"
-import { Building2, Users, Activity, TrendingUp, CheckCircle, Plus, Edit, Eye, UserPlus, Settings } from "lucide-react"
+import type { Company, User, Operation } from "@/types"
+import { Building2, Users, Activity, TrendingUp, CheckCircle, Plus, Edit, Eye, UserPlus, Settings, Trash2, Key } from "lucide-react"
 import { CreateCompanyDialog } from "@/components/system-admin/create-company-dialog"
 import { CreateAdminDialog } from "@/components/system-admin/create-admin-dialog"
+import { ViewCompanyDialog } from "@/components/system-admin/view-company-dialog"
+import { EditCompanyDialog } from "@/components/system-admin/edit-company-dialog"
 
 export default function SystemAdminPage() {
-  const [isLoading, setIsLoading] = useState(true)
+  const { 
+    companies: companiesList, 
+    users: usersList, 
+    operations,
+    isLoading,
+    refreshData 
+  } = useData()
+  
   const [createCompanyOpen, setCreateCompanyOpen] = useState(false)
   const [createAdminOpen, setCreateAdminOpen] = useState(false)
-  const [companiesList, setCompaniesList] = useState(companies)
-  const [usersList, setUsersList] = useState(users)
+  const [viewCompanyOpen, setViewCompanyOpen] = useState(false)
+  const [editCompanyOpen, setEditCompanyOpen] = useState(false)
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
   const router = useRouter()
-
 
   useEffect(() => {
     const user = AuthService.getCurrentUser()
+    console.log("Usuario en system-admin:", user)
+    
     if (!user || user.role !== "system_admin") {
-      router.push("/dashboard")
+      console.log("Usuario no autorizado, redirigiendo...")
+      router.push("/login")
     } else {
-      setIsLoading(false)
+      console.log("Usuario autorizado, cargando datos...")
+      // Los datos se cargan automáticamente a través del DataProvider
     }
   }, [router])
 
@@ -40,16 +54,16 @@ export default function SystemAdminPage() {
 
   // Estadísticas del sistema
   const totalCompanies = companiesList.length
-  const activeCompanies = companiesList.filter((c) => c.status === "active").length
+  const activeCompanies = companiesList.filter((c: Company) => c.status === "active").length
   const totalUsers = usersList.length
-  const activeUsers = usersList.filter((u) => u.is_active).length
+  const activeUsers = usersList.filter((u: User) => u.is_active).length
   const totalOperations = operations.length
 
   // Estadísticas por plan
   const planStats = {
-    basic: companiesList.filter((c) => c.subscription_plan === "basic").length,
-    premium: companiesList.filter((c) => c.subscription_plan === "premium").length,
-    enterprise: companiesList.filter((c) => c.subscription_plan === "enterprise").length,
+    basic: companiesList.filter((c: Company) => c.subscription_plan === "basic").length,
+    premium: companiesList.filter((c: Company) => c.subscription_plan === "premium").length,
+    enterprise: companiesList.filter((c: Company) => c.subscription_plan === "enterprise").length,
   }
 
   const stats = [
@@ -87,22 +101,144 @@ export default function SystemAdminPage() {
     },
   ]
 
-  const handleCompanyCreated = (newCompany: any) => {
-    setCompaniesList([...companiesList, newCompany])
+  const handleCompanyCreated = async (newCompany: Company) => {
+    // Los datos se actualizan automáticamente a través del DataProvider
+    await refreshData()
   }
 
-  const handleAdminCreated = (newAdmin: any) => {
-    setUsersList([...usersList, newAdmin])
+  const handleCompanyUpdated = async (updatedCompany: Company) => {
+    // Los datos se actualizan automáticamente a través del DataProvider
+    await refreshData()
+  }
+
+  const handleAdminCreated = async (newAdmin: User) => {
+    // Los datos se actualizan automáticamente a través del DataProvider
+    await refreshData()
   }
 
   const handleEditCompany = (companyId: string) => {
-    console.log("Editar empresa:", companyId)
-    // TODO: Implementar edición de empresa
+    const company = companiesList.find(c => c.id === companyId)
+    if (company) {
+      setSelectedCompany(company)
+      setEditCompanyOpen(true)
+    }
   }
 
   const handleViewCompany = (companyId: string) => {
-    console.log("Ver empresa:", companyId)
-    // TODO: Implementar vista detallada de empresa
+    const company = companiesList.find(c => c.id === companyId)
+    if (company) {
+      setSelectedCompany(company)
+      setViewCompanyOpen(true)
+    }
+  }
+
+  const handleDeleteCompany = async (companyId: string) => {
+    const company = companiesList.find(c => c.id === companyId)
+    if (!company) return
+
+    if (confirm(`¿Está seguro de que desea eliminar la empresa "${company.name}"? Esta acción no se puede deshacer.`)) {
+      try {
+        const response = await fetch(`/api/companies/${companyId}`, {
+          method: 'DELETE',
+        })
+
+        if (response.ok) {
+          await refreshData()
+          alert('Empresa eliminada exitosamente')
+        } else {
+          const error = await response.json()
+          if (error.users && error.users.length > 0 && error.canForceDelete) {
+            const userList = error.users.map((u: any) => `• ${u.name} (${u.email})`).join('\n')
+            const forceDelete = confirm(
+              `No se puede eliminar la empresa "${company.name}" porque tiene usuarios asociados:\n\n${userList}\n\n¿Desea eliminar la empresa Y todos sus usuarios asociados? Esta acción es irreversible.`
+            )
+            
+            if (forceDelete) {
+              try {
+                const forceResponse = await fetch(`/api/companies/${companyId}?force=true`, {
+                  method: 'DELETE',
+                })
+                
+                if (forceResponse.ok) {
+                  const result = await forceResponse.json()
+                  await refreshData()
+                  alert(result.message)
+                } else {
+                  const forceError = await forceResponse.json()
+                  alert(`Error al eliminar empresa: ${forceError.error || 'Error desconocido'}`)
+                }
+              } catch (forceErr) {
+                console.error('Error:', forceErr)
+                alert('Error al eliminar empresa')
+              }
+            }
+          } else {
+            alert(`Error al eliminar empresa: ${error.error || 'Error desconocido'}`)
+          }
+        }
+      } catch (error) {
+        console.error('Error:', error)
+        alert('Error al eliminar empresa')
+      }
+    }
+  }
+
+  const handleDeleteUser = async (userId: string) => {
+    const user = usersList.find(u => u.id === userId)
+    if (!user) return
+
+    if (confirm(`¿Está seguro de que desea eliminar el usuario "${user.full_name}"? Esta acción no se puede deshacer.`)) {
+      try {
+        const response = await fetch(`/api/users/${userId}`, {
+          method: 'DELETE',
+        })
+
+        if (response.ok) {
+          await refreshData()
+          alert('Usuario eliminado exitosamente')
+        } else {
+          const error = await response.json()
+          alert(`Error al eliminar usuario: ${error.error || 'Error desconocido'}`)
+        }
+      } catch (error) {
+        console.error('Error:', error)
+        alert('Error al eliminar usuario')
+      }
+    }
+  }
+
+  const handleResetPassword = async (userId: string) => {
+    const user = usersList.find(u => u.id === userId)
+    if (!user) return
+
+    const newPassword = prompt(`Ingrese la nueva contraseña para ${user.full_name}:`)
+    if (!newPassword) return
+
+    if (newPassword.length < 6) {
+      alert('La contraseña debe tener al menos 6 caracteres')
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/users/${userId}/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ newPassword }),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        alert(`Contraseña actualizada exitosamente para ${user.full_name}\n\nNueva contraseña: ${result.newPassword}\n\n¡Guarda esta información!`)
+      } else {
+        const error = await response.json()
+        alert(`Error al resetear contraseña: ${error.error || 'Error desconocido'}`)
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Error al resetear contraseña')
+    }
   }
 
   const getPlanBadgeColor = (plan: string) => {
@@ -184,7 +320,7 @@ export default function SystemAdminPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {companiesList.map((company) => (
+                {companiesList.map((company: Company) => (
                   <div
                     key={company.id}
                     className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
@@ -224,6 +360,14 @@ export default function SystemAdminPage() {
                         </Button>
                         <Button size="sm" variant="outline" onClick={() => handleEditCompany(company.id)}>
                           <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => handleDeleteCompany(company.id)}
+                          className="hover:bg-red-50 hover:border-red-200"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
                         </Button>
                       </div>
                     </div>
@@ -307,9 +451,9 @@ export default function SystemAdminPage() {
           <CardContent>
             <div className="space-y-3">
               {usersList
-                .filter((user) => user.role === "admin" || user.role === "company_admin")
-                .map((admin) => {
-                  const company = companiesList.find((c) => c.id === admin.company_id)
+                .filter((user: User) => user.role === "admin" || user.role === "company_admin")
+                .map((admin: User) => {
+                  const company = companiesList.find((c: Company) => c.id === admin.company_id)
                   return (
                     <div key={admin.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center space-x-3">
@@ -339,6 +483,23 @@ export default function SystemAdminPage() {
                         <Button size="sm" variant="outline">
                           <Settings className="h-4 w-4" />
                         </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => handleResetPassword(admin.id)}
+                          className="hover:bg-blue-50 hover:border-blue-200"
+                          title="Resetear contraseña"
+                        >
+                          <Key className="h-4 w-4 text-blue-600" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => handleDeleteUser(admin.id)}
+                          className="hover:bg-red-50 hover:border-red-200"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
                       </div>
                     </div>
                   )
@@ -355,8 +516,8 @@ export default function SystemAdminPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {operations.slice(0, 5).map((operation) => {
-                const client = companiesList.find((c) => c.id === operation.client_id)
+              {operations.slice(0, 5).map((operation: Operation) => {
+                const client = companiesList.find((c: Company) => c.id === operation.client_id)
                 return (
                   <div key={operation.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex items-center space-x-3">
@@ -406,13 +567,26 @@ export default function SystemAdminPage() {
         <CreateCompanyDialog
           open={createCompanyOpen}
           onOpenChange={setCreateCompanyOpen}
-          onAdminCreated={handleAdminCreated}
+          onCompanyCreated={handleCompanyCreated}
         />
 
         <CreateAdminDialog
           open={createAdminOpen}
           onOpenChange={setCreateAdminOpen}
           onAdminCreated={handleAdminCreated}
+        />
+
+        <ViewCompanyDialog
+          open={viewCompanyOpen}
+          onOpenChange={setViewCompanyOpen}
+          company={selectedCompany}
+        />
+
+        <EditCompanyDialog
+          open={editCompanyOpen}
+          onOpenChange={setEditCompanyOpen}
+          company={selectedCompany}
+          onCompanyUpdated={handleCompanyUpdated}
         />
       </div>
     </DashboardLayout>
