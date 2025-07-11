@@ -3,12 +3,17 @@ import connectDB from "@/app/mongoDB/db"
 import User from "@/app/mongoDB/models/user"
 
 // DELETE /api/users/[id] - Eliminar usuario
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     await connectDB()
     
+    const resolvedParams = await params
+    
     // Verificar que el usuario existe
-    const user = await User.findById(params.id)
+    const user = await User.findById(resolvedParams.id)
     if (!user) {
       return NextResponse.json(
         { error: "Usuario no encontrado" },
@@ -25,7 +30,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     }
 
     // Eliminar usuario
-    await User.findByIdAndDelete(params.id)
+    await User.findByIdAndDelete(resolvedParams.id)
 
     return NextResponse.json({ 
       message: "Usuario eliminado exitosamente",

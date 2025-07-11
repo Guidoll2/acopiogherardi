@@ -4,11 +4,15 @@ import Company from "@/app/mongoDB/models/company"
 import User from "@/app/mongoDB/models/user"
 
 // GET /api/companies/[id] - Obtener empresa por ID
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     await connectDB()
     
-    const company = await Company.findById(params.id)
+    const resolvedParams = await params
+    const company = await Company.findById(resolvedParams.id)
     if (!company) {
       return NextResponse.json(
         { error: "Empresa no encontrada" },
@@ -27,12 +31,16 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // PUT /api/companies/[id] - Actualizar empresa
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     await connectDB()
     
     const body = await request.json()
     const { name, email, phone, address, cuit, subscription_plan, status, notes } = body
+    const resolvedParams = await params
 
     // Validaciones básicas
     if (!name || !email || !cuit) {
@@ -43,7 +51,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     // Verificar que la empresa existe
-    const existingCompany = await Company.findById(params.id)
+    const existingCompany = await Company.findById(resolvedParams.id)
     if (!existingCompany) {
       return NextResponse.json(
         { error: "Empresa no encontrada" },
@@ -55,7 +63,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     if (email !== existingCompany.email) {
       const emailExists = await Company.findOne({ 
         email, 
-        _id: { $ne: params.id } 
+        _id: { $ne: resolvedParams.id } 
       })
       if (emailExists) {
         return NextResponse.json(
@@ -69,7 +77,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     if (cuit !== existingCompany.cuit) {
       const cuitExists = await Company.findOne({ 
         cuit, 
-        _id: { $ne: params.id } 
+        _id: { $ne: resolvedParams.id } 
       })
       if (cuitExists) {
         return NextResponse.json(
@@ -81,7 +89,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     // Actualizar empresa
     const updatedCompany = await Company.findByIdAndUpdate(
-      params.id,
+      resolvedParams.id,
       {
         name,
         email,
@@ -107,15 +115,19 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // DELETE /api/companies/[id] - Eliminar empresa
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     await connectDB()
     
     const url = new URL(request.url)
     const force = url.searchParams.get('force') === 'true'
+    const resolvedParams = await params
     
     // Verificar que la empresa existe
-    const company = await Company.findById(params.id)
+    const company = await Company.findById(resolvedParams.id)
     if (!company) {
       return NextResponse.json(
         { error: "Empresa no encontrada" },
@@ -124,7 +136,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     }
 
     // Verificar si hay usuarios asociados a esta empresa
-    const users = await User.find({ company_id: params.id })
+    const users = await User.find({ company_id: resolvedParams.id })
     if (users.length > 0 && !force) {
       const userNames = users.map(u => u.full_name).join(", ")
       return NextResponse.json(
@@ -139,12 +151,12 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
     // Si force=true, eliminar primero todos los usuarios asociados
     if (force && users.length > 0) {
-      await User.deleteMany({ company_id: params.id })
+      await User.deleteMany({ company_id: resolvedParams.id })
       console.log(`Eliminados ${users.length} usuarios asociados a la empresa ${company.name}`)
     }
 
     // Eliminar empresa
-    await Company.findByIdAndDelete(params.id)
+    await Company.findByIdAndDelete(resolvedParams.id)
 
     return NextResponse.json({ 
       message: force && users.length > 0 
