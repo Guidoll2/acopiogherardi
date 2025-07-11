@@ -99,7 +99,7 @@ const handleSave = async () => {
      scheduled_date:
     formData.scheduled_date && formData.scheduled_time
       ? new Date(formData.scheduled_date + "T" + formData.scheduled_time).toISOString()
-      : undefined,
+      : new Date().toISOString(),
       notes: formData.notes,
        status: "pendiente" as
     | "pendiente"
@@ -113,9 +113,14 @@ const handleSave = async () => {
       tare_weight: 0,
       gross_weight: 0,
       net_weight: 0,
+      moisture: 0,
+      impurities: 0,
+      test_weight: 0,
+      estimated_duration: 0,
       company_id: "1",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     }
 
     // Simular llamada a API
