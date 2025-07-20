@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { DataProvider } from "@/contexts/data-context"
+import { PageTransitionProvider } from "@/contexts/page-transition-context"
 
 export const metadata: Metadata = {
   title: "Acopio Gherardi",
@@ -15,9 +16,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <DataProvider>
-          {children}
-        </DataProvider>
+        <PageTransitionProvider>
+          <DataProvider>
+            {children}
+          </DataProvider>
+        </PageTransitionProvider>
       </body>
     </html>
   );

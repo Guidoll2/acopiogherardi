@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter, usePathname } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
+import { useNavigationWithLoading } from "@/hooks/use-navigation"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
@@ -25,7 +26,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
-  const router = useRouter()
+  const { navigateWithLoading, navigateAndReplace } = useNavigationWithLoading()
   const pathname = usePathname()
   const [user, setUser] = useState<any>(null)
 
@@ -36,7 +37,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
   const handleLogout = () => {
     AuthService.logout()
-    router.push("/login")
+    navigateAndReplace("/login")
   }
 
   // Definir navegación según el rol del usuario
@@ -149,7 +150,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   }
 
   const handleNavigation = (href: string) => {
-    router.push(href)
+    navigateWithLoading(href)
     onClose?.() // Cerrar el menú móvil después de navegar
   }
 

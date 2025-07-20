@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { Sidebar } from "./sidebar"
 import { Header } from "./header"
+import { PageTransitionLoader } from "@/contexts/page-transition-context"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -35,8 +37,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <h2 className="mt-4 text-xl font-semibold text-gray-900">Acopio Gherardi</h2>
+          <p className="mt-2 text-gray-600">Verificando autenticación...</p>
+        </div>
       </div>
     )
   }
@@ -49,7 +55,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Contenido principal - ocupa todo el ancho en móvil */}
       <div className="flex-1 flex flex-col min-w-0">
         <Header onMenuToggle={toggleMobileMenu} />
-        <main className="flex-1 p-4 sm:p-6 overflow-auto">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 overflow-auto relative min-h-0">
+          {/* Loader de transición solo en el área de contenido */}
+          <PageTransitionLoader />
+          <div className="h-full">
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   )

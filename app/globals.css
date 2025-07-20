@@ -74,3 +74,43 @@ body {
 .text-muted-foreground {
   color: #6b7280 !important;
 }
+
+/* Transiciones suaves para evitar destellos */
+html {
+  background-color: white;
+}
+
+body {
+  background-color: white;
+  transition: background-color 0.2s ease;
+}
+
+/* Prevenir destello blanco/negro durante navegación */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Transiciones suaves para elementos de navegación */
+.page-transition {
+  transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-transition-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+}
