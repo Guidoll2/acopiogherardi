@@ -247,8 +247,8 @@ export default function NewOperationPage() {
                     <SelectValue placeholder="Seleccionar cliente" />
                   </SelectTrigger>
                   <SelectContent>
-                    {displayClients.map((client) => (
-                      <SelectItem key={client.id} value={client.id}>
+                    {displayClients.map((client, index) => (
+                      <SelectItem key={client.id || `client-${index}`} value={client.id || `client-${index}`}>
                         {client.name}
                       </SelectItem>
                     ))}
@@ -282,8 +282,8 @@ export default function NewOperationPage() {
                     <SelectValue placeholder="Seleccionar cereal" />
                   </SelectTrigger>
                   <SelectContent>
-                    {displayCereals.map((cereal) => (
-                      <SelectItem key={cereal.id} value={cereal.id}>
+                    {displayCereals.map((cereal, index) => (
+                      <SelectItem key={cereal.id || `cereal-${index}`} value={cereal.id || `cereal-${index}`}>
                         {cereal.name} ({cereal.code})
                       </SelectItem>
                     ))}
@@ -298,8 +298,8 @@ export default function NewOperationPage() {
                     <SelectValue placeholder="Seleccionar silo" />
                   </SelectTrigger>
                   <SelectContent>
-                    {displaySilos.map((silo) => (
-                      <SelectItem key={silo.id} value={silo.id}>
+                    {displaySilos.map((silo, index) => (
+                      <SelectItem key={silo.id || `silo-${index}`} value={silo.id || `silo-${index}`}>
                         {silo.name} (Cap: {silo.capacity}t)
                       </SelectItem>
                     ))}
@@ -337,8 +337,8 @@ export default function NewOperationPage() {
                     <SelectValue placeholder="Seleccionar conductor" />
                   </SelectTrigger>
                   <SelectContent>
-                    {displayDrivers.map((driver) => (
-                      <SelectItem key={driver.id} value={driver.id}>
+                    {displayDrivers.map((driver, index) => (
+                      <SelectItem key={driver.id || `driver-${index}`} value={driver.id || `driver-${index}`}>
                         {driver.name} - Lic: {driver.license_number}
                       </SelectItem>
                     ))}

@@ -64,11 +64,13 @@ export function PageTransitionLoader() {
   if (!isLoading) return null
   
   return (
-    <div className="absolute inset-0 bg-white/98 z-10 flex items-center justify-center">
-      <div className="text-center">
-        <div className="inline-block">
-          <PageLoadingSpinner text="Cargando..." />
-        </div>
+    <div className="absolute inset-0 z-50 flex items-center justify-center">
+      {/* Glass background que ocupa solo el área de contenido */}
+      <div className="absolute inset-0 bg-white/30 backdrop-blur-sm"></div>
+      
+      {/* Contenido del loading centrado - sin bordes ni contenedor */}
+      <div className="relative z-10">
+        <PageLoadingSpinner text="Cargando..." />
       </div>
     </div>
   )

@@ -390,9 +390,9 @@ export default function ClientsPage() {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Crear Nuevo Cliente</DialogTitle>
+            <DialogTitle className="text-gray-700">Crear Nuevo Cliente</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 text-gray-700">
             <div>
               <Label htmlFor="tax_id">CUIT/CUIL *</Label>
               <Input
@@ -462,7 +462,7 @@ export default function ClientsPage() {
 
       {/* Dialog de Cuenta Corriente */}
       <Dialog open={isAccountDialogOpen} onOpenChange={setIsAccountDialogOpen}>
-        <DialogContent className="max-w-7xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="text-gray-700 max-w-7xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <Scale className="h-5 w-5" />
@@ -556,7 +556,7 @@ export default function ClientsPage() {
 
       {/* Dialog de Edición */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="text-gray-700">
           <DialogHeader>
             <DialogTitle>Editar Cliente</DialogTitle>
           </DialogHeader>

@@ -43,7 +43,7 @@ export function ViewCompanyDialog({ open, onOpenChange, company }: ViewCompanyDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl text-gray-700">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5" />

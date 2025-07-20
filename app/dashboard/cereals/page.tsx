@@ -224,9 +224,9 @@ export default function CerealsPage() {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Crear Nuevo Cereal</DialogTitle>
+            <DialogTitle className="text-gray-700">Crear Nuevo Cereal</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 text-gray-700">
             <div>
               <Label htmlFor="name">Nombre *</Label>
               <Input
@@ -269,7 +269,7 @@ export default function CerealsPage() {
 
       {/* Dialog de Edición */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="text-gray-700">
           <DialogHeader>
             <DialogTitle>Editar Cereal</DialogTitle>
           </DialogHeader>

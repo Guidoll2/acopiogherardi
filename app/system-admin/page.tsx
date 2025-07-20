@@ -288,7 +288,7 @@ export default function SystemAdminPage() {
         </div>
 
         {/* Estadísticas principales */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 text-gray-700">
           {stats.map((stat, index) => (
             <Card key={index}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -297,7 +297,7 @@ export default function SystemAdminPage() {
                   <stat.icon className={`h-4 w-4 ${stat.color}`} />
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="text-gray-700">
                 <div className="text-2xl font-bold">{stat.value}</div>
                 <p className="text-xs text-muted-foreground">{stat.description}</p>
               </CardContent>
@@ -378,7 +378,7 @@ export default function SystemAdminPage() {
           </Card>
 
           {/* Planes de suscripción */}
-          <Card className="col-span-2">
+          <Card className="col-span-2 text-gray-700">
             <CardHeader>
               <CardTitle>Planes de Suscripción</CardTitle>
               <CardDescription>Distribución y ingresos</CardDescription>

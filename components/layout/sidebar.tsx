@@ -94,15 +94,15 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         roles: ["admin", "company_admin", "supervisor"],
       },
       {
-        name: "Silos",
-        href: "/dashboard/silos",
-        icon: Warehouse,
-        roles: ["admin", "company_admin", "supervisor"],
-      },
-      {
         name: "Cereales",
         href: "/dashboard/cereals",
         icon: Wheat,
+        roles: ["admin", "company_admin", "supervisor"],
+      },
+      {
+        name: "Silos",
+        href: "/dashboard/silos",
+        icon: Warehouse,
         roles: ["admin", "company_admin", "supervisor"],
       },
       {
@@ -166,7 +166,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       
       {/* Sidebar */}
       <div className={`
-        fixed md:static inset-y-0 left-0 z-50
+        fixed top-0 left-0 z-50
         w-80 md:w-64 bg-white shadow-lg 
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}

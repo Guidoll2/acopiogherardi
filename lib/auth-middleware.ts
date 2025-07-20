@@ -10,15 +10,25 @@ export interface AuthenticatedUser {
 
 export function verifyToken(request: NextRequest): AuthenticatedUser | null {
   try {
+    console.log("=== DEBUG verifyToken ===")
+    
     // Obtener token de cookies o header Authorization
-    const token = request.cookies.get("auth-token")?.value || 
-                  request.headers.get("Authorization")?.replace("Bearer ", "")
+    const cookieToken = request.cookies.get("auth-token")?.value
+    const headerToken = request.headers.get("Authorization")?.replace("Bearer ", "")
+    
+    console.log("Cookie token presente:", !!cookieToken)
+    console.log("Header token presente:", !!headerToken)
+    
+    const token = cookieToken || headerToken
 
     if (!token) {
+      console.log("No se encontró token en cookies ni headers")
       return null
     }
 
+    console.log("Token encontrado, verificando...")
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallback_secret") as any
+    console.log("Token decodificado exitosamente:", { userId: decoded.userId, email: decoded.email, role: decoded.role })
     
     return {
       userId: decoded.userId,

@@ -279,7 +279,7 @@ export default function SilosPage() {
 
       {/* Dialog de Creación */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent>
+        <DialogContent className="text-gray-700">
           <DialogHeader>
             <DialogTitle>Crear Nuevo Silo</DialogTitle>
           </DialogHeader>
@@ -334,7 +334,7 @@ export default function SilosPage() {
 
       {/* Dialog de Edición */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="text-gray-700">
           <DialogHeader>
             <DialogTitle>Editar Silo</DialogTitle>
           </DialogHeader>

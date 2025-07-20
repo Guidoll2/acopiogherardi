@@ -48,12 +48,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <Sidebar isOpen={isMobileMenuOpen} onClose={closeMobileMenu} />
       
-      {/* Contenido principal - ocupa todo el ancho en móvil */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Contenido principal - ajustado para sidebar fijo */}
+      <div className="md:ml-64 flex flex-col min-h-screen">
         <Header onMenuToggle={toggleMobileMenu} />
         <main className="flex-1 p-4 sm:p-6 overflow-auto relative min-h-0">
           {/* Loader de transición solo en el área de contenido */}

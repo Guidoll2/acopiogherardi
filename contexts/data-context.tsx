@@ -173,6 +173,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [operations, setOperations] = useState<Operation[]>([])
   const [users, setUsers] = useState<User[]>([])
 
+  // Helper function for authenticated fetch requests
+  const authenticatedFetch = async (url: string, options: RequestInit = {}) => {
+    return fetch(url, {
+      ...options,
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    })
+  }
+
   // Load all data from APIs
   const loadData = async () => {
     setIsLoading(true)
@@ -196,7 +208,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Load companies
   const loadCompanies = async () => {
     try {
-      const response = await fetch("/api/companies")
+      const response = await authenticatedFetch("/api/companies")
       if (response.ok) {
         const data = await response.json()
         setCompanies(data.companies || [])
@@ -209,7 +221,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Load users
   const loadUsers = async () => {
     try {
-      const response = await fetch("/api/users")
+      const response = await authenticatedFetch("/api/users")
       if (response.ok) {
         const data = await response.json()
         setUsers(data.users || [])
@@ -222,7 +234,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Load clients
   const loadClients = async () => {
     try {
-      const response = await fetch("/api/clients")
+      const response = await authenticatedFetch("/api/clients")
       if (response.ok) {
         const data = await response.json()
         setClients(data.clients || [])
@@ -235,7 +247,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Load drivers
   const loadDrivers = async () => {
     try {
-      const response = await fetch("/api/drivers")
+      const response = await authenticatedFetch("/api/drivers")
       if (response.ok) {
         const data = await response.json()
         setDrivers(data.drivers || [])
@@ -248,7 +260,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Load silos
   const loadSilos = async () => {
     try {
-      const response = await fetch("/api/silos")
+      const response = await authenticatedFetch("/api/silos")
       if (response.ok) {
         const data = await response.json()
         setSilos(data.silos || [])
@@ -261,7 +273,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Load cereal types
   const loadCerealTypes = async () => {
     try {
-      const response = await fetch("/api/cereals")
+      const response = await authenticatedFetch("/api/cereals")
       if (response.ok) {
         const data = await response.json()
         setCerealTypes(data.cereals || [])
@@ -274,7 +286,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Load operations
   const loadOperations = async () => {
     try {
-      const response = await fetch("/api/operations")
+      const response = await authenticatedFetch("/api/operations")
       if (response.ok) {
         const data = await response.json()
         setOperations(data.operations || [])
@@ -287,9 +299,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Client CRUD operations
   const addClient = async (clientData: Omit<Client, "id" | "created_at" | "updated_at">) => {
     try {
-      const response = await fetch("/api/clients", {
+      const response = await authenticatedFetch("/api/clients", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(clientData)
       })
       if (response.ok) {
@@ -302,9 +313,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const updateClient = async (id: string, updates: Partial<Client>) => {
     try {
-      const response = await fetch(`/api/clients/${id}`, {
+      const response = await authenticatedFetch(`/api/clients/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates)
       })
       if (response.ok) {
@@ -317,7 +327,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const deleteClient = async (id: string) => {
     try {
-      const response = await fetch(`/api/clients/${id}`, {
+      const response = await authenticatedFetch(`/api/clients/${id}`, {
         method: "DELETE"
       })
       if (response.ok) {
@@ -331,9 +341,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Driver CRUD operations
   const addDriver = async (driverData: Omit<Driver, "id" | "created_at" | "updated_at">) => {
     try {
-      const response = await fetch("/api/drivers", {
+      const response = await authenticatedFetch("/api/drivers", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(driverData)
       })
       if (response.ok) {
@@ -346,9 +355,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const updateDriver = async (id: string, updates: Partial<Driver>) => {
     try {
-      const response = await fetch(`/api/drivers/${id}`, {
+      const response = await authenticatedFetch(`/api/drivers/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates)
       })
       if (response.ok) {
@@ -361,7 +369,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const deleteDriver = async (id: string) => {
     try {
-      const response = await fetch(`/api/drivers/${id}`, {
+      const response = await authenticatedFetch(`/api/drivers/${id}`, {
         method: "DELETE"
       })
       if (response.ok) {
@@ -375,9 +383,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Silo CRUD operations
   const addSilo = async (siloData: Omit<Silo, "id" | "created_at" | "updated_at">) => {
     try {
-      const response = await fetch("/api/silos", {
+      const response = await authenticatedFetch("/api/silos", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(siloData)
       })
       if (response.ok) {
@@ -390,9 +397,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const updateSilo = async (id: string, updates: Partial<Silo>) => {
     try {
-      const response = await fetch(`/api/silos/${id}`, {
+      const response = await authenticatedFetch(`/api/silos/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates)
       })
       if (response.ok) {
@@ -405,7 +411,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const deleteSilo = async (id: string) => {
     try {
-      const response = await fetch(`/api/silos/${id}`, {
+      const response = await authenticatedFetch(`/api/silos/${id}`, {
         method: "DELETE"
       })
       if (response.ok) {
@@ -419,9 +425,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // CerealType CRUD operations
   const addCerealType = async (cerealData: Omit<CerealType, "id" | "created_at" | "updated_at">) => {
     try {
-      const response = await fetch("/api/cereals", {
+      const response = await authenticatedFetch("/api/cereals", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST",
         body: JSON.stringify(cerealData)
       })
       if (response.ok) {
@@ -434,9 +440,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const updateCerealType = async (id: string, updates: Partial<CerealType>) => {
     try {
-      const response = await fetch(`/api/cereals/${id}`, {
+      const response = await authenticatedFetch(`/api/cereals/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates)
       })
       if (response.ok) {
@@ -449,7 +454,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const deleteCerealType = async (id: string) => {
     try {
-      const response = await fetch(`/api/cereals/${id}`, {
+      const response = await authenticatedFetch(`/api/cereals/${id}`, {
         method: "DELETE"
       })
       if (response.ok) {
@@ -463,9 +468,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Company CRUD operations
   const addCompany = async (companyData: Omit<Company, "id" | "created_at" | "updated_at">) => {
     try {
-      const response = await fetch("/api/companies", {
+      const response = await authenticatedFetch("/api/companies", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(companyData)
       })
       if (response.ok) {
@@ -478,9 +482,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const updateCompany = async (id: string, updates: Partial<Company>) => {
     try {
-      const response = await fetch(`/api/companies/${id}`, {
+      const response = await authenticatedFetch(`/api/companies/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates)
       })
       if (response.ok) {
@@ -493,7 +496,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const deleteCompany = async (id: string) => {
     try {
-      const response = await fetch(`/api/companies/${id}`, {
+      const response = await authenticatedFetch(`/api/companies/${id}`, {
         method: "DELETE"
       })
       if (response.ok) {
@@ -507,9 +510,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Operation CRUD operations
   const addOperation = async (operationData: Omit<Operation, "id" | "created_at" | "updated_at">) => {
     try {
-      const response = await fetch("/api/operations", {
+      const response = await authenticatedFetch("/api/operations", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(operationData)
       })
       if (response.ok) {
@@ -522,7 +524,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const updateOperation = async (id: string, updates: Partial<Operation>) => {
     try {
-      const response = await fetch(`/api/operations/${id}`, {
+      const response = await authenticatedFetch(`/api/operations/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates)
@@ -537,7 +539,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const deleteOperation = async (id: string) => {
     try {
-      const response = await fetch(`/api/operations/${id}`, {
+      const response = await authenticatedFetch(`/api/operations/${id}`, {
         method: "DELETE"
       })
       if (response.ok) {

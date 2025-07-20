@@ -323,7 +323,7 @@ export default function DriversPage() {
 
       {/* Dialog de Creación */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl text-gray-700">
           <DialogHeader>
             <DialogTitle>Crear Nuevo Conductor</DialogTitle>
           </DialogHeader>
@@ -396,7 +396,7 @@ export default function DriversPage() {
 
       {/* Dialog de Edición */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="text-gray-700">
           <DialogHeader>
             <DialogTitle>Editar Conductor</DialogTitle>
           </DialogHeader>

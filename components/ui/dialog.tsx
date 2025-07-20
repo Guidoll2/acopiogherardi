@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils"
 
 export const Dialog = RadixDialog.Root
 export const DialogTrigger = RadixDialog.Trigger
+export const DialogClose = RadixDialog.Close
 
 export const DialogContent = React.forwardRef<
   React.ElementRef<typeof RadixDialog.Content>,
@@ -31,10 +32,10 @@ export const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLD
 DialogHeader.displayName = "DialogHeader"
 
 export const DialogTitle = React.forwardRef<
-  HTMLHeadingElement,
-  React.HTMLAttributes<HTMLHeadingElement>
+  React.ElementRef<typeof RadixDialog.Title>,
+  React.ComponentPropsWithoutRef<typeof RadixDialog.Title>
 >(({ className, ...props }, ref) => (
-  <h2
+  <RadixDialog.Title
     ref={ref}
     className={cn("text-xl font-semibold leading-tight", className)}
     {...props}
@@ -43,10 +44,10 @@ export const DialogTitle = React.forwardRef<
 DialogTitle.displayName = "DialogTitle"
 
 export const DialogDescription = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
+  React.ElementRef<typeof RadixDialog.Description>,
+  React.ComponentPropsWithoutRef<typeof RadixDialog.Description>
 >(({ className, ...props }, ref) => (
-  <p
+  <RadixDialog.Description
     ref={ref}
     className={cn("text-sm text-muted-foreground", className)}
     {...props}

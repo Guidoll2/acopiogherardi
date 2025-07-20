@@ -79,7 +79,7 @@ export function CreateCompanyDialog({ open, onOpenChange, onCompanyCreated }: Cr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-gray-700">
             <Building2 className="h-5 w-5" />
             Crear Nueva Empresa
           </DialogTitle>
