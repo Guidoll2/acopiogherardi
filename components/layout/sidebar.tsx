@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
   Users,
@@ -15,9 +16,15 @@ import {
   LogOut,
   Wheat,
   Shield,
+  X,
 } from "lucide-react"
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean
+  onClose?: () => void
+}
+
+export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const router = useRouter()
   const pathname = usePathname()
   const [user, setUser] = useState<any>(null)
@@ -141,69 +148,107 @@ export function Sidebar() {
     }
   }
 
+  const handleNavigation = (href: string) => {
+    router.push(href)
+    onClose?.() // Cerrar el menú móvil después de navegar
+  }
+
   return (
-    <div className="w-64 bg-white shadow-lg flex flex-col h-screen">
-      {/* Header */}
-      <div className="p-4 border-b">
-        <div className="flex items-center space-x-2">
-          <div className="bg-green-600 p-2 rounded-lg">
-            {user?.role === "system_admin" ? (
-              <Shield className="h-6 w-6 text-white" />
-            ) : (
-              <Wheat className="h-6 w-6 text-white" />
-            )}
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-gray-700">{getTitle(user?.role)}</h2>
-            <p className="text-xs text-gray-500">{getSubtitle(user?.role)}</p>
+    <>
+      {/* Overlay para móvil */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={onClose}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div className={`
+        fixed md:static inset-y-0 left-0 z-50
+        w-80 md:w-64 bg-white shadow-lg 
+        transform transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        flex flex-col h-screen
+      `}>
+        {/* Header con botón de cierre para móvil */}
+        <div className="p-4 border-b">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="bg-green-600 p-2 rounded-lg flex-shrink-0">
+                {user?.role === "system_admin" ? (
+                  <Shield className="h-6 w-6 text-white" />
+                ) : (
+                  <Wheat className="h-6 w-6 text-white" />
+                )}
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">{getTitle(user?.role)}</h2>
+                <p className="text-xs text-gray-600">{getSubtitle(user?.role)}</p>
+              </div>
+            </div>
+            {/* Botón de cierre para móvil */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="md:hidden p-2"
+              onClick={onClose}
+            >
+              <X className="h-5 w-5" />
+            </Button>
           </div>
         </div>
-      </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        {navigation.map((item) => (
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+          {navigation.map((item) => (
+            <Button
+              key={item.name}
+              variant={pathname === item.href ? "secondary" : "outline"}
+              className={cn(
+                "w-full h-12 !justify-start px-4 gap-3 text-left font-medium",
+                pathname === item.href 
+                  ? "bg-green-50 text-green-700 border-green-200" 
+                  : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+              )}
+              onClick={() => handleNavigation(item.href)}
+            >
+              <item.icon className="h-5 w-5 flex-shrink-0" />
+              <span className="text-sm">{item.name}</span>
+            </Button>
+          ))}
+        </nav>
+
+        {/* User info and logout */}
+        <div className="p-4 border-t mt-auto">
+          {user && (
+            <div className="mb-3">
+              <p className="text-sm font-medium text-gray-900">{user.full_name || user.name}</p>
+              <p className="text-xs text-gray-600">
+                {user.role === "system_admin"
+                  ? "Administrador Sistema"
+                  : user.role === "garita"
+                    ? "Operador de Garita"
+                    : user.role === "admin" || user.role === "company_admin"
+                      ? "Administrador"
+                      : user.role === "supervisor"
+                        ? "Supervisor"
+                        : user.role === "operator"
+                          ? "Operador"
+                          : user.position || user.system_role}
+              </p>
+            </div>
+          )}
           <Button
-            key={item.name}
-            variant={pathname === item.href ? "secondary" : "outline"}
-            className="w-full justify-start"
-            onClick={() => router.push(item.href)}
+            variant="outline"
+            className="w-full h-12 !justify-start px-4 gap-3 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+            onClick={handleLogout}
           >
-            <item.icon className="mr-2 h-4 w-4" />
-            {item.name}
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+            <span className="text-sm">Cerrar Sesión</span>
           </Button>
-        ))}
-      </nav>
-
-      {/* User info and logout */}
-      <div className="p-4 border-t mt-auto text-gray-700">
-        {user && (
-          <div className="mb-3">
-            <p className="text-sm font-medium">{user.full_name || user.name}</p>
-            <p className="text-xs text-gray-500">
-              {user.role === "system_admin"
-                ? "Administrador Sistema"
-                : user.role === "garita"
-                  ? "Operador de Garita"
-                  : user.role === "admin" || user.role === "company_admin"
-                    ? "Administrador"
-                    : user.role === "supervisor"
-                      ? "Supervisor"
-                      : user.role === "operator"
-                        ? "Operador"
-                        : user.position || user.system_role}
-            </p>
-          </div>
-        )}
-        <Button
-          variant="outline"
-          className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-          onClick={handleLogout}
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          Cerrar Sesión
-        </Button>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

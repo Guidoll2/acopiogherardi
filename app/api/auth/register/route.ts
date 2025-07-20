@@ -4,6 +4,11 @@ import connectDB from "@/app/mongoDB/db"
 import User from "@/app/mongoDB/models/user"
 import Company from "@/app/mongoDB/models/company"
 
+// Método GET para evitar errores de build
+export async function GET() {
+  return NextResponse.json({ message: "Register API endpoint" })
+}
+
 export async function POST(request: NextRequest) {
   try {
     await connectDB()

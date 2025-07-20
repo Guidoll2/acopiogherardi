@@ -29,5 +29,5 @@ export default function GaritaLayout({
     }
   }, [router])
 
-  return <div className="min-h-screen bg-gray-50">{children}</div>
+  return <div className="min-h-screen bg-gray-50 ">{children}</div>
 }

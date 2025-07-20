@@ -4,8 +4,23 @@ import jwt from "jsonwebtoken"
 import connectDB from "@/app/mongoDB/db"
 import User from "@/app/mongoDB/models/user"
 
+// Método GET para evitar errores de build
+export async function GET() {
+  return NextResponse.json({ message: "Login API endpoint" })
+}
+
 export async function POST(request: NextRequest) {
   try {
+    // Verificar variable de entorno JWT_SECRET
+    const jwtSecret = process.env.JWT_SECRET
+    if (!jwtSecret) {
+      console.error("JWT_SECRET no está configurado")
+      return NextResponse.json(
+        { error: "Configuración del servidor incompleta" },
+        { status: 500 }
+      )
+    }
+
     await connectDB()
     
     const { email, password } = await request.json()
@@ -44,7 +59,7 @@ export async function POST(request: NextRequest) {
         role: user.role,
         company_id: user.company_id 
       },
-      process.env.JWT_SECRET || "fallback_secret",
+      jwtSecret,
       { expiresIn: "7d" }
     )
 

@@ -13,6 +13,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isLoading, setIsLoading] = useState(true)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -24,6 +25,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [router])
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen)
+  }
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false)
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -34,10 +43,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar />
+      {/* Sidebar */}
+      <Sidebar isOpen={isMobileMenuOpen} onClose={closeMobileMenu} />
+      
+      {/* Contenido principal - ocupa todo el ancho en móvil */}
       <div className="flex-1 flex flex-col min-w-0">
-        <Header />
-        <main className="flex-1 p-6 overflow-auto">{children}</main>
+        <Header onMenuToggle={toggleMobileMenu} />
+        <main className="flex-1 p-4 sm:p-6 overflow-auto">{children}</main>
       </div>
     </div>
   )

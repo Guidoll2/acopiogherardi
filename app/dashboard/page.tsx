@@ -86,7 +86,7 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 text-gray-700">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-gray-600">Bienvenido, {user?.full_name || user?.name}</p>

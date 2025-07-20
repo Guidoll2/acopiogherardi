@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -61,7 +62,18 @@ export default function NewOperationPage() {
 
   const handleInputChange = (field: string, value: string) => {
     console.log(`📝 Campo ${field} cambiado a:`, value)
-    setFormData((prev) => ({ ...prev, [field]: value }))
+    setFormData((prev) => {
+      const newData = { ...prev, [field]: value }
+      console.log(`📋 Estado actualizado del formulario:`, newData)
+      
+      // Log específico para cliente
+      if (field === "client_id") {
+        const cliente = displayClients.find(c => c.id === value)
+        console.log(`👤 Cliente seleccionado: ID=${value}, Nombre=${cliente?.name}`)
+      }
+      
+      return newData
+    })
   }
 
   const handleBack = () => {
@@ -69,82 +81,96 @@ export default function NewOperationPage() {
     router.push("/dashboard/operations")
   }
 
-const handleSave = async () => {
-  setIsLoading(true)
+  const handleSave = async () => {
+    setIsLoading(true)
 
-  try {
-    // Validar campos requeridos
-    if (!formData.client_id || !formData.operation_type || !formData.cereal_type_id || !formData.chassis_plate) {
-      alert("Por favor complete todos los campos requeridos")
-      return
+    try {
+      // Log para debuggear los valores del formulario
+      console.log("🔍 Datos del formulario:", formData)
+
+      // Validar campos requeridos uno por uno para mejor debugging
+      const requiredFields = [
+        { field: 'client_id', value: formData.client_id, label: 'Cliente' },
+        { field: 'operation_type', value: formData.operation_type, label: 'Tipo de operación' },
+        { field: 'cereal_type_id', value: formData.cereal_type_id, label: 'Cereal' },
+        { field: 'chassis_plate', value: formData.chassis_plate, label: 'Patente chasis' }
+      ]
+
+      const missingFields = requiredFields.filter(f => !f.value || f.value.trim() === '')
+      
+      if (missingFields.length > 0) {
+        const missingFieldNames = missingFields.map(f => f.label).join(', ')
+        console.log("❌ Campos faltantes:", missingFields)
+        alert(`Por favor complete los siguientes campos requeridos: ${missingFieldNames}`)
+        return
+      }
+
+      // Validar tipo de operación
+      if (formData.operation_type !== "ingreso" && formData.operation_type !== "egreso") {
+        alert("Tipo de operación inválido")
+        return
+      }
+
+      // Crear nueva operación (con todos los campos)
+      const newOperation = {
+        id: `op_${Date.now()}`,
+        client_id: formData.client_id,
+        operation_type: formData.operation_type as "ingreso" | "egreso",
+        cereal_type_id: formData.cereal_type_id,
+        silo_id: formData.silo_id,
+        driver_id: formData.driver_id,
+        chassis_plate: formData.chassis_plate,
+        trailer_plate: formData.trailer_plate,
+        estimated_quantity: Number.parseFloat(formData.estimated_quantity) || 0,
+        scheduled_date:
+          formData.scheduled_date && formData.scheduled_time
+            ? new Date(formData.scheduled_date + "T" + formData.scheduled_time).toISOString()
+            : new Date().toISOString(),
+        notes: formData.notes,
+        status: "pendiente" as
+          | "pendiente"
+          | "autorizar_acceso"
+          | "balanza_ingreso"
+          | "en_carga_descarga"
+          | "balanza_egreso"
+          | "autorizar_egreso"
+          | "completado",
+        quantity: 0,
+        tare_weight: 0,
+        gross_weight: 0,
+        net_weight: 0,
+        moisture: 0,
+        impurities: 0,
+        test_weight: 0,
+        estimated_duration: 0,
+        company_id: "1",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+      }
+
+      // Simular llamada a API
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      // Pasar solo los campos requeridos a addOperation
+      if (addOperation) {
+        const { id, created_at, updated_at, ...operationData } = newOperation
+        addOperation(operationData)
+      }
+
+      console.log("✅ Operación creada exitosamente")
+      router.push("/dashboard/operations")
+    } catch (error) {
+      console.error("❌ Error creando operación:", error)
+      alert("Error al crear la operación")
+    } finally {
+      setIsLoading(false)
     }
-
-    // Validar tipo de operación
-    if (formData.operation_type !== "ingreso" && formData.operation_type !== "egreso") {
-      alert("Tipo de operación inválido")
-      return
-    }
-
-    // Crear nueva operación (con todos los campos)
-    const newOperation = {
-      id: `op_${Date.now()}`,
-      client_id: formData.client_id,
-      operation_type: formData.operation_type as "ingreso" | "egreso",
-      cereal_type_id: formData.cereal_type_id,
-      silo_id: formData.silo_id,
-      driver_id: formData.driver_id,
-      chassis_plate: formData.chassis_plate,
-      trailer_plate: formData.trailer_plate,
-      estimated_quantity: Number.parseFloat(formData.estimated_quantity) || 0,
-     scheduled_date:
-    formData.scheduled_date && formData.scheduled_time
-      ? new Date(formData.scheduled_date + "T" + formData.scheduled_time).toISOString()
-      : new Date().toISOString(),
-      notes: formData.notes,
-       status: "pendiente" as
-    | "pendiente"
-    | "autorizar_acceso"
-    | "balanza_ingreso"
-    | "en_carga_descarga"
-    | "balanza_egreso"
-    | "autorizar_egreso"
-    | "completado",
-      quantity: 0,
-      tare_weight: 0,
-      gross_weight: 0,
-      net_weight: 0,
-      moisture: 0,
-      impurities: 0,
-      test_weight: 0,
-      estimated_duration: 0,
-      company_id: "1",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-    }
-
-    // Simular llamada a API
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // Pasar solo los campos requeridos a addOperation
-    if (addOperation) {
-      const { id, created_at, updated_at, ...operationData } = newOperation
-      addOperation(operationData)
-    }
-
-    console.log("✅ Operación creada exitosamente")
-    router.push("/dashboard/operations")
-  } catch (error) {
-    console.error("❌ Error creando operación:", error)
-    alert("Error al crear la operación")
-  } finally {
-    setIsLoading(false)
   }
-}
 
   const handleQuickFill = () => {
     console.log("⚡ Llenado rápido activado")
-    setFormData({
+    const quickFillData = {
       client_id: "1",
       operation_type: "ingreso",
       cereal_type_id: "1",
@@ -156,261 +182,281 @@ const handleSave = async () => {
       scheduled_date: new Date().toISOString().split("T")[0],
       scheduled_time: "09:00",
       notes: "Operación de prueba",
-    })
+    }
+    console.log("📝 Datos de llenado rápido:", quickFillData)
+    setFormData(quickFillData)
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button variant="outline" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Volver
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">Nueva Operación</h1>
-            <p className="text-muted-foreground">Crear una nueva operación de ingreso o egreso</p>
+    <DashboardLayout>
+      <div className="space-y-6 text-gray-700">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Button variant="outline" onClick={handleBack}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Volver
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">Nueva Operación</h1>
+              <p className="text-muted-foreground">Crear una nueva operación de ingreso o egreso</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleQuickFill}>
+              <Plus className="h-4 w-4 mr-2" />
+              Llenar Rápido
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                console.log("🔍 Estado actual del formulario:", formData)
+                alert(`Estado del formulario:\n${JSON.stringify(formData, null, 2)}`)
+              }}
+            >
+              Debug
+            </Button>
+            <Button onClick={handleSave} disabled={isLoading} className="bg-green-600 hover:bg-green-700">
+              <Save className="h-4 w-4 mr-2" />
+              {isLoading ? "Guardando..." : "Guardar Operación"}
+            </Button>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleQuickFill}>
-            <Plus className="h-4 w-4 mr-2" />
-            Llenar Rápido
-          </Button>
-          <Button onClick={handleSave} disabled={isLoading} className="bg-green-600 hover:bg-green-700">
-            <Save className="h-4 w-4 mr-2" />
-            {isLoading ? "Guardando..." : "Guardar Operación"}
-          </Button>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Información General */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Información General
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="client">Cliente *</Label>
+                <Select 
+                  value={formData.client_id} 
+                  onValueChange={(value) => {
+                    console.log("🏢 Cliente seleccionado:", value)
+                    console.log("🏢 Cliente encontrado:", displayClients.find(c => c.id === value))
+                    handleInputChange("client_id", value)
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {displayClients.map((client) => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="operation_type">Tipo de Operación *</Label>
+                <Select
+                  value={formData.operation_type}
+                  onValueChange={(value) => handleInputChange("operation_type", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ingreso">Ingreso</SelectItem>
+                    <SelectItem value="egreso">Egreso</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cereal">Cereal *</Label>
+                <Select
+                  value={formData.cereal_type_id}
+                  onValueChange={(value) => handleInputChange("cereal_type_id", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar cereal" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {displayCereals.map((cereal) => (
+                      <SelectItem key={cereal.id} value={cereal.id}>
+                        {cereal.name} ({cereal.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="silo">Silo</Label>
+                <Select value={formData.silo_id} onValueChange={(value) => handleInputChange("silo_id", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar silo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {displaySilos.map((silo) => (
+                      <SelectItem key={silo.id} value={silo.id}>
+                        {silo.name} (Cap: {silo.capacity}t)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="estimated_quantity">Cantidad Estimada (toneladas)</Label>
+                <Input
+                  id="estimated_quantity"
+                  type="number"
+                  step="0.1"
+                  value={formData.estimated_quantity}
+                  onChange={(e) => handleInputChange("estimated_quantity", e.target.value)}
+                  placeholder="25.5"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Información del Transporte */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Truck className="h-5 w-5" />
+                Información del Transporte
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="driver">Conductor</Label>
+                <Select value={formData.driver_id} onValueChange={(value) => handleInputChange("driver_id", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar conductor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {displayDrivers.map((driver) => (
+                      <SelectItem key={driver.id} value={driver.id}>
+                        {driver.name} - Lic: {driver.license_number}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="chassis_plate">Patente Chasis *</Label>
+                <Input
+                  id="chassis_plate"
+                  value={formData.chassis_plate}
+                  onChange={(e) => handleInputChange("chassis_plate", e.target.value.toUpperCase())}
+                  placeholder="ABC123"
+                  maxLength={6}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="trailer_plate">Patente Acoplado</Label>
+                <Input
+                  id="trailer_plate"
+                  value={formData.trailer_plate}
+                  onChange={(e) => handleInputChange("trailer_plate", e.target.value.toUpperCase())}
+                  placeholder="TRL456"
+                  maxLength={6}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Programación */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Programación
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="scheduled_date">Fecha Programada</Label>
+                <Input
+                  id="scheduled_date"
+                  type="date"
+                  value={formData.scheduled_date}
+                  onChange={(e) => handleInputChange("scheduled_date", e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="scheduled_time">Hora Programada</Label>
+                <Input
+                  id="scheduled_time"
+                  type="time"
+                  value={formData.scheduled_time}
+                  onChange={(e) => handleInputChange("scheduled_time", e.target.value)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Observaciones */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Scale className="h-5 w-5" />
+                Observaciones
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notas adicionales</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => handleInputChange("notes", e.target.value)}
+                  placeholder="Información adicional sobre la operación..."
+                  rows={4}
+                />
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Información General */}
+        {/* Summary */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              Información General
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="client">Cliente *</Label>
-              <Select value={formData.client_id} onValueChange={(value) => handleInputChange("client_id", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {displayClients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="operation_type">Tipo de Operación *</Label>
-              <Select
-                value={formData.operation_type}
-                onValueChange={(value) => handleInputChange("operation_type", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ingreso">Ingreso</SelectItem>
-                  <SelectItem value="egreso">Egreso</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="cereal">Cereal *</Label>
-              <Select
-                value={formData.cereal_type_id}
-                onValueChange={(value) => handleInputChange("cereal_type_id", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar cereal" />
-                </SelectTrigger>
-                <SelectContent>
-                  {displayCereals.map((cereal) => (
-                    <SelectItem key={cereal.id} value={cereal.id}>
-                      {cereal.name} ({cereal.code})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="silo">Silo</Label>
-              <Select value={formData.silo_id} onValueChange={(value) => handleInputChange("silo_id", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar silo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {displaySilos.map((silo) => (
-                    <SelectItem key={silo.id} value={silo.id}>
-                      {silo.name} (Cap: {silo.capacity}t)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="estimated_quantity">Cantidad Estimada (toneladas)</Label>
-              <Input
-                id="estimated_quantity"
-                type="number"
-                step="0.1"
-                value={formData.estimated_quantity}
-                onChange={(e) => handleInputChange("estimated_quantity", e.target.value)}
-                placeholder="25.5"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Información del Transporte */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Truck className="h-5 w-5" />
-              Información del Transporte
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="driver">Conductor</Label>
-              <Select value={formData.driver_id} onValueChange={(value) => handleInputChange("driver_id", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar conductor" />
-                </SelectTrigger>
-                <SelectContent>
-                  {displayDrivers.map((driver) => (
-                    <SelectItem key={driver.id} value={driver.id}>
-                      {driver.name} - Lic: {driver.license_number}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="chassis_plate">Patente Chasis *</Label>
-              <Input
-                id="chassis_plate"
-                value={formData.chassis_plate}
-                onChange={(e) => handleInputChange("chassis_plate", e.target.value.toUpperCase())}
-                placeholder="ABC123"
-                maxLength={6}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="trailer_plate">Patente Acoplado</Label>
-              <Input
-                id="trailer_plate"
-                value={formData.trailer_plate}
-                onChange={(e) => handleInputChange("trailer_plate", e.target.value.toUpperCase())}
-                placeholder="TRL456"
-                maxLength={6}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Programación */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Programación
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="scheduled_date">Fecha Programada</Label>
-              <Input
-                id="scheduled_date"
-                type="date"
-                value={formData.scheduled_date}
-                onChange={(e) => handleInputChange("scheduled_date", e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="scheduled_time">Hora Programada</Label>
-              <Input
-                id="scheduled_time"
-                type="time"
-                value={formData.scheduled_time}
-                onChange={(e) => handleInputChange("scheduled_time", e.target.value)}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Observaciones */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Scale className="h-5 w-5" />
-              Observaciones
-            </CardTitle>
+            <CardTitle>Resumen de la Operación</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notas adicionales</Label>
-              <Textarea
-                id="notes"
-                value={formData.notes}
-                onChange={(e) => handleInputChange("notes", e.target.value)}
-                placeholder="Información adicional sobre la operación..."
-                rows={4}
-              />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Cliente:</span>
+                <p className="font-medium">
+                  {formData.client_id ? displayClients.find((c) => c.id === formData.client_id)?.name : "No seleccionado"}
+                </p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Tipo:</span>
+                <p className="font-medium">{formData.operation_type || "No seleccionado"}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Cereal:</span>
+                <p className="font-medium">
+                  {formData.cereal_type_id
+                    ? displayCereals.find((c) => c.id === formData.cereal_type_id)?.name
+                    : "No seleccionado"}
+                </p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Patente:</span>
+                <p className="font-medium">{formData.chassis_plate || "No ingresada"}</p>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Resumen de la Operación</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Cliente:</span>
-              <p className="font-medium">
-                {formData.client_id ? displayClients.find((c) => c.id === formData.client_id)?.name : "No seleccionado"}
-              </p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Tipo:</span>
-              <p className="font-medium">{formData.operation_type || "No seleccionado"}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Cereal:</span>
-              <p className="font-medium">
-                {formData.cereal_type_id
-                  ? displayCereals.find((c) => c.id === formData.cereal_type_id)?.name
-                  : "No seleccionado"}
-              </p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Patente:</span>
-              <p className="font-medium">{formData.chassis_plate || "No ingresada"}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    </DashboardLayout>
   )
 }
