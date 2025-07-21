@@ -4,8 +4,8 @@ import { DataProvider } from "@/contexts/data-context"
 import { PageTransitionProvider } from "@/contexts/page-transition-context"
 
 export const metadata: Metadata = {
-  title: "Acopio Gherardi",
-  description: "Tu app cerealera",
+  title: "Cuatro Granos",
+  description: "Sistema de gestión de cereales",
 };
 
 export default function RootLayout({

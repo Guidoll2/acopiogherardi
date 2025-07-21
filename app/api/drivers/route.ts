@@ -19,7 +19,13 @@ export async function GET(request: NextRequest) {
     
     const drivers = await Driver.find(filter).sort({ name: 1 })
 
-    return NextResponse.json({ success: true, drivers })
+    // Mapear _id a id para que coincida con el tipo TypeScript
+    const mappedDrivers = drivers.map(driver => ({
+      ...driver.toObject(),
+      id: driver._id.toString(),
+    }))
+
+    return NextResponse.json({ success: true, drivers: mappedDrivers })
   } catch (error) {
     console.error("Error obteniendo drivers:", error)
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })

@@ -33,7 +33,7 @@ export const sendWelcomeEmail = async (
     const { data, error } = await resend.emails.send({
       from: process.env.EMAIL_FROM || 'noreply@acopiogh.com',
       to: [companyEmail],
-      subject: `¡Bienvenido a Acopio Gherardi! - Credenciales de acceso para ${companyName}`,
+      subject: `¡Bienvenido a 4 Granos! - Credenciales de acceso para ${companyName}`,
       html: getEmailTemplate(companyEmail, companyName, tempPassword),
     })
 
@@ -72,7 +72,7 @@ const getEmailTemplate = (companyEmail: string, companyName: string, tempPasswor
     <body>
       <div class="container">
         <div class="header">
-          <h1>🌾 ¡Bienvenido a Acopio Gherardi!</h1>
+          <h1>🌾 ¡Bienvenido a 4 Granos!</h1>
         </div>
         
         <div class="content">
@@ -123,8 +123,8 @@ const getEmailTemplate = (companyEmail: string, companyName: string, tempPasswor
         </div>
         
         <div class="footer">
-          <p>Este email fue enviado automáticamente por Acopio Gherardi</p>
-          <p>© ${new Date().getFullYear()} Acopio Gherardi. Todos los derechos reservados.</p>
+          <p>Este email fue enviado automáticamente por 4 Granos</p>
+          <p>© ${new Date().getFullYear()} 4 Granos. Todos los derechos reservados.</p>
         </div>
       </div>
     </body>
@@ -160,7 +160,7 @@ export const sendAdminNotification = async (
       to: [adminEmail],
       subject: `Nueva empresa registrada: ${companyName}`,
       html: `
-        <h2>Nueva empresa registrada en Acopio Gherardi</h2>
+        <h2>Nueva empresa registrada en 4 Granos</h2>
         <p><strong>Empresa:</strong> ${companyName}</p>
         <p><strong>Email:</strong> ${companyEmail}</p>
         <p><strong>Plan:</strong> ${subscriptionPlan}</p>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useData } from "@/contexts/data-context"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,7 +25,7 @@ import {
 } from "lucide-react"
 
 export default function ReportsPage() {
-  const { clients, cerealTypes, operations } = useData()
+  const { clients, cerealTypes, operations, drivers, silos, refreshData, isLoading } = useData()
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
   const [selectedClient, setSelectedClient] = useState("all")
@@ -33,44 +33,145 @@ export default function ReportsPage() {
   const [reportType, setReportType] = useState("operations")
   const [isGenerating, setIsGenerating] = useState(false)
 
-  const mockOperationsData = [
-    {
-      id: "1",
-      date: "2024-01-15",
-      client: "Estancia La Esperanza",
-      type: "ingreso",
-      cereal: "Soja",
-      quantity: 25.5,
-      driver: "Carlos Mendez",
-      truck: "ABC123",
-    },
-    {
-      id: "2",
-      date: "2024-01-15",
-      client: "Agropecuaria San Martín",
-      type: "egreso",
-      cereal: "Maíz",
-      quantity: 18.2,
-      driver: "Ana Rodriguez",
-      truck: "XYZ789",
-    },
-    {
-      id: "3",
-      date: "2024-01-16",
-      client: "Cooperativa del Norte",
-      type: "ingreso",
-      cereal: "Trigo",
-      quantity: 30.0,
-      driver: "Luis Garcia",
-      truck: "DEF456",
-    },
-  ]
+  // Debug: Log data to see what we have
+  console.log("🔍 Debug data:", {
+    operationsCount: operations.length,
+    clientsCount: clients.length,
+    driversCount: drivers.length,
+    cerealTypesCount: cerealTypes.length,
+    firstOperation: operations[0],
+    allClients: clients.map(c => ({ id: c.id, name: c.name })),
+    allDrivers: drivers.map(d => ({ id: d.id, name: d.name })),
+    allCereals: cerealTypes.map(c => ({ id: c.id, name: c.name }))
+  })
 
-  const mockStockData = [
-    { silo: "Silo A1", cereal: "Soja", current: 850, capacity: 1000, percentage: 85 },
-    { silo: "Silo B2", cereal: "Maíz", current: 1200, capacity: 1500, percentage: 80 },
-    { silo: "Silo C3", cereal: "Trigo", current: 600, capacity: 2000, percentage: 30 },
-  ]
+  // Effect to log data changes
+  useEffect(() => {
+    console.log("📊 Data updated:", {
+      operations: operations.length,
+      clients: clients.length,
+      drivers: drivers.length,
+      cereals: cerealTypes.length
+    })
+  }, [operations, clients, drivers, cerealTypes])
+
+  // Helper functions to get names from IDs
+  const getClientName = (clientId: string) => {
+    if (!clientId) return "Sin cliente"
+    const client = clients.find(c => c.id === clientId)
+    const result = client ? client.name : `Cliente ID: ${clientId}`
+    console.log(`🔍 Getting client name for ID: ${clientId}, found: ${result}`)
+    return result
+  }
+
+  const getDriverName = (driverId: string) => {
+    if (!driverId) return "Sin conductor"
+    const driver = drivers.find(d => d.id === driverId)
+    const result = driver ? driver.name : `Conductor ID: ${driverId}`
+    console.log(`🔍 Getting driver name for ID: ${driverId}, found: ${result}`)
+    return result
+  }
+
+  // Helper function to get cereal name from ID
+  const getCerealName = (cerealId: string) => {
+    if (!cerealId) return "Sin cereal"
+    const cereal = cerealTypes.find(c => c.id === cerealId)
+    const result = cereal ? cereal.name : `Cereal ID: ${cerealId}`
+    console.log(`🔍 Getting cereal name for ID: ${cerealId}, found: ${result}`)
+    return result
+  }
+
+  // Helper function to format dates safely
+  const formatDate = (operation: any) => {
+    // Try multiple date fields for backward compatibility
+    const dateString = operation.created_at || operation.createdAt || operation.scheduled_date
+    
+    if (!dateString) {
+      console.log(`🔍 No date found in operation:`, operation)
+      return "Sin fecha"
+    }
+    
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) {
+        console.log(`🔍 Invalid date: ${dateString}`)
+        return `Fecha inválida: ${dateString}`
+      }
+      return date.toLocaleDateString("es-AR")
+    } catch (error) {
+      console.log(`🔍 Error parsing date: ${dateString}`, error)
+      return `Error en fecha: ${dateString}`
+    }
+  }
+
+  // Filter operations based on current filters
+  const getFilteredOperations = () => {
+    let filtered = [...operations]
+
+    // Filter by date range
+    if (dateFrom) {
+      filtered = filtered.filter(op => {
+        const operationDate = new Date(op.created_at || op.createdAt || op.scheduled_date)
+        return operationDate >= new Date(dateFrom)
+      })
+    }
+    if (dateTo) {
+      const toDate = new Date(dateTo)
+      toDate.setHours(23, 59, 59, 999) // Include the entire day
+      filtered = filtered.filter(op => {
+        const operationDate = new Date(op.created_at || op.createdAt || op.scheduled_date)
+        return operationDate <= toDate
+      })
+    }
+
+    // Filter by client
+    if (selectedClient !== "all") {
+      filtered = filtered.filter(op => op.client_id === selectedClient)
+    }
+
+    // Filter by cereal
+    if (selectedCereal !== "all") {
+      filtered = filtered.filter(op => op.cereal_type_id === selectedCereal)
+    }
+
+    // Sort by date (most recent first)
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.created_at || a.createdAt || a.scheduled_date)
+      const dateB = new Date(b.created_at || b.createdAt || b.scheduled_date)
+      return dateB.getTime() - dateA.getTime()
+    })
+
+    return filtered
+  }
+
+  const filteredOperations = getFilteredOperations()
+
+  // Calculate statistics from real data
+  const totalOperations = filteredOperations.length
+  const ingresos = filteredOperations.filter(op => op.operation_type === "ingreso").length
+  const egresos = filteredOperations.filter(op => op.operation_type === "egreso").length
+
+  // Calculate stock data from real silos
+  const getStockData = () => {
+    return silos.map(silo => {
+      const cerealName = getCerealName(silo.cereal_type_id)
+      const percentage = silo.capacity > 0 ? Math.round((silo.current_stock / silo.capacity) * 100) : 0
+      
+      return {
+        silo: silo.name,
+        cereal: cerealName,
+        current: silo.current_stock,
+        capacity: silo.capacity,
+        percentage
+      }
+    })
+  }
+
+  const stockData = getStockData()
+  const totalCapacity = silos.reduce((sum, silo) => sum + silo.capacity, 0)
+  const totalCurrentStock = silos.reduce((sum, silo) => sum + silo.current_stock, 0)
+  const totalAvailableSpace = totalCapacity - totalCurrentStock
+  const totalOccupancy = totalCapacity > 0 ? Math.round((totalCurrentStock / totalCapacity) * 100) : 0
 
   // Button handlers
   const handleGenerateReport = async () => {
@@ -110,17 +211,26 @@ export default function ReportsPage() {
     console.log("📧 Enviando reporte por email...")
   }
 
-  const handleRefreshData = () => {
+  const handleRefreshData = async () => {
     console.log("🔄 Actualizando datos...")
+    try {
+      if (refreshData) {
+        await refreshData()
+        console.log("✅ Datos actualizados exitosamente")
+      }
+    } catch (error) {
+      console.error("❌ Error actualizando datos:", error)
+    }
   }
 
   const handleApplyFilters = () => {
-    console.log("🔍 Aplicando filtros:", {
+    console.log("🔍 Filtros aplicados:", {
       dateFrom,
       dateTo,
       client: selectedClient,
       cereal: selectedCereal,
     })
+    // The filters are automatically applied through the getFilteredOperations function
   }
 
   const handleClearFilters = () => {
@@ -158,6 +268,19 @@ export default function ReportsPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6 text-gray-700">
+        {/* Loading State */}
+        {isLoading && (
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center py-8">
+                <RefreshCw className="h-8 w-8 mx-auto mb-4 animate-spin text-blue-500" />
+                <p className="text-lg font-medium">Cargando datos...</p>
+                <p className="text-sm text-muted-foreground">Por favor espera mientras obtenemos la información</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -188,7 +311,7 @@ export default function ReportsPage() {
           <CardDescription>Configura los parámetros para generar el reporte</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
             <div className="space-y-2">
               <Label htmlFor="report-type">Tipo de Reporte</Label>
               <Select value={reportType} onValueChange={setReportType}>
@@ -225,6 +348,23 @@ export default function ReportsPage() {
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cereal">Cereal</Label>
+              <Select value={selectedCereal} onValueChange={setSelectedCereal}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los cereales</SelectItem>
+                  {cerealTypes.map((cereal) => (
+                    <SelectItem key={cereal.id} value={cereal.id}>
+                      {cereal.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -295,8 +435,10 @@ export default function ReportsPage() {
                 <CardTitle className="text-sm font-medium">Total Operaciones</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-xl sm:text-2xl font-bold">156</div>
-                <p className="text-xs text-muted-foreground">+12% vs mes anterior</p>
+                <div className="text-xl sm:text-2xl font-bold">{totalOperations}</div>
+                <p className="text-xs text-muted-foreground">
+                  {dateFrom || dateTo ? "En el período seleccionado" : "Todas las operaciones"}
+                </p>
               </CardContent>
             </Card>
             <Card>
@@ -304,8 +446,10 @@ export default function ReportsPage() {
                 <CardTitle className="text-sm font-medium">Ingresos</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-xl sm:text-2xl font-bold text-green-600">89</div>
-                <p className="text-xs text-muted-foreground">57% del total</p>
+                <div className="text-xl sm:text-2xl font-bold text-green-600">{ingresos}</div>
+                <p className="text-xs text-muted-foreground">
+                  {totalOperations > 0 ? `${Math.round((ingresos / totalOperations) * 100)}% del total` : "0% del total"}
+                </p>
               </CardContent>
             </Card>
             <Card>
@@ -313,8 +457,10 @@ export default function ReportsPage() {
                 <CardTitle className="text-sm font-medium">Egresos</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-xl sm:text-2xl font-bold text-orange-600">67</div>
-                <p className="text-xs text-muted-foreground">43% del total</p>
+                <div className="text-xl sm:text-2xl font-bold text-orange-600">{egresos}</div>
+                <p className="text-xs text-muted-foreground">
+                  {totalOperations > 0 ? `${Math.round((egresos / totalOperations) * 100)}% del total` : "0% del total"}
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -358,65 +504,82 @@ export default function ReportsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockOperationsData.map((operation) => (
-                      <TableRow key={operation.id}>
-                        <TableCell>{new Date(operation.date).toLocaleDateString("es-AR")}</TableCell>
-                        <TableCell>{operation.client}</TableCell>
-                        <TableCell>
-                          <Badge variant={operation.type === "ingreso" ? "default" : "secondary"}>
-                            {operation.type === "ingreso" ? "Ingreso" : "Egreso"}
-                          </Badge>
+                    {filteredOperations.length > 0 ? (
+                      filteredOperations.map((operation) => {
+                        console.log("🔍 Rendering operation:", operation)
+                        return (
+                          <TableRow key={operation.id}>
+                            <TableCell>{formatDate(operation)}</TableCell>
+                            <TableCell>{getClientName(operation.client_id)}</TableCell>
+                            <TableCell>
+                              <Badge variant={operation.operation_type === "ingreso" ? "default" : "secondary"}>
+                                {operation.operation_type === "ingreso" ? "Ingreso" : "Egreso"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{getCerealName(operation.cereal_type_id)}</TableCell>
+                            <TableCell className="font-mono">{operation.quantity?.toFixed(1) || operation.net_weight?.toFixed(1) || "0.0"}</TableCell>
+                            <TableCell>{getDriverName(operation.driver_id)}</TableCell>
+                            <TableCell className="font-mono">{operation.chassis_plate || "N/A"}</TableCell>
+                          </TableRow>
+                        )
+                      })
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                          No hay operaciones que coincidan con los filtros seleccionados
                         </TableCell>
-                        <TableCell>{operation.cereal}</TableCell>
-                        <TableCell className="font-mono">{operation.quantity.toFixed(1)}</TableCell>
-                        <TableCell>{operation.driver}</TableCell>
-                        <TableCell className="font-mono">{operation.truck}</TableCell>
                       </TableRow>
-                    ))}
+                    )}
                   </TableBody>
                 </Table>
               </div>
 
               {/* Mobile Cards - Shown only on small screens */}
               <div className="lg:hidden space-y-3 p-4">
-                {mockOperationsData.map((operation) => (
-                  <Card key={operation.id} className="border border-gray-200 shadow-sm">
-                    <CardContent className="p-4">
-                      {/* Header with Date and Type */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <div className="font-medium text-gray-900">
-                            {new Date(operation.date).toLocaleDateString("es-AR")}
+                {filteredOperations.length > 0 ? (
+                  filteredOperations.map((operation) => (
+                    <Card key={operation.id} className="border border-gray-200 shadow-sm">
+                      <CardContent className="p-4">
+                        {/* Header with Date and Type */}
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">
+                              {formatDate(operation)}
+                            </div>
+                            <div className="text-sm text-gray-500 truncate">{getClientName(operation.client_id)}</div>
                           </div>
-                          <div className="text-sm text-gray-500 truncate">{operation.client}</div>
+                          <Badge variant={operation.operation_type === "ingreso" ? "default" : "secondary"} className="ml-2">
+                            {operation.operation_type === "ingreso" ? "Ingreso" : "Egreso"}
+                          </Badge>
                         </div>
-                        <Badge variant={operation.type === "ingreso" ? "default" : "secondary"} className="ml-2">
-                          {operation.type === "ingreso" ? "Ingreso" : "Egreso"}
-                        </Badge>
-                      </div>
 
-                      {/* Operation Details Grid */}
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div>
-                          <div className="text-gray-500 text-xs">Cereal</div>
-                          <div className="font-medium">{operation.cereal}</div>
+                        {/* Operation Details Grid */}
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <div className="text-gray-500 text-xs">Cereal</div>
+                            <div className="font-medium">{getCerealName(operation.cereal_type_id)}</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-500 text-xs">Cantidad</div>
+                            <div className="font-bold text-lg">{(operation.quantity?.toFixed(1) || operation.net_weight?.toFixed(1) || "0.0")}t</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-500 text-xs">Conductor</div>
+                            <div className="font-medium truncate">{getDriverName(operation.driver_id)}</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-500 text-xs">Patente</div>
+                            <div className="font-mono font-medium">{operation.chassis_plate || "N/A"}</div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="text-gray-500 text-xs">Cantidad</div>
-                          <div className="font-bold text-lg">{operation.quantity.toFixed(1)}t</div>
-                        </div>
-                        <div>
-                          <div className="text-gray-500 text-xs">Conductor</div>
-                          <div className="font-medium truncate">{operation.driver}</div>
-                        </div>
-                        <div>
-                          <div className="text-gray-500 text-xs">Patente</div>
-                          <div className="font-mono font-medium">{operation.truck}</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No hay operaciones que coincidan con los filtros seleccionados</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -429,7 +592,7 @@ export default function ReportsPage() {
                 <CardTitle className="text-sm font-medium">Capacidad Total</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-xl sm:text-2xl font-bold">4,500t</div>
+                <div className="text-xl sm:text-2xl font-bold">{totalCapacity.toLocaleString()}t</div>
                 <p className="text-xs text-muted-foreground">Todos los silos</p>
               </CardContent>
             </Card>
@@ -438,8 +601,8 @@ export default function ReportsPage() {
                 <CardTitle className="text-sm font-medium">Stock Actual</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-xl sm:text-2xl font-bold">2,650t</div>
-                <p className="text-xs text-muted-foreground">59% ocupación</p>
+                <div className="text-xl sm:text-2xl font-bold">{totalCurrentStock.toLocaleString()}t</div>
+                <p className="text-xs text-muted-foreground">{totalOccupancy}% ocupación</p>
               </CardContent>
             </Card>
             <Card>
@@ -447,8 +610,8 @@ export default function ReportsPage() {
                 <CardTitle className="text-sm font-medium">Espacio Disponible</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-xl sm:text-2xl font-bold">1,850t</div>
-                <p className="text-xs text-muted-foreground">41% disponible</p>
+                <div className="text-xl sm:text-2xl font-bold">{totalAvailableSpace.toLocaleString()}t</div>
+                <p className="text-xs text-muted-foreground">{100 - totalOccupancy}% disponible</p>
               </CardContent>
             </Card>
           </div>
@@ -472,109 +635,123 @@ export default function ReportsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockStockData.map((silo, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium">{silo.silo}</TableCell>
-                        <TableCell>{silo.cereal}</TableCell>
-                        <TableCell className="font-mono">{silo.current}t</TableCell>
-                        <TableCell className="font-mono">{silo.capacity}t</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <div className="w-20 bg-gray-200 rounded-full h-2">
-                              <div
-                                className={`h-2 rounded-full ${
-                                  silo.percentage >= 90
-                                    ? "bg-red-500"
-                                    : silo.percentage >= 70
-                                      ? "bg-yellow-500"
-                                      : "bg-green-500"
-                                }`}
-                                style={{ width: `${silo.percentage}%` }}
-                              />
+                    {stockData.length > 0 ? (
+                      stockData.map((silo, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{silo.silo}</TableCell>
+                          <TableCell>{silo.cereal}</TableCell>
+                          <TableCell className="font-mono">{silo.current.toLocaleString()}t</TableCell>
+                          <TableCell className="font-mono">{silo.capacity.toLocaleString()}t</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="w-20 bg-gray-200 rounded-full h-2">
+                                <div
+                                  className={`h-2 rounded-full ${
+                                    silo.percentage >= 90
+                                      ? "bg-red-500"
+                                      : silo.percentage >= 70
+                                        ? "bg-yellow-500"
+                                        : "bg-green-500"
+                                  }`}
+                                  style={{ width: `${silo.percentage}%` }}
+                                />
+                              </div>
+                              <span className="text-sm font-mono">{silo.percentage}%</span>
                             </div>
-                            <span className="text-sm font-mono">{silo.percentage}%</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              silo.percentage >= 90 ? "default" : silo.percentage >= 70 ? "default" : "secondary"
-                            }
-                          >
-                            {silo.percentage >= 90 ? "Crítico" : silo.percentage >= 70 ? "Alto" : "Normal"}
-                          </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                silo.percentage >= 90 ? "default" : silo.percentage >= 70 ? "default" : "secondary"
+                              }
+                            >
+                              {silo.percentage >= 90 ? "Crítico" : silo.percentage >= 70 ? "Alto" : "Normal"}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                          No hay silos configurados
                         </TableCell>
                       </TableRow>
-                    ))}
+                    )}
                   </TableBody>
                 </Table>
               </div>
 
               {/* Mobile Cards - Shown only on small screens */}
               <div className="md:hidden space-y-3 p-4">
-                {mockStockData.map((silo, index) => (
-                  <Card key={index} className="border border-gray-200 shadow-sm">
-                    <CardContent className="p-4">
-                      {/* Header with Silo Name and Status */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <div className="font-medium text-gray-900">{silo.silo}</div>
-                          <div className="text-sm text-gray-500">{silo.cereal}</div>
-                        </div>
-                        <Badge
-                          variant={
-                            silo.percentage >= 90 
-                              ? "default" 
-                              : silo.percentage >= 70 
+                {stockData.length > 0 ? (
+                  stockData.map((silo, index) => (
+                    <Card key={index} className="border border-gray-200 shadow-sm">
+                      <CardContent className="p-4">
+                        {/* Header with Silo Name and Status */}
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">{silo.silo}</div>
+                            <div className="text-sm text-gray-500">{silo.cereal}</div>
+                          </div>
+                          <Badge
+                            variant={
+                              silo.percentage >= 90 
                                 ? "default" 
-                                : "secondary"
-                          }
-                          className={
-                            silo.percentage >= 90 
-                              ? "bg-red-100 text-red-800 border-red-200" 
-                              : silo.percentage >= 70 
-                                ? "bg-yellow-100 text-yellow-800 border-yellow-200" 
-                                : ""
-                          }
-                        >
-                          {silo.percentage >= 90 ? "Crítico" : silo.percentage >= 70 ? "Alto" : "Normal"}
-                        </Badge>
-                      </div>
+                                : silo.percentage >= 70 
+                                  ? "default" 
+                                  : "secondary"
+                            }
+                            className={
+                              silo.percentage >= 90 
+                                ? "bg-red-100 text-red-800 border-red-200" 
+                                : silo.percentage >= 70 
+                                  ? "bg-yellow-100 text-yellow-800 border-yellow-200" 
+                                  : ""
+                            }
+                          >
+                            {silo.percentage >= 90 ? "Crítico" : silo.percentage >= 70 ? "Alto" : "Normal"}
+                          </Badge>
+                        </div>
 
-                      {/* Capacity Information */}
-                      <div className="grid grid-cols-2 gap-3 mb-3 text-sm">
-                        <div>
-                          <div className="text-gray-500 text-xs">Stock Actual</div>
-                          <div className="font-bold text-lg">{silo.current}t</div>
+                        {/* Capacity Information */}
+                        <div className="grid grid-cols-2 gap-3 mb-3 text-sm">
+                          <div>
+                            <div className="text-gray-500 text-xs">Stock Actual</div>
+                            <div className="font-bold text-lg">{silo.current.toLocaleString()}t</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-500 text-xs">Capacidad</div>
+                            <div className="font-medium">{silo.capacity.toLocaleString()}t</div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="text-gray-500 text-xs">Capacidad</div>
-                          <div className="font-medium">{silo.capacity}t</div>
-                        </div>
-                      </div>
 
-                      {/* Progress Bar */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-500">Ocupación</span>
-                          <span className="font-mono font-medium">{silo.percentage}%</span>
+                        {/* Progress Bar */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-500">Ocupación</span>
+                            <span className="font-mono font-medium">{silo.percentage}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-3">
+                            <div
+                              className={`h-3 rounded-full transition-all ${
+                                silo.percentage >= 90
+                                  ? "bg-red-500"
+                                  : silo.percentage >= 70
+                                    ? "bg-yellow-500"
+                                    : "bg-green-500"
+                              }`}
+                              style={{ width: `${silo.percentage}%` }}
+                            />
+                          </div>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3">
-                          <div
-                            className={`h-3 rounded-full transition-all ${
-                              silo.percentage >= 90
-                                ? "bg-red-500"
-                                : silo.percentage >= 70
-                                  ? "bg-yellow-500"
-                                  : "bg-green-500"
-                            }`}
-                            style={{ width: `${silo.percentage}%` }}
-                          />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No hay silos configurados</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

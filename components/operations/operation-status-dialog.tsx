@@ -106,7 +106,7 @@ export function OperationStatusDialog({ operationId, open, onOpenChange }: Opera
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl text-gray-700">
         <DialogHeader>
           <DialogTitle>Actualizar Estado - Operación #{operation.id}</DialogTitle>
           <DialogDescription>Cambia el estado actual de la operación</DialogDescription>

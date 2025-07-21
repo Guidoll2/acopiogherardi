@@ -48,7 +48,7 @@ export const sendWelcomeEmail = async (
     const mailOptions = {
       from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
       to: companyEmail,
-      subject: `¡Bienvenido a Acopio Gherardi! - Credenciales de acceso para ${companyName}`,
+      subject: `¡Bienvenido a 4 Granos! - Credenciales de acceso para ${companyName}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -68,7 +68,7 @@ export const sendWelcomeEmail = async (
         <body>
           <div class="container">
             <div class="header">
-              <h1>🌾 ¡Bienvenido a Acopio Gherardi!</h1>
+              <h1>🌾 ¡Bienvenido a 4 Granos!</h1>
             </div>
             
             <div class="content">
@@ -119,8 +119,8 @@ export const sendWelcomeEmail = async (
             </div>
             
             <div class="footer">
-              <p>Este email fue enviado automáticamente por Acopio Gherardi</p>
-              <p>© ${new Date().getFullYear()} Acopio Gherardi. Todos los derechos reservados.</p>
+              <p>Este email fue enviado automáticamente por 4 Granos</p>
+              <p>© ${new Date().getFullYear()} 4 Granos. Todos los derechos reservados.</p>
             </div>
           </div>
         </body>
@@ -128,7 +128,7 @@ export const sendWelcomeEmail = async (
       `,
       // Versión en texto plano como fallback
       text: `
-¡Bienvenido a Acopio Gherardi!
+¡Bienvenido a 4 Granos!
 
 Hola, equipo de ${companyName}
 
@@ -143,7 +143,7 @@ IMPORTANTE: Cambia tu contraseña inmediatamente después del primer inicio de s
 
 ¿Necesitas ayuda? Contáctanos en soporte@acopiogh.com
 
-© ${new Date().getFullYear()} Acopio Gherardi
+© ${new Date().getFullYear()} 4 Granos
       `
     }
 
@@ -177,7 +177,7 @@ export const sendAdminNotification = async (
       to: adminEmail,
       subject: `Nueva empresa registrada: ${companyName}`,
       html: `
-        <h2>Nueva empresa registrada en Acopio Gherardi</h2>
+        <h2>Nueva empresa registrada en 4 Granos</h2>
         <p><strong>Empresa:</strong> ${companyName}</p>
         <p><strong>Email:</strong> ${companyEmail}</p>
         <p><strong>Plan:</strong> ${subscriptionPlan}</p>

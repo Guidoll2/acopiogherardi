@@ -31,7 +31,7 @@ export function CreateCompanyDialog({ open, onOpenChange, onCompanyCreated }: Cr
     phone: "",
     address: "",
     cuit: "",
-    subscription_plan: "basic" as "basic" | "premium" | "enterprise",
+    subscription_plan: "basic" as "free" | "basic" | "enterprise",
   })
   const [isLoading, setIsLoading] = useState(false)
 
@@ -145,16 +145,16 @@ export function CreateCompanyDialog({ open, onOpenChange, onCompanyCreated }: Cr
             <Label htmlFor="subscription_plan">Plan de Suscripción *</Label>
             <Select
               value={formData.subscription_plan}
-              onValueChange={(value) => setFormData({ ...formData, subscription_plan: value as any })}
+              onValueChange={(value) => setFormData({ ...formData, subscription_plan: value as "free" | "basic" | "enterprise" })}
               required
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="basic">Básico - $29/mes</SelectItem>
-                <SelectItem value="premium">Premium - $99/mes</SelectItem>
-                <SelectItem value="enterprise">Enterprise - $299/mes</SelectItem>
+                <SelectItem value="free">Free (250 ops/mes)</SelectItem>
+                <SelectItem value="basic">Básico - $29/mes (500 ops)</SelectItem>
+                <SelectItem value="enterprise">Enterprise - $299/mes (Ilimitado)</SelectItem>
               </SelectContent>
             </Select>
           </div>

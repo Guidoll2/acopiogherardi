@@ -9,12 +9,15 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { QuickLimitCheck } from "@/components/ui/subscription-alert"
 import { ArrowLeft, Save, Plus, Truck, Package, Scale, Clock } from "lucide-react"
 import { useData } from "@/contexts/data-context"
+import { useCanCreateOperation } from "@/hooks/use-subscription"
 
 export default function NewOperationPage() {
   const router = useRouter()
   const { clients, drivers, silos, cerealTypes, addOperation } = useData()
+  const { canCreate, remainingOperations, currentCount, limit, plan, loading: subscriptionLoading } = useCanCreateOperation()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     client_id: "",
@@ -25,6 +28,8 @@ export default function NewOperationPage() {
     chassis_plate: "",
     trailer_plate: "",
     estimated_quantity: "",
+    gross_weight: "",
+    tare_weight: "",
     scheduled_date: "",
     scheduled_time: "",
     notes: "",
@@ -82,6 +87,12 @@ export default function NewOperationPage() {
   }
 
   const handleSave = async () => {
+    // Verificar límites de suscripción antes de proceder
+    if (!canCreate) {
+      alert(`Has alcanzado el límite de ${limit} operaciones para tu plan. No puedes crear más operaciones este mes.`)
+      return
+    }
+
     setIsLoading(true)
 
     try {
@@ -93,6 +104,8 @@ export default function NewOperationPage() {
         { field: 'client_id', value: formData.client_id, label: 'Cliente' },
         { field: 'operation_type', value: formData.operation_type, label: 'Tipo de operación' },
         { field: 'cereal_type_id', value: formData.cereal_type_id, label: 'Cereal' },
+        { field: 'silo_id', value: formData.silo_id, label: 'Silo' },
+        { field: 'driver_id', value: formData.driver_id, label: 'Conductor' },
         { field: 'chassis_plate', value: formData.chassis_plate, label: 'Patente chasis' }
       ]
 
@@ -111,58 +124,45 @@ export default function NewOperationPage() {
         return
       }
 
-      // Crear nueva operación (con todos los campos)
+      // Crear nueva operación (con todos los campos requeridos)
       const newOperation = {
-        id: `op_${Date.now()}`,
         client_id: formData.client_id,
-        operation_type: formData.operation_type as "ingreso" | "egreso",
-        cereal_type_id: formData.cereal_type_id,
-        silo_id: formData.silo_id,
         driver_id: formData.driver_id,
+        silo_id: formData.silo_id,
+        cereal_type_id: formData.cereal_type_id,
+        company_id: "default-company-id", // Valor temporal hasta que se implemente autenticación
+        operation_type: formData.operation_type as "ingreso" | "egreso",
+        status: "pending",
         chassis_plate: formData.chassis_plate,
-        trailer_plate: formData.trailer_plate,
-        estimated_quantity: Number.parseFloat(formData.estimated_quantity) || 0,
-        scheduled_date:
-          formData.scheduled_date && formData.scheduled_time
-            ? new Date(formData.scheduled_date + "T" + formData.scheduled_time).toISOString()
-            : new Date().toISOString(),
-        notes: formData.notes,
-        status: "pendiente" as
-          | "pendiente"
-          | "autorizar_acceso"
-          | "balanza_ingreso"
-          | "en_carga_descarga"
-          | "balanza_egreso"
-          | "autorizar_egreso"
-          | "completado",
-        quantity: 0,
-        tare_weight: 0,
-        gross_weight: 0,
-        net_weight: 0,
+        trailer_plate: formData.trailer_plate || "",
+        quantity: Number.parseFloat(formData.estimated_quantity) || 0,
+        tare_weight: Number.parseFloat(formData.tare_weight) || 0,
+        gross_weight: Number.parseFloat(formData.gross_weight) || 0,
+        net_weight: (Number.parseFloat(formData.gross_weight) || 0) - (Number.parseFloat(formData.tare_weight) || 0),
         moisture: 0,
         impurities: 0,
         test_weight: 0,
-        estimated_duration: 0,
-        company_id: "1",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
+        notes: formData.notes || "",
+        scheduled_date: formData.scheduled_date && formData.scheduled_time 
+          ? `${formData.scheduled_date}T${formData.scheduled_time}:00.000Z`
+          : new Date().toISOString(),
+        estimated_duration: 60, // 60 minutos por defecto
+        createdAt: new Date().toISOString(), // Para compatibilidad hacia atrás
       }
 
-      // Simular llamada a API
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      console.log("📤 Enviando operación:", newOperation)
 
-      // Pasar solo los campos requeridos a addOperation
+      // Llamar a la función addOperation del contexto
       if (addOperation) {
-        const { id, created_at, updated_at, ...operationData } = newOperation
-        addOperation(operationData)
+        await addOperation(newOperation)
       }
 
       console.log("✅ Operación creada exitosamente")
       router.push("/dashboard/operations")
     } catch (error) {
       console.error("❌ Error creando operación:", error)
-      alert("Error al crear la operación")
+      const errorMessage = error instanceof Error ? error.message : "Error desconocido al crear la operación"
+      alert(`Error al crear la operación: ${errorMessage}`)
     } finally {
       setIsLoading(false)
     }
@@ -179,6 +179,8 @@ export default function NewOperationPage() {
       chassis_plate: "ABC123",
       trailer_plate: "TRL456",
       estimated_quantity: "25",
+      gross_weight: "34000",
+      tare_weight: "8500",
       scheduled_date: new Date().toISOString().split("T")[0],
       scheduled_time: "09:00",
       notes: "Operación de prueba",
@@ -216,12 +218,25 @@ export default function NewOperationPage() {
             >
               Debug
             </Button>
-            <Button onClick={handleSave} disabled={isLoading} className="bg-green-600 hover:bg-green-700">
+            <Button 
+              onClick={handleSave} 
+              disabled={isLoading || !canCreate} 
+              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400"
+            >
               <Save className="h-4 w-4 mr-2" />
               {isLoading ? "Guardando..." : "Guardar Operación"}
             </Button>
           </div>
         </div>
+
+        {/* Subscription Limit Alert */}
+        {!subscriptionLoading && (
+          <QuickLimitCheck 
+            currentCount={currentCount}
+            limit={limit}
+            plan={plan}
+          />
+        )}
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Información General */}
@@ -317,6 +332,31 @@ export default function NewOperationPage() {
                   onChange={(e) => handleInputChange("estimated_quantity", e.target.value)}
                   placeholder="25.5"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="gross_weight">Peso Bruto (kg)</Label>
+                  <Input
+                    id="gross_weight"
+                    type="number"
+                    step="0.1"
+                    value={formData.gross_weight}
+                    onChange={(e) => handleInputChange("gross_weight", e.target.value)}
+                    placeholder="34000"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tare_weight">Peso Tara (kg)</Label>
+                  <Input
+                    id="tare_weight"
+                    type="number"
+                    step="0.1"
+                    value={formData.tare_weight}
+                    onChange={(e) => handleInputChange("tare_weight", e.target.value)}
+                    placeholder="8500"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>

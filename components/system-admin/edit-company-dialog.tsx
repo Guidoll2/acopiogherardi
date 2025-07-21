@@ -25,7 +25,7 @@ export function EditCompanyDialog({ open, onOpenChange, company, onCompanyUpdate
     phone: "",
     address: "",
     cuit: "",
-    subscription_plan: "basic" as "basic" | "premium" | "enterprise",
+    subscription_plan: "basic" as "free" | "basic" | "enterprise",
     status: "active" as "active" | "inactive",
     notes: "",
   })
@@ -205,14 +205,14 @@ export function EditCompanyDialog({ open, onOpenChange, company, onCompanyUpdate
 
               <div className="space-y-2">
                 <Label htmlFor="subscription_plan">Plan de Suscripción</Label>
-                <Select value={formData.subscription_plan} onValueChange={(value: "basic" | "premium" | "enterprise") => setFormData({ ...formData, subscription_plan: value })}>
+                <Select value={formData.subscription_plan} onValueChange={(value: "free" | "basic" | "enterprise") => setFormData({ ...formData, subscription_plan: value })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="basic">Basic ($29/mes)</SelectItem>
-                    <SelectItem value="premium">Premium ($99/mes)</SelectItem>
-                    <SelectItem value="enterprise">Enterprise ($299/mes)</SelectItem>
+                    <SelectItem value="free">Free (250 ops/mes)</SelectItem>
+                    <SelectItem value="basic">Basic ($29/mes - 500 ops)</SelectItem>
+                    <SelectItem value="enterprise">Enterprise ($299/mes - Ilimitado)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

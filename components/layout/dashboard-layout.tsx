@@ -40,7 +40,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <LoadingSpinner size="lg" />
-          <h2 className="mt-4 text-xl font-semibold text-gray-900">Acopio Gherardi</h2>
+          <h2 className="mt-4 text-xl font-semibold text-gray-900">4 Granos</h2>
           <p className="mt-2 text-gray-600">Verificando autenticación...</p>
         </div>
       </div>

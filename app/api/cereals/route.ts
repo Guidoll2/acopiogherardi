@@ -21,7 +21,13 @@ export async function GET(request: NextRequest) {
     
     const cereals = await Cereal.find(filter).sort({ name: 1 })
 
-    return NextResponse.json({ success: true, cereals })
+    // Mapear _id a id para que coincida con el tipo TypeScript
+    const mappedCereals = cereals.map(cereal => ({
+      ...cereal.toObject(),
+      id: cereal._id.toString(),
+    }))
+
+    return NextResponse.json({ success: true, cereals: mappedCereals })
   } catch (error) {
     console.error("Error obteniendo cereales:", error)
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })

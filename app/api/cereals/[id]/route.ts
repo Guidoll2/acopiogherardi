@@ -3,7 +3,7 @@ import connectDB from "@/app/mongoDB/db"
 import Cereal from "@/app/mongoDB/models/cereal"
 import { verifyToken } from "@/lib/auth-middleware"
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     console.log("=== DEBUG PUT /api/cereals/[id] ===")
     
@@ -14,12 +14,13 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     // }
 
     await connectDB()
+    const { id } = await params
 
     const cerealData = await request.json()
     cerealData.updated_at = new Date().toISOString()
 
     const updatedCereal = await Cereal.findByIdAndUpdate(
-      params.id,
+      id,
       cerealData,
       { new: true }
     )
@@ -39,7 +40,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     console.log("=== DEBUG DELETE /api/cereals/[id] ===")
     
@@ -50,8 +51,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     // }
 
     await connectDB()
+    const { id } = await params
 
-    const deletedCereal = await Cereal.findByIdAndDelete(params.id)
+    const deletedCereal = await Cereal.findByIdAndDelete(id)
 
     if (!deletedCereal) {
       return NextResponse.json({ error: "Cereal no encontrado" }, { status: 404 })

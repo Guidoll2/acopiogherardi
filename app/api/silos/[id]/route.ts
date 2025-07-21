@@ -3,7 +3,7 @@ import connectDB from "@/app/mongoDB/db"
 import Silo from "@/app/mongoDB/models/silo"
 import { verifyToken } from "@/lib/auth-middleware"
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     console.log("=== DEBUG PUT /api/silos/[id] ===")
     
@@ -14,12 +14,13 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     // }
 
     await connectDB()
+    const { id } = await params
 
     const siloData = await request.json()
     siloData.updated_at = new Date().toISOString()
 
     const updatedSilo = await Silo.findByIdAndUpdate(
-      params.id,
+      id,
       siloData,
       { new: true }
     )
@@ -39,7 +40,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     console.log("=== DEBUG DELETE /api/silos/[id] ===")
     
@@ -50,8 +51,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     // }
 
     await connectDB()
+    const { id } = await params
 
-    const deletedSilo = await Silo.findByIdAndDelete(params.id)
+    const deletedSilo = await Silo.findByIdAndDelete(id)
 
     if (!deletedSilo) {
       return NextResponse.json({ error: "Silo no encontrado" }, { status: 404 })

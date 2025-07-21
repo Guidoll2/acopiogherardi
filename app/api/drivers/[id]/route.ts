@@ -3,7 +3,7 @@ import connectDB from "@/app/mongoDB/db"
 import Driver from "@/app/mongoDB/models/driver"
 import { verifyToken } from "@/lib/auth-middleware"
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // TODO: Re-habilitar autenticación después del desarrollo
     // const user = verifyToken(request)
@@ -12,12 +12,13 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     // }
 
     await connectDB()
+    const { id } = await params
 
     const driverData = await request.json()
     driverData.updated_at = new Date().toISOString()
 
     const updatedDriver = await Driver.findByIdAndUpdate(
-      params.id,
+      id,
       driverData,
       { new: true }
     )
@@ -37,7 +38,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // TODO: Re-habilitar autenticación después del desarrollo
     // const user = verifyToken(request)
@@ -46,8 +47,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     // }
 
     await connectDB()
+    const { id } = await params
 
-    const deletedDriver = await Driver.findByIdAndDelete(params.id)
+    const deletedDriver = await Driver.findByIdAndDelete(id)
 
     if (!deletedDriver) {
       return NextResponse.json({ error: "Driver no encontrado" }, { status: 404 })

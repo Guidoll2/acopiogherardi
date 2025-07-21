@@ -23,7 +23,13 @@ export async function GET(request: NextRequest) {
     
     const clients = await Client.find(filter).sort({ name: 1 })
 
-    return NextResponse.json({ success: true, clients })
+    // Mapear _id a id para que coincida con el tipo TypeScript
+    const mappedClients = clients.map(client => ({
+      ...client.toObject(),
+      id: client._id.toString(),
+    }))
+
+    return NextResponse.json({ success: true, clients: mappedClients })
   } catch (error) {
     console.error("Error obteniendo clientes:", error)
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })

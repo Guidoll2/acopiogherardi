@@ -19,7 +19,13 @@ export interface Company {
   address: string
   cuit: string
   status: "active" | "inactive"
-  subscription_plan: "basic" | "premium" | "enterprise"
+  subscription_plan: "free" | "basic" | "enterprise"
+  // Campos para control de suscripción
+  operations_count_current_month: number
+  operations_limit: number
+  billing_cycle_start: string
+  billing_cycle_end: string
+  subscription_status: "active" | "suspended" | "cancelled"
   notes?: string
   created_at: string
   updated_at: string

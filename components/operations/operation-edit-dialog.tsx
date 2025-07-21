@@ -27,7 +27,23 @@ interface OperationEditDialogProps {
 
 export function OperationEditDialog({ operationId, open, onOpenChange }: OperationEditDialogProps) {
   const { operations, clients, drivers, silos, cerealTypes, updateOperation } = useData()
-  const operation = operations.find((op) => op.id === operationId)
+  const operation = operations?.find((op) => op.id === operationId)
+  
+  // Función helper para encontrar entidades con fallback
+  const findEntityWithFallback = (entities: any[], targetId: string, entityType: string) => {
+    if (!entities || !targetId) return null
+    
+    // Primero buscar por ID exacto
+    let found = entities.find((entity) => entity.id === targetId)
+    if (found) return found
+    
+    // Si no se encuentra y es un ID de ejemplo, usar el primer disponible
+    if (targetId.startsWith(entityType.toLowerCase() + '-')) {
+      return entities[0] || null
+    }
+    
+    return null
+  }
 
   const [formData, setFormData] = useState({
     client_id: "",
@@ -111,7 +127,7 @@ export function OperationEditDialog({ operationId, open, onOpenChange }: Operati
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto text-gray-700">
         <DialogHeader>
           <DialogTitle>Editar Operación #{operation.id}</DialogTitle>
           <DialogDescription>

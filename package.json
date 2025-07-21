@@ -10,12 +10,15 @@
     "lint": "next lint",
     "create-admin": "tsx scripts/create-admin.ts",
     "check-admin": "tsx scripts/check-admin.ts",
-    "create-companies": "tsx scripts/create-sample-companies.ts"
+    "create-companies": "tsx scripts/create-sample-companies.ts",
+    "migrate-subscriptions": "tsx scripts/migrate-subscriptions.ts",
+    "test-subscription-limits": "tsx scripts/test-subscription-limits.ts"
   },
   "dependencies": {
     "@radix-ui/react-collapsible": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-popover": "^1.1.14",
+    "@radix-ui/react-progress": "^1.1.7",
     "@radix-ui/react-select": "^2.2.5",
     "@radix-ui/react-tabs": "^1.1.12",
     "@types/nodemailer": "^6.4.17",

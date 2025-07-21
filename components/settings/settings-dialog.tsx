@@ -25,7 +25,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     phone: "+54 11 4567-8900",
     address: "Av. Libertador 1234, Buenos Aires",
     tax_id: "30-12345678-9",
-    subscription_plan: "premium",
+    subscription_plan: "basic",
   })
   const [systemSettings, setSystemSettings] = useState({
     notifications: true,
@@ -52,10 +52,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     switch (plan) {
       case "enterprise":
         return <Badge className="bg-purple-100 text-purple-800">Enterprise - $299/mes</Badge>
-      case "premium":
-        return <Badge className="bg-blue-100 text-blue-800">Premium - $99/mes</Badge>
       case "basic":
-        return <Badge className="bg-gray-100 text-gray-800">Basic - $29/mes</Badge>
+        return <Badge className="bg-blue-100 text-blue-800">Basic - $29/mes</Badge>
+      case "free":
+        return <Badge className="bg-gray-100 text-gray-800">Free - Gratis</Badge>
       default:
         return <Badge variant="secondary">Plan desconocido</Badge>
     }

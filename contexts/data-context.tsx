@@ -427,7 +427,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authenticatedFetch("/api/cereals", {
         method: "POST",
-        method: "POST",
         body: JSON.stringify(cerealData)
       })
       if (response.ok) {
@@ -510,15 +509,58 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Operation CRUD operations
   const addOperation = async (operationData: Omit<Operation, "id" | "created_at" | "updated_at">) => {
     try {
+      // Convertir el formato del frontend al formato de la API
+      const apiOperation = {
+        client_id: operationData.client_id,
+        driver_id: operationData.driver_id || "",
+        silo_id: operationData.silo_id || "",
+        cereal_type_id: operationData.cereal_type_id,
+        company_id: operationData.company_id || "",
+        type: operationData.operation_type, // Convertir operation_type a type
+        status: operationData.status || "pending",
+        chassis_plate: operationData.chassis_plate,
+        trailer_plate: operationData.trailer_plate || "",
+        quantity: operationData.quantity || 0,
+        tare_weight: operationData.tare_weight || 0,
+        gross_weight: operationData.gross_weight || 0,
+        net_weight: operationData.net_weight || 0,
+        moisture: operationData.moisture || 0,
+        impurities: operationData.impurities || 0,
+        test_weight: operationData.test_weight || 0,
+        notes: operationData.notes || "",
+        scheduled_date: operationData.scheduled_date || new Date().toISOString(),
+        estimated_duration: operationData.estimated_duration || 60,
+        date: new Date().toISOString().split('T')[0], // Para compatibilidad hacia atrás
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      
+      console.log("📤 Enviando a API:", apiOperation)
+      
       const response = await authenticatedFetch("/api/operations", {
         method: "POST",
-        body: JSON.stringify(operationData)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(apiOperation)
       })
       if (response.ok) {
+        const result = await response.json()
+        console.log("✅ Operación creada:", result)
+        
+        // Actualizar inmediatamente el estado local
+        if (result.operation) {
+          setOperations(prev => [...prev, result.operation])
+        }
+        
+        // También recargar desde el servidor para estar seguro
         await loadOperations()
+      } else {
+        const error = await response.json()
+        console.error("❌ Error del servidor:", error)
+        throw new Error(error.error || "Error creando operación")
       }
     } catch (error) {
       console.error("Error adding operation:", error)
+      throw error
     }
   }
 
@@ -530,6 +572,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify(updates)
       })
       if (response.ok) {
+        const result = await response.json()
+        console.log("✅ Operación actualizada:", result)
+        
+        // Actualizar inmediatamente el estado local
+        setOperations(prev => 
+          prev.map(op => 
+            op.id === id ? { ...op, ...updates, updated_at: new Date().toISOString() } : op
+          )
+        )
+        
+        // También recargar desde el servidor para estar seguro
         await loadOperations()
       }
     } catch (error) {

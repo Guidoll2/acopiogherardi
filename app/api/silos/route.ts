@@ -21,7 +21,13 @@ export async function GET(request: NextRequest) {
     
     const silos = await Silo.find(filter).sort({ name: 1 })
 
-    return NextResponse.json({ success: true, silos })
+    // Mapear _id a id para que coincida con el tipo TypeScript
+    const mappedSilos = silos.map(silo => ({
+      ...silo.toObject(),
+      id: silo._id.toString(),
+    }))
+
+    return NextResponse.json({ success: true, silos: mappedSilos })
   } catch (error) {
     console.error("Error obteniendo silos:", error)
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })

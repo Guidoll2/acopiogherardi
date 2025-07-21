@@ -1,4 +1,4 @@
-# 📧 Configuración de Email para Acopio Gherardi
+# 📧 Configuración de Email para 4 Granos
 
 ## Configuración Rápida
 
@@ -63,7 +63,7 @@ Se envía un email al admin cuando se registra una nueva empresa.
 ## Estructura del email
 
 ```
-🌾 ¡Bienvenido a Acopio Gherardi!
+🌾 ¡Bienvenido a 4 Granos!
 ├── Saludo personalizado
 ├── 📋 Credenciales de acceso
 ├── ⚠️ Instrucciones de seguridad

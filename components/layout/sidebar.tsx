@@ -76,12 +76,6 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         roles: ["admin", "company_admin", "supervisor", "operator"],
       },
       {
-        name: "Operaciones",
-        href: "/dashboard/operations",
-        icon: Package,
-        roles: ["admin", "company_admin", "supervisor", "operator"],
-      },
-      {
         name: "Clientes",
         href: "/dashboard/clients",
         icon: Users,
@@ -104,6 +98,12 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         href: "/dashboard/silos",
         icon: Warehouse,
         roles: ["admin", "company_admin", "supervisor"],
+      },
+      {
+        name: "Operaciones",
+        href: "/dashboard/operations",
+        icon: Package,
+        roles: ["admin", "company_admin", "supervisor", "operator"],
       },
       {
         name: "Reportes",

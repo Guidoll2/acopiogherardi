@@ -19,9 +19,9 @@ export function ViewCompanyDialog({ open, onOpenChange, company }: ViewCompanyDi
     switch (plan) {
       case "enterprise":
         return "bg-purple-100 text-purple-800"
-      case "premium":
-        return "bg-blue-100 text-blue-800"
       case "basic":
+        return "bg-blue-100 text-blue-800"
+      case "free":
         return "bg-gray-100 text-gray-800"
       default:
         return "bg-gray-100 text-gray-800"
@@ -32,10 +32,10 @@ export function ViewCompanyDialog({ open, onOpenChange, company }: ViewCompanyDi
     switch (plan) {
       case "enterprise":
         return "$299/mes"
-      case "premium":
-        return "$99/mes"
       case "basic":
         return "$29/mes"
+      case "free":
+        return "Gratis"
       default:
         return "N/A"
     }

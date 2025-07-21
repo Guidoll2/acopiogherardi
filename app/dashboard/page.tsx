@@ -4,8 +4,11 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { useData } from "@/contexts/data-context"
+import { useSubscription } from "@/hooks/use-subscription"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { UsageMeter } from "@/components/ui/usage-meter"
+import { SubscriptionAlert } from "@/components/ui/subscription-alert"
 import { BarChart3, Users, Truck, Warehouse } from "lucide-react"
 import { GaritaDashboard } from "@/components/dashboard/garita-dashboard"
 import { OperatorDashboard } from "@/components/dashboard/operator-dashboard"
@@ -21,6 +24,7 @@ export default function DashboardPage() {
   }
   const user = AuthService.getCurrentUser() as User
   const { operations, clients, drivers, silos } = useData()
+  const { data: subscriptionData, loading: subscriptionLoading } = useSubscription()
 
   useEffect(() => {
     if (!user) {
@@ -107,6 +111,48 @@ export default function DashboardPage() {
             </Card>
           ))}
         </div>
+
+        {/* Subscription Usage */}
+        {subscriptionData && !subscriptionLoading && (
+          <div className="grid gap-4 md:grid-cols-2">
+            <UsageMeter
+              currentCount={subscriptionData.subscription.currentCount}
+              limit={subscriptionData.subscription.limit}
+              plan={subscriptionData.subscription.plan}
+              planName={subscriptionData.subscription.planName}
+            />
+            <div className="space-y-4">
+              <SubscriptionAlert
+                currentCount={subscriptionData.subscription.currentCount}
+                limit={subscriptionData.subscription.limit}
+                plan={subscriptionData.subscription.plan}
+                planName={subscriptionData.subscription.planName}
+                onUpgrade={() => {
+                  // TODO: Implementar modal de upgrade
+                  alert("Funcionalidad de upgrade próximamente")
+                }}
+              />
+              {subscriptionData.subscription.plan !== "enterprise" && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Plan Actual</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">{subscriptionData.subscription.planName}</span>
+                      <span className="text-lg font-bold text-green-600">
+                        ${subscriptionData.subscription.price}/mes
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      Próximo ciclo: {new Date(subscriptionData.subscription.billingCycleEnd).toLocaleDateString('es-AR')}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Recent Operations and Silo Status */}
         <div className="grid gap-4 md:grid-cols-2 text-gray-700">
