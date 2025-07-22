@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useData } from "@/contexts/data-context"
+import { useToasts } from "@/components/ui/toast"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -25,42 +26,21 @@ import {
 } from "lucide-react"
 
 export default function ReportsPage() {
-  const { clients, cerealTypes, operations, drivers, silos, refreshData, isLoading } = useData()
+  const { clients, cerealTypes, operations, drivers, silos, refreshData, syncSiloStocks, isLoading } = useData()
+  const { showSuccess, showError, showProcessing } = useToasts()
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
   const [selectedClient, setSelectedClient] = useState("all")
   const [selectedCereal, setSelectedCereal] = useState("all")
   const [reportType, setReportType] = useState("operations")
   const [isGenerating, setIsGenerating] = useState(false)
-
-  // Debug: Log data to see what we have
-  console.log("🔍 Debug data:", {
-    operationsCount: operations.length,
-    clientsCount: clients.length,
-    driversCount: drivers.length,
-    cerealTypesCount: cerealTypes.length,
-    firstOperation: operations[0],
-    allClients: clients.map(c => ({ id: c.id, name: c.name })),
-    allDrivers: drivers.map(d => ({ id: d.id, name: d.name })),
-    allCereals: cerealTypes.map(c => ({ id: c.id, name: c.name }))
-  })
-
-  // Effect to log data changes
-  useEffect(() => {
-    console.log("📊 Data updated:", {
-      operations: operations.length,
-      clients: clients.length,
-      drivers: drivers.length,
-      cereals: cerealTypes.length
-    })
-  }, [operations, clients, drivers, cerealTypes])
+  const [isSyncing, setIsSyncing] = useState(false)
 
   // Helper functions to get names from IDs
   const getClientName = (clientId: string) => {
     if (!clientId) return "Sin cliente"
     const client = clients.find(c => c.id === clientId)
     const result = client ? client.name : `Cliente ID: ${clientId}`
-    console.log(`🔍 Getting client name for ID: ${clientId}, found: ${result}`)
     return result
   }
 
@@ -68,7 +48,6 @@ export default function ReportsPage() {
     if (!driverId) return "Sin conductor"
     const driver = drivers.find(d => d.id === driverId)
     const result = driver ? driver.name : `Conductor ID: ${driverId}`
-    console.log(`🔍 Getting driver name for ID: ${driverId}, found: ${result}`)
     return result
   }
 
@@ -77,7 +56,6 @@ export default function ReportsPage() {
     if (!cerealId) return "Sin cereal"
     const cereal = cerealTypes.find(c => c.id === cerealId)
     const result = cereal ? cereal.name : `Cereal ID: ${cerealId}`
-    console.log(`🔍 Getting cereal name for ID: ${cerealId}, found: ${result}`)
     return result
   }
 
@@ -87,19 +65,16 @@ export default function ReportsPage() {
     const dateString = operation.created_at || operation.createdAt || operation.scheduled_date
     
     if (!dateString) {
-      console.log(`🔍 No date found in operation:`, operation)
       return "Sin fecha"
     }
     
     try {
       const date = new Date(dateString)
       if (isNaN(date.getTime())) {
-        console.log(`🔍 Invalid date: ${dateString}`)
         return `Fecha inválida: ${dateString}`
       }
       return date.toLocaleDateString("es-AR")
     } catch (error) {
-      console.log(`🔍 Error parsing date: ${dateString}`, error)
       return `Error en fecha: ${dateString}`
     }
   }
@@ -151,7 +126,7 @@ export default function ReportsPage() {
   const ingresos = filteredOperations.filter(op => op.operation_type === "ingreso").length
   const egresos = filteredOperations.filter(op => op.operation_type === "egreso").length
 
-  // Calculate stock data from real silos
+  // Calculate stock data from silos
   const getStockData = () => {
     return silos.map(silo => {
       const cerealName = getCerealName(silo.cereal_type_id)
@@ -175,35 +150,70 @@ export default function ReportsPage() {
 
   // Button handlers
   const handleGenerateReport = async () => {
-    console.log("📊 Generando reporte:", {
-      type: reportType,
-      dateFrom,
-      dateTo,
-      client: selectedClient,
-      cereal: selectedCereal,
-    })
-
     setIsGenerating(true)
     try {
       await new Promise((resolve) => setTimeout(resolve, 2000))
-      console.log("✅ Reporte generado exitosamente")
     } catch (error) {
-      console.error("❌ Error generando reporte:", error)
+      console.error("Error generando reporte:", error)
     } finally {
       setIsGenerating(false)
     }
   }
 
   const handleDownloadPDF = () => {
-    console.log("📄 Descargando reporte en PDF...")
+    // TODO: Implementar descarga de PDF
+  }
+
+  const handleSyncStocks = async () => {
+    setIsSyncing(true)
+    showProcessing("Sincronizando stocks de silos...")
+    
+    try {
+      await syncSiloStocks()
+      showSuccess("Stocks sincronizados", "Los stocks de todos los silos han sido actualizados correctamente")
+    } catch (error) {
+      console.error("Error sincronizando stocks:", error)
+      showError("Error en sincronización", "No se pudieron sincronizar los stocks de los silos")
+    } finally {
+      setIsSyncing(false)
+    }
+  }
+
+  const handleInitializeStocks = async () => {
+    setIsSyncing(true)
+    showProcessing("Inicializando stocks...")
+    
+    try {
+      // Llamar a la API para inicializar stocks
+      const response = await fetch('/api/silos/initialize-stocks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        showSuccess("Stocks inicializados", "Los stocks de los silos han sido inicializados correctamente");
+        
+        // Recargar datos
+        await refreshData();
+      } else {
+        throw new Error("Error en la respuesta del servidor");
+      }
+    } catch (error) {
+      console.error("Error inicializando stocks:", error)
+      showError("Error en inicialización", "No se pudieron inicializar los stocks de los silos")
+    } finally {
+      setIsSyncing(false)
+    }
   }
 
   const handleDownloadExcel = () => {
-    console.log("📊 Descargando reporte en Excel...")
+    // TODO: Implementar descarga de Excel
   }
 
   const handlePrintReport = () => {
-    console.log("🖨️ Imprimiendo reporte...")
     
     // Crear una nueva ventana para imprimir solo el contenido de la tabla
     const printWindow = window.open('', '_blank')
@@ -302,33 +312,24 @@ export default function ReportsPage() {
   }
 
   const handleEmailReport = () => {
-    console.log("📧 Enviando reporte por email...")
+    // TODO: Implementar envío por email
   }
 
   const handleRefreshData = async () => {
-    console.log("🔄 Actualizando datos...")
     try {
       if (refreshData) {
         await refreshData()
-        console.log("✅ Datos actualizados exitosamente")
       }
     } catch (error) {
-      console.error("❌ Error actualizando datos:", error)
+      console.error("Error actualizando datos:", error)
     }
   }
 
   const handleApplyFilters = () => {
-    console.log("🔍 Filtros aplicados:", {
-      dateFrom,
-      dateTo,
-      client: selectedClient,
-      cereal: selectedCereal,
-    })
     // The filters are automatically applied through the getFilteredOperations function
   }
 
   const handleClearFilters = () => {
-    console.log("🧹 Limpiando filtros...")
     setDateFrom("")
     setDateTo("")
     setSelectedClient("all")
@@ -336,7 +337,6 @@ export default function ReportsPage() {
   }
 
   const handleQuickFilter = (period: string) => {
-    console.log("⚡ Filtro rápido:", period)
     const today = new Date()
     const from = new Date()
 
@@ -596,7 +596,6 @@ export default function ReportsPage() {
                   <TableBody>
                     {filteredOperations.length > 0 ? (
                       filteredOperations.map((operation) => {
-                        console.log("🔍 Rendering operation:", operation)
                         return (
                           <TableRow key={operation.id}>
                             <TableCell>{formatDate(operation)}</TableCell>
@@ -845,6 +844,28 @@ export default function ReportsPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Botones de sincronización de stocks */}
+          <div className="flex gap-2 justify-end">
+            <Button 
+              onClick={handleInitializeStocks}
+              disabled={isSyncing}
+              variant="outline"
+              className="flex items-center gap-2 border-orange-200 text-orange-700 hover:bg-orange-50"
+            >
+              <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? "Inicializando..." : "Inicializar Stocks"}
+            </Button>
+            <Button 
+              onClick={handleSyncStocks}
+              disabled={isSyncing}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? "Sincronizando..." : "Sincronizar Stocks"}
+            </Button>
+          </div>
         </TabsContent>
 
         <TabsContent value="clients" className="space-y-4">

@@ -122,6 +122,10 @@ interface DataContextType {
   
   // Refresh function
   refreshData: () => Promise<void>
+  
+  // Silo stock management
+  recalculateSiloStock: (siloId: string) => number
+  syncSiloStocks: () => Promise<void>
 
   // Client CRUD operations
   addClient: (client: Omit<Client, "id" | "created_at" | "updated_at">) => Promise<void>
@@ -260,10 +264,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Load silos
   const loadSilos = async () => {
     try {
+      console.log("🔍 Cargando silos...")
       const response = await authenticatedFetch("/api/silos")
       if (response.ok) {
         const data = await response.json()
+        console.log("📦 Datos de silos recibidos:", data)
+        console.log("📦 Silos mapeados:", data.silos)
         setSilos(data.silos || [])
+        
+        // Log adicional para verificar el estado
+        if (data.silos && data.silos.length > 0) {
+          console.log("📦 Primer silo:", data.silos[0])
+          console.log("📦 Current stock del primer silo:", data.silos[0].current_stock)
+        }
+      } else {
+        console.error("❌ Error en respuesta:", response.status, response.statusText)
       }
     } catch (error) {
       console.error("Error loading silos:", error)
@@ -551,6 +566,42 @@ export function DataProvider({ children }: { children: ReactNode }) {
           setOperations(prev => [...prev, result.operation])
         }
         
+        // Actualizar el stock del silo según el tipo de operación
+        if (operationData.silo_id && operationData.quantity) {
+          const affectedSilo = silos.find(s => s.id === operationData.silo_id)
+          if (affectedSilo) {
+            let newStock = affectedSilo.current_stock
+            
+            if (operationData.operation_type === "ingreso") {
+              newStock += operationData.quantity
+            } else if (operationData.operation_type === "egreso") {
+              newStock = Math.max(0, newStock - operationData.quantity) // No permitir stock negativo
+            }
+            
+            console.log(`📦 Actualizando stock del silo ${affectedSilo.name}: ${affectedSilo.current_stock} → ${newStock}`)
+            
+            // Actualizar el silo localmente de inmediato
+            setSilos(prev => prev.map(silo => 
+              silo.id === operationData.silo_id 
+                ? { ...silo, current_stock: newStock }
+                : silo
+            ))
+            
+            // También enviar la actualización al servidor
+            try {
+              await updateSilo(operationData.silo_id, { current_stock: newStock })
+            } catch (error) {
+              console.error("❌ Error actualizando stock del silo:", error)
+              // Revertir el cambio local si falla la actualización del servidor
+              setSilos(prev => prev.map(silo => 
+                silo.id === operationData.silo_id 
+                  ? { ...silo, current_stock: affectedSilo.current_stock }
+                  : silo
+              ))
+            }
+          }
+        }
+        
         // También recargar desde el servidor para estar seguro
         await loadOperations()
       } else {
@@ -566,6 +617,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const updateOperation = async (id: string, updates: Partial<Operation>) => {
     try {
+      // Obtener la operación original antes de actualizarla
+      const originalOperation = operations.find(op => op.id === id)
+      if (!originalOperation) {
+        throw new Error("Operación no encontrada")
+      }
+
       const response = await authenticatedFetch(`/api/operations/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -581,25 +638,152 @@ export function DataProvider({ children }: { children: ReactNode }) {
             op.id === id ? { ...op, ...updates, updated_at: new Date().toISOString() } : op
           )
         )
+
+        // Actualizar el stock del silo si cambió la cantidad o el silo
+        const quantityChanged = updates.quantity !== undefined && updates.quantity !== originalOperation.quantity
+        const siloChanged = updates.silo_id !== undefined && updates.silo_id !== originalOperation.silo_id
+        
+        if (quantityChanged || siloChanged) {
+          console.log("📦 Actualizando stock del silo debido a cambios en la operación")
+          
+          // Si cambió el silo, revertir el stock del silo original
+          if (siloChanged && originalOperation.silo_id) {
+            const originalSilo = silos.find(s => s.id === originalOperation.silo_id)
+            if (originalSilo) {
+              let revertedStock = originalSilo.current_stock
+              
+              if (originalOperation.operation_type === "ingreso") {
+                revertedStock -= (originalOperation.quantity || 0)
+              } else if (originalOperation.operation_type === "egreso") {
+                revertedStock += (originalOperation.quantity || 0)
+              }
+              
+              revertedStock = Math.max(0, revertedStock)
+              
+              console.log(`📦 Revirtiendo stock del silo original ${originalSilo.name}: ${originalSilo.current_stock} → ${revertedStock}`)
+              
+              setSilos(prev => prev.map(silo => 
+                silo.id === originalOperation.silo_id 
+                  ? { ...silo, current_stock: revertedStock }
+                  : silo
+              ))
+              
+              try {
+                await updateSilo(originalOperation.silo_id, { current_stock: revertedStock })
+              } catch (error) {
+                console.error("❌ Error actualizando silo original:", error)
+              }
+            }
+          }
+          
+          // Actualizar el stock del silo actual (nuevo o modificado)
+          const currentSiloId = updates.silo_id || originalOperation.silo_id
+          const currentSilo = silos.find(s => s.id === currentSiloId)
+          
+          if (currentSilo && currentSiloId) {
+            let newStock = currentSilo.current_stock
+            const operationType = updates.operation_type || originalOperation.operation_type
+            
+            // Si solo cambió la cantidad (mismo silo), calcular la diferencia
+            if (!siloChanged && quantityChanged) {
+              const oldQuantity = originalOperation.quantity || 0
+              const newQuantity = updates.quantity || 0
+              const quantityDifference = newQuantity - oldQuantity
+              
+              if (operationType === "ingreso") {
+                newStock += quantityDifference
+              } else if (operationType === "egreso") {
+                newStock -= quantityDifference
+              }
+            } else {
+              // Si cambió el silo, aplicar la cantidad completa
+              const newQuantity = updates.quantity || originalOperation.quantity || 0
+              
+              if (operationType === "ingreso") {
+                newStock += newQuantity
+              } else if (operationType === "egreso") {
+                newStock -= newQuantity
+              }
+            }
+            
+            newStock = Math.max(0, newStock)
+            
+            console.log(`📦 Actualizando stock del silo ${currentSilo.name}: ${currentSilo.current_stock} → ${newStock}`)
+            
+            setSilos(prev => prev.map(silo => 
+              silo.id === currentSiloId 
+                ? { ...silo, current_stock: newStock }
+                : silo
+            ))
+            
+            try {
+              await updateSilo(currentSiloId, { current_stock: newStock })
+            } catch (error) {
+              console.error("❌ Error actualizando stock del silo:", error)
+              // Revertir el cambio local si falla la actualización del servidor
+              setSilos(prev => prev.map(silo => 
+                silo.id === currentSiloId 
+                  ? { ...silo, current_stock: currentSilo.current_stock }
+                  : silo
+              ))
+            }
+          }
+        }
         
         // También recargar desde el servidor para estar seguro
         await loadOperations()
       }
     } catch (error) {
       console.error("Error updating operation:", error)
+      throw error
     }
   }
 
   const deleteOperation = async (id: string) => {
     try {
+      // Obtener la operación antes de eliminarla para revertir el stock
+      const operationToDelete = operations.find(op => op.id === id)
+      
       const response = await authenticatedFetch(`/api/operations/${id}`, {
         method: "DELETE"
       })
       if (response.ok) {
+        // Revertir el stock del silo si la operación tenía cantidad y silo asignado
+        if (operationToDelete && operationToDelete.silo_id && operationToDelete.quantity) {
+          const affectedSilo = silos.find(s => s.id === operationToDelete.silo_id)
+          if (affectedSilo) {
+            let newStock = affectedSilo.current_stock
+            
+            // Revertir el efecto de la operación eliminada
+            if (operationToDelete.operation_type === "ingreso") {
+              newStock -= operationToDelete.quantity
+            } else if (operationToDelete.operation_type === "egreso") {
+              newStock += operationToDelete.quantity
+            }
+            
+            newStock = Math.max(0, newStock)
+            
+            console.log(`📦 Revirtiendo stock por eliminación de operación en silo ${affectedSilo.name}: ${affectedSilo.current_stock} → ${newStock}`)
+            
+            setSilos(prev => prev.map(silo => 
+              silo.id === operationToDelete.silo_id 
+                ? { ...silo, current_stock: newStock }
+                : silo
+            ))
+            
+            try {
+              await updateSilo(operationToDelete.silo_id, { current_stock: newStock })
+            } catch (error) {
+              console.error("❌ Error actualizando stock tras eliminación:", error)
+            }
+          }
+        }
+        
         await loadOperations()
       }
     } catch (error) {
       console.error("Error deleting operation:", error)
+      throw error
     }
   }
 
@@ -619,6 +803,56 @@ export function DataProvider({ children }: { children: ReactNode }) {
     await loadData()
   }
 
+  // Función para recalcular el stock de un silo basado en operaciones
+  const recalculateSiloStock = (siloId: string): number => {
+    const siloOperations = operations.filter(op => op.silo_id === siloId)
+    
+    let stock = 0
+    siloOperations.forEach(op => {
+      if (op.operation_type === "ingreso") {
+        stock += op.quantity || 0
+      } else if (op.operation_type === "egreso") {
+        stock -= op.quantity || 0
+      }
+    })
+    
+    return Math.max(0, stock) // No permitir stock negativo
+  }
+
+  // Función para sincronizar todos los stocks de silos con las operaciones
+  const syncSiloStocks = async () => {
+    console.log("🔄 Sincronizando stocks de silos...")
+    
+    const updates = silos.map(silo => {
+      const calculatedStock = recalculateSiloStock(silo.id)
+      return {
+        siloId: silo.id,
+        currentStock: silo.current_stock,
+        calculatedStock
+      }
+    })
+    
+    const needsUpdate = updates.filter(u => u.currentStock !== u.calculatedStock)
+    
+    if (needsUpdate.length > 0) {
+      console.log("📦 Silos que necesitan actualización:", needsUpdate)
+      
+      for (const update of needsUpdate) {
+        try {
+          await updateSilo(update.siloId, { current_stock: update.calculatedStock })
+          console.log(`✅ Stock actualizado para silo ${update.siloId}: ${update.currentStock} → ${update.calculatedStock}`)
+        } catch (error) {
+          console.error(`❌ Error actualizando silo ${update.siloId}:`, error)
+        }
+      }
+      
+      // Recargar silos después de las actualizaciones
+      await loadSilos()
+    } else {
+      console.log("✅ Todos los stocks están sincronizados")
+    }
+  }
+
   // Load data on mount
   useEffect(() => {
     loadData()
@@ -635,6 +869,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     users,
     cereals: cerealTypes, // Alias
     refreshData,
+    recalculateSiloStock,
+    syncSiloStocks,
     
     // Client operations
     addClient,
