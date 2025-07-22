@@ -12,7 +12,7 @@ const UserSchema = new mongoose.Schema({
   updated_at: { type: String, default: () => new Date().toISOString() },
   role: { 
     type: String, 
-    enum: ["system_admin", "admin", "company_admin", "operador", "garita"], 
+    enum: ["system_admin", "admin", "company_admin", "supervisor", "operator", "garita"], 
     required: true 
   },
   is_active: { type: Boolean, default: true },

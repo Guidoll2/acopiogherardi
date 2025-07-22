@@ -247,39 +247,46 @@ export default function NewOperationPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6 text-gray-700">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button variant="outline" onClick={handleBack}>
+        {/* Header - Responsive */}
+        <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
+            <Button variant="outline" onClick={handleBack} className="w-fit">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Volver
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">Nueva Operación</h1>
-              <p className="text-muted-foreground">Crear una nueva operación de ingreso o egreso</p>
+              <h1 className="text-2xl sm:text-3xl font-bold">Nueva Operación</h1>
+              <p className="text-muted-foreground text-sm">Crear una nueva operación de ingreso o egreso</p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleQuickFill}>
-              <Plus className="h-4 w-4 mr-2" />
-              Llenar Rápido
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                console.log("🔍 Estado actual del formulario:", formData)
-                alert(`Estado del formulario:\n${JSON.stringify(formData, null, 2)}`)
-              }}
-            >
-              Debug
-            </Button>
+          
+          {/* Action buttons - Responsive layout */}
+          <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:gap-2">
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleQuickFill} className="flex-1 sm:flex-none">
+                <Plus className="h-4 w-4 mr-2" />
+                <span className="hidden xs:inline">Llenar Rápido</span>
+                <span className="xs:hidden">Rápido</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  console.log("🔍 Estado actual del formulario:", formData)
+                  alert(`Estado del formulario:\n${JSON.stringify(formData, null, 2)}`)
+                }}
+                className="flex-1 sm:flex-none"
+              >
+                Debug
+              </Button>
+            </div>
             <Button 
               onClick={handleSave} 
               disabled={isLoading || !canCreate || !!capacityError} 
-              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400"
+              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 w-full sm:w-auto"
             >
               <Save className="h-4 w-4 mr-2" />
-              {isLoading ? "Guardando..." : "Guardar Operación"}
+              <span className="hidden xs:inline">{isLoading ? "Guardando..." : "Guardar Operación"}</span>
+              <span className="xs:hidden">{isLoading ? "Guardando..." : "Guardar"}</span>
             </Button>
           </div>
         </div>
@@ -293,18 +300,18 @@ export default function NewOperationPage() {
           />
         )}
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
           {/* Información General */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Package className="h-4 w-4 sm:h-5 sm:w-5" />
                 Información General
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="client">Cliente *</Label>
+                <Label htmlFor="client" className="text-sm font-medium">Cliente *</Label>
                 <Select 
                   value={formData.client_id} 
                   onValueChange={(value) => {
@@ -313,7 +320,7 @@ export default function NewOperationPage() {
                     handleInputChange("client_id", value)
                   }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="Seleccionar cliente" />
                   </SelectTrigger>
                   <SelectContent>
@@ -327,28 +334,28 @@ export default function NewOperationPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="operation_type">Tipo de Operación *</Label>
+                <Label htmlFor="operation_type" className="text-sm font-medium">Tipo de Operación *</Label>
                 <Select
                   value={formData.operation_type}
                   onValueChange={(value) => handleInputChange("operation_type", value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="Seleccionar tipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ingreso">Ingreso</SelectItem>
-                    <SelectItem value="egreso">Egreso</SelectItem>
+                    <SelectItem value="ingreso">🟢 Ingreso</SelectItem>
+                    <SelectItem value="egreso">🟠 Egreso</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="cereal">Cereal *</Label>
+                <Label htmlFor="cereal" className="text-sm font-medium">Cereal *</Label>
                 <Select
                   value={formData.cereal_type_id}
                   onValueChange={(value) => handleInputChange("cereal_type_id", value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="Seleccionar cereal" />
                   </SelectTrigger>
                   <SelectContent>
@@ -362,9 +369,9 @@ export default function NewOperationPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="silo">Silo</Label>
+                <Label htmlFor="silo" className="text-sm font-medium">Silo</Label>
                 <Select value={formData.silo_id} onValueChange={(value) => handleInputChange("silo_id", value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="Seleccionar silo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -378,7 +385,7 @@ export default function NewOperationPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="estimated_quantity">Cantidad Estimada (toneladas)</Label>
+                <Label htmlFor="estimated_quantity" className="text-sm font-medium">Cantidad Estimada (toneladas)</Label>
                 <Input
                   id="estimated_quantity"
                   type="number"
@@ -386,19 +393,19 @@ export default function NewOperationPage() {
                   value={formData.estimated_quantity}
                   onChange={(e) => handleInputChange("estimated_quantity", e.target.value)}
                   placeholder="25.5"
-                  className={capacityError ? "border-red-500 focus-visible:ring-red-500" : ""}
+                  className={`h-10 ${capacityError ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                 />
                 {capacityError && (
-                  <div className="flex items-center gap-2 text-red-600 text-sm">
-                    <AlertTriangle className="h-4 w-4" />
+                  <div className="flex items-start gap-2 text-red-600 text-sm p-2 bg-red-50 rounded-md">
+                    <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                     <span>{capacityError}</span>
                   </div>
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="gross_weight">Peso Bruto (kg)</Label>
+                  <Label htmlFor="gross_weight" className="text-sm font-medium">Peso Bruto (kg)</Label>
                   <Input
                     id="gross_weight"
                     type="number"
@@ -406,10 +413,11 @@ export default function NewOperationPage() {
                     value={formData.gross_weight}
                     onChange={(e) => handleInputChange("gross_weight", e.target.value)}
                     placeholder="34000"
+                    className="h-10"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="tare_weight">Peso Tara (kg)</Label>
+                  <Label htmlFor="tare_weight" className="text-sm font-medium">Peso Tara (kg)</Label>
                   <Input
                     id="tare_weight"
                     type="number"
@@ -417,6 +425,7 @@ export default function NewOperationPage() {
                     value={formData.tare_weight}
                     onChange={(e) => handleInputChange("tare_weight", e.target.value)}
                     placeholder="8500"
+                    className="h-10"
                   />
                 </div>
               </div>
@@ -426,22 +435,25 @@ export default function NewOperationPage() {
           {/* Información del Transporte */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Truck className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Truck className="h-4 w-4 sm:h-5 sm:w-5" />
                 Información del Transporte
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="driver">Conductor</Label>
+                <Label htmlFor="driver" className="text-sm font-medium">Conductor</Label>
                 <Select value={formData.driver_id} onValueChange={(value) => handleInputChange("driver_id", value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="Seleccionar conductor" />
                   </SelectTrigger>
                   <SelectContent>
                     {displayDrivers.map((driver, index) => (
                       <SelectItem key={driver.id || `driver-${index}`} value={driver.id || `driver-${index}`}>
-                        {driver.name} - Lic: {driver.license_number}
+                        <div className="flex flex-col">
+                          <span>{driver.name}</span>
+                          <span className="text-xs text-muted-foreground">Lic: {driver.license_number}</span>
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -449,24 +461,26 @@ export default function NewOperationPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="chassis_plate">Patente Chasis *</Label>
+                <Label htmlFor="chassis_plate" className="text-sm font-medium">Patente Chasis *</Label>
                 <Input
                   id="chassis_plate"
                   value={formData.chassis_plate}
                   onChange={(e) => handleInputChange("chassis_plate", e.target.value.toUpperCase())}
                   placeholder="ABC123"
                   maxLength={6}
+                  className="h-10 font-mono"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="trailer_plate">Patente Acoplado</Label>
+                <Label htmlFor="trailer_plate" className="text-sm font-medium">Patente Acoplado</Label>
                 <Input
                   id="trailer_plate"
                   value={formData.trailer_plate}
                   onChange={(e) => handleInputChange("trailer_plate", e.target.value.toUpperCase())}
                   placeholder="TRL456"
                   maxLength={6}
+                  className="h-10 font-mono"
                 />
               </div>
             </CardContent>
@@ -475,30 +489,34 @@ export default function NewOperationPage() {
           {/* Programación */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
                 Programación
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="scheduled_date">Fecha Programada</Label>
-                <Input
-                  id="scheduled_date"
-                  type="date"
-                  value={formData.scheduled_date}
-                  onChange={(e) => handleInputChange("scheduled_date", e.target.value)}
-                />
-              </div>
+            <CardContent className="space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="scheduled_date" className="text-sm font-medium">Fecha Programada</Label>
+                  <Input
+                    id="scheduled_date"
+                    type="date"
+                    value={formData.scheduled_date}
+                    onChange={(e) => handleInputChange("scheduled_date", e.target.value)}
+                    className="h-10"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="scheduled_time">Hora Programada</Label>
-                <Input
-                  id="scheduled_time"
-                  type="time"
-                  value={formData.scheduled_time}
-                  onChange={(e) => handleInputChange("scheduled_time", e.target.value)}
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="scheduled_time" className="text-sm font-medium">Hora Programada</Label>
+                  <Input
+                    id="scheduled_time"
+                    type="time"
+                    value={formData.scheduled_time}
+                    onChange={(e) => handleInputChange("scheduled_time", e.target.value)}
+                    className="h-10"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -506,20 +524,21 @@ export default function NewOperationPage() {
           {/* Observaciones */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Scale className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Scale className="h-4 w-4 sm:h-5 sm:w-5" />
                 Observaciones
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Label htmlFor="notes">Notas adicionales</Label>
+                <Label htmlFor="notes" className="text-sm font-medium">Notas adicionales</Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => handleInputChange("notes", e.target.value)}
                   placeholder="Información adicional sobre la operación..."
-                  rows={4}
+                  rows={3}
+                  className="min-h-[80px] resize-none"
                 />
               </div>
             </CardContent>

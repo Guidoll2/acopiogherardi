@@ -18,6 +18,7 @@ import {
   Wheat,
   Shield,
   X,
+  UserPlus,
 } from "lucide-react"
 
 interface SidebarProps {
@@ -74,6 +75,12 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         href: "/dashboard",
         icon: LayoutDashboard,
         roles: ["admin", "company_admin", "supervisor", "operator"],
+      },
+      {
+        name: "Usuarios",
+        href: "/dashboard/users",
+        icon: UserPlus,
+        roles: ["admin", "company_admin"],
       },
       {
         name: "Clientes",

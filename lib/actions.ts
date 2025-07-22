@@ -36,7 +36,7 @@ export async function addOperation(operation: Partial<Operation>) {
       tare_weight: 0,
       humidity: 0,
       entry_time: "",
-      exit_time: null,
+      exit_time: undefined,
       chassis_plate: operation.chassis_plate || "",
       trailer_plate: operation.trailer_plate || "",
       quantity: operation.quantity || 0,

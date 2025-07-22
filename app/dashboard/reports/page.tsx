@@ -213,6 +213,16 @@ export default function ReportsPage() {
     // TODO: Implementar descarga de Excel
   }
 
+  const handleRefreshData = async () => {
+    try {
+      await refreshData()
+      showSuccess("Datos actualizados", "Los datos han sido recargados correctamente")
+    } catch (error) {
+      console.error("Error al actualizar datos:", error)
+      showError("Error", "No se pudieron actualizar los datos")
+    }
+  }
+
   const handlePrintReport = () => {
     
     // Crear una nueva ventana para imprimir solo el contenido de la tabla
@@ -313,16 +323,6 @@ export default function ReportsPage() {
 
   const handleEmailReport = () => {
     // TODO: Implementar envío por email
-  }
-
-  const handleRefreshData = async () => {
-    try {
-      if (refreshData) {
-        await refreshData()
-      }
-    } catch (error) {
-      console.error("Error actualizando datos:", error)
-    }
   }
 
   const handleApplyFilters = () => {
@@ -523,7 +523,7 @@ export default function ReportsPage() {
         </TabsList>
 
         <TabsContent value="operations" className="space-y-4">
-          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Total Operaciones</CardTitle>
@@ -555,6 +555,37 @@ export default function ReportsPage() {
                 <p className="text-xs text-muted-foreground">
                   {totalOperations > 0 ? `${Math.round((egresos / totalOperations) * 100)}% del total` : "0% del total"}
                 </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-1">
+                  🚪 Control Garita
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-600">Esperando Entrada:</span>
+                    <span className="text-sm font-bold text-yellow-600">
+                      {filteredOperations.filter(op => op.status === "autorizar_acceso").length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-600">En Planta:</span>
+                    <span className="text-sm font-bold text-blue-600">
+                      {filteredOperations.filter(op => 
+                        ["balanza_ingreso", "en_carga_descarga", "balanza_egreso"].includes(op.status)
+                      ).length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-600">Esperando Salida:</span>
+                    <span className="text-sm font-bold text-red-600">
+                      {filteredOperations.filter(op => op.status === "autorizar_egreso").length}
+                    </span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>

@@ -6,7 +6,7 @@ export interface User {
   address?: string
   created_at: string
   updated_at: string
-  role: "system_admin" | "admin" | "company_admin" | "garita"
+  role: "system_admin" | "admin" | "company_admin" | "supervisor" | "operator" | "garita"
   is_active: boolean
   company_id?: string
 }
@@ -96,6 +96,8 @@ export interface Operation {
   notes: string
   scheduled_date: string
   estimated_duration: number
+  entry_time?: string
+  exit_time?: string
   created_at: string
   updated_at: string
   createdAt: string // For backward compatibility
@@ -106,8 +108,6 @@ export interface Operation {
   cereal_id?: string
   truck_plate?: string
   humidity?: number
-  entry_time?: string
-  exit_time?: string | null
   updatedAt?: Date
   description?: string
   weight_in?: number
