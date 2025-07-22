@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { DataProvider } from "@/contexts/data-context"
 import { PageTransitionProvider } from "@/contexts/page-transition-context"
+import { ToastProvider, ToastContainer } from "@/components/ui/toast"
 
 export const metadata: Metadata = {
   title: "Cuatro Granos",
@@ -16,11 +17,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <PageTransitionProvider>
-          <DataProvider>
-            {children}
-          </DataProvider>
-        </PageTransitionProvider>
+        <ToastProvider>
+          <PageTransitionProvider>
+            <DataProvider>
+              {children}
+              <ToastContainer />
+            </DataProvider>
+          </PageTransitionProvider>
+        </ToastProvider>
       </body>
     </html>
   );

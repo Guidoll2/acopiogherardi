@@ -204,7 +204,101 @@ export default function ReportsPage() {
 
   const handlePrintReport = () => {
     console.log("🖨️ Imprimiendo reporte...")
-    window.print()
+    
+    // Crear una nueva ventana para imprimir solo el contenido de la tabla
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) return
+    
+    // Obtener el contenido de la tabla de operaciones
+    const tableContent = document.querySelector('[data-print-content="operations-detail"]')
+    if (!tableContent) {
+      console.error("No se encontró el contenido a imprimir")
+      return
+    }
+    
+    // HTML para la ventana de impresión
+    const printHTML = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Detalle de Operaciones - 4 Granos</title>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 20px; 
+              color: #333; 
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 30px;
+              border-bottom: 2px solid #16a34a;
+              padding-bottom: 20px;
+            }
+            .header h1 { 
+              color: #16a34a; 
+              margin: 0;
+              font-size: 24px;
+            }
+            .header p { 
+              margin: 5px 0; 
+              color: #666;
+            }
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin-top: 20px;
+            }
+            th, td { 
+              border: 1px solid #ddd; 
+              padding: 8px; 
+              text-align: left; 
+              font-size: 12px;
+            }
+            th { 
+              background-color: #f8f9fa; 
+              font-weight: bold;
+            }
+            .badge {
+              padding: 2px 6px;
+              border-radius: 3px;
+              font-size: 10px;
+              font-weight: bold;
+            }
+            .badge-ingreso {
+              background-color: #dcfce7;
+              color: #166534;
+            }
+            .badge-egreso {
+              background-color: #fef3c7;
+              color: #92400e;
+            }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>🌾 4 Granos</h1>
+            <p>Detalle de Operaciones</p>
+            <p>Generado el: ${new Date().toLocaleDateString('es-AR')} a las ${new Date().toLocaleTimeString('es-AR')}</p>
+          </div>
+          ${tableContent.innerHTML}
+          <script>
+            window.onload = function() {
+              window.print();
+              window.onafterprint = function() {
+                window.close();
+              }
+            }
+          </script>
+        </body>
+      </html>
+    `
+    
+    printWindow.document.write(printHTML)
+    printWindow.document.close()
   }
 
   const handleEmailReport = () => {
@@ -482,13 +576,9 @@ export default function ReportsPage() {
                   <span className="hidden xs:inline">Imprimir</span>
                   <span className="xs:hidden">Print</span>
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleEmailReport} className="text-xs">
-                  <Mail className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  Email
-                </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-0">
+            <CardContent className="p-0" data-print-content="operations-detail">
               {/* Desktop Table - Hidden on small screens */}
               <div className="hidden lg:block p-6">
                 <Table>

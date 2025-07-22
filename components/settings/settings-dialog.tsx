@@ -20,11 +20,11 @@ interface SettingsDialogProps {
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [user, setUser] = useState<any>(null)
   const [companyData, setCompanyData] = useState({
-    name: "Acopio Central S.A.",
-    email: "admin@acopio.com",
-    phone: "+54 11 4567-8900",
-    address: "Av. Libertador 1234, Buenos Aires",
-    tax_id: "30-12345678-9",
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    tax_id: "",
     subscription_plan: "basic",
   })
   const [systemSettings, setSystemSettings] = useState({
@@ -32,15 +32,74 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     autoBackup: true,
     maintenanceMode: false,
   })
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     const currentUser = AuthService.getCurrentUser()
     setUser(currentUser)
-  }, [])
+    
+    // Cargar datos de la empresa cuando se abre el dialog
+    if (open && currentUser?.company_id) {
+      loadCompanyData(currentUser.company_id)
+    }
+  }, [open])
 
-  const handleSaveCompany = () => {
-    // TODO: Implementar guardado de datos de empresa
-    console.log("Guardando datos de empresa:", companyData)
+  const loadCompanyData = async (companyId: string) => {
+    try {
+      setIsLoading(true)
+      const response = await fetch(`/api/companies/${companyId}`)
+      if (response.ok) {
+        const company = await response.json()
+        setCompanyData({
+          name: company.name || "",
+          email: company.email || "",
+          phone: company.phone || "",
+          address: company.address || "",
+          tax_id: company.cuit || "",
+          subscription_plan: company.subscription_plan || "basic",
+        })
+      } else {
+        console.error("Error loading company data:", await response.text())
+      }
+    } catch (error) {
+      console.error("Error loading company data:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSaveCompany = async () => {
+    if (!user?.company_id) return
+    
+    try {
+      setIsLoading(true)
+      const response = await fetch(`/api/companies/${user.company_id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: companyData.name,
+          email: companyData.email,
+          phone: companyData.phone,
+          address: companyData.address,
+          cuit: companyData.tax_id,
+          subscription_plan: companyData.subscription_plan,
+        }),
+      })
+      
+      if (response.ok) {
+        alert('Datos de empresa guardados exitosamente')
+      } else {
+        const errorData = await response.json()
+        alert(`Error al guardar: ${errorData.error || 'Error desconocido'}`)
+      }
+    } catch (error) {
+      console.error("Error saving company data:", error)
+      alert('Error de conexión al guardar los datos')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleSaveSystem = () => {
@@ -111,6 +170,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                         id="company-name"
                         value={companyData.name}
                         onChange={(e) => setCompanyData({ ...companyData, name: e.target.value })}
+                        disabled={isLoading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -120,6 +180,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                         type="email"
                         value={companyData.email}
                         onChange={(e) => setCompanyData({ ...companyData, email: e.target.value })}
+                        disabled={isLoading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -128,6 +189,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                         id="company-phone"
                         value={companyData.phone}
                         onChange={(e) => setCompanyData({ ...companyData, phone: e.target.value })}
+                        disabled={isLoading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -136,6 +198,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                         id="company-tax"
                         value={companyData.tax_id}
                         onChange={(e) => setCompanyData({ ...companyData, tax_id: e.target.value })}
+                        disabled={isLoading}
                       />
                     </div>
                   </div>
@@ -146,11 +209,12 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                       value={companyData.address}
                       onChange={(e) => setCompanyData({ ...companyData, address: e.target.value })}
                       rows={2}
+                      disabled={isLoading}
                     />
                   </div>
-                  <Button onClick={handleSaveCompany} className="w-full">
+                  <Button onClick={handleSaveCompany} className="w-full" disabled={isLoading}>
                     <Save className="mr-2 h-4 w-4" />
-                    Guardar Cambios
+                    {isLoading ? "Guardando..." : "Guardar Cambios"}
                   </Button>
                 </CardContent>
               </Card>

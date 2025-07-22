@@ -10,15 +10,20 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { QuickLimitCheck } from "@/components/ui/subscription-alert"
-import { ArrowLeft, Save, Plus, Truck, Package, Scale, Clock } from "lucide-react"
+import { ArrowLeft, Save, Plus, Truck, Package, Scale, Clock, AlertTriangle } from "lucide-react"
 import { useData } from "@/contexts/data-context"
 import { useCanCreateOperation } from "@/hooks/use-subscription"
+import { useSiloValidation } from "@/lib/silo-validation"
+import { useToasts } from "@/components/ui/toast"
 
 export default function NewOperationPage() {
   const router = useRouter()
   const { clients, drivers, silos, cerealTypes, addOperation } = useData()
   const { canCreate, remainingOperations, currentCount, limit, plan, loading: subscriptionLoading } = useCanCreateOperation()
+  const { validateSiloCapacity } = useSiloValidation()
+  const { showSuccess, showError, showProcessing } = useToasts()
   const [isLoading, setIsLoading] = useState(false)
+  const [capacityError, setCapacityError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     client_id: "",
     operation_type: "",
@@ -77,6 +82,36 @@ export default function NewOperationPage() {
         console.log(`👤 Cliente seleccionado: ID=${value}, Nombre=${cliente?.name}`)
       }
       
+      // Validar capacidad del silo cuando cambia la cantidad estimada
+      if (field === "estimated_quantity" && newData.silo_id && value) {
+        const quantity = parseFloat(value)
+        if (!isNaN(quantity) && quantity > 0) {
+          const validation = validateSiloCapacity(displaySilos, newData.silo_id, quantity)
+          if (!validation.valid) {
+            setCapacityError(`La cantidad excede la capacidad disponible del silo (${validation.availableSpace} toneladas disponibles)`)
+          } else {
+            setCapacityError(null)
+          }
+        } else {
+          setCapacityError(null)
+        }
+      }
+      
+      // También validar cuando cambia el silo seleccionado
+      if (field === "silo_id" && newData.estimated_quantity) {
+        const quantity = parseFloat(newData.estimated_quantity)
+        if (!isNaN(quantity) && quantity > 0 && value) {
+          const validation = validateSiloCapacity(displaySilos, value, quantity)
+          if (!validation.valid) {
+            setCapacityError(`La cantidad excede la capacidad disponible del silo (${validation.availableSpace} toneladas disponibles)`)
+          } else {
+            setCapacityError(null)
+          }
+        } else {
+          setCapacityError(null)
+        }
+      }
+      
       return newData
     })
   }
@@ -89,11 +124,18 @@ export default function NewOperationPage() {
   const handleSave = async () => {
     // Verificar límites de suscripción antes de proceder
     if (!canCreate) {
-      alert(`Has alcanzado el límite de ${limit} operaciones para tu plan. No puedes crear más operaciones este mes.`)
+      showError(`Has alcanzado el límite de ${limit} operaciones para tu plan. No puedes crear más operaciones este mes.`)
+      return
+    }
+
+    // Verificar errores de capacidad
+    if (capacityError) {
+      showError(capacityError)
       return
     }
 
     setIsLoading(true)
+    showProcessing("Creando operación...")
 
     try {
       // Log para debuggear los valores del formulario
@@ -114,14 +156,26 @@ export default function NewOperationPage() {
       if (missingFields.length > 0) {
         const missingFieldNames = missingFields.map(f => f.label).join(', ')
         console.log("❌ Campos faltantes:", missingFields)
-        alert(`Por favor complete los siguientes campos requeridos: ${missingFieldNames}`)
+        showError(`Por favor complete los siguientes campos requeridos: ${missingFieldNames}`)
         return
       }
 
       // Validar tipo de operación
       if (formData.operation_type !== "ingreso" && formData.operation_type !== "egreso") {
-        alert("Tipo de operación inválido")
+        showError("Tipo de operación inválido")
         return
+      }
+
+      // Validación final de capacidad del silo para operaciones de ingreso
+      if (formData.operation_type === "ingreso" && formData.estimated_quantity && formData.silo_id) {
+        const quantity = parseFloat(formData.estimated_quantity)
+        if (!isNaN(quantity) && quantity > 0) {
+          const validation = validateSiloCapacity(displaySilos, formData.silo_id, quantity)
+          if (!validation.valid) {
+            showError(`No se puede cargar ${quantity} toneladas. ${validation.message}`)
+            return
+          }
+        }
       }
 
       // Crear nueva operación (con todos los campos requeridos)
@@ -158,11 +212,12 @@ export default function NewOperationPage() {
       }
 
       console.log("✅ Operación creada exitosamente")
+      showSuccess("Operación creada exitosamente")
       router.push("/dashboard/operations")
     } catch (error) {
       console.error("❌ Error creando operación:", error)
       const errorMessage = error instanceof Error ? error.message : "Error desconocido al crear la operación"
-      alert(`Error al crear la operación: ${errorMessage}`)
+      showError(`Error al crear la operación: ${errorMessage}`)
     } finally {
       setIsLoading(false)
     }
@@ -220,7 +275,7 @@ export default function NewOperationPage() {
             </Button>
             <Button 
               onClick={handleSave} 
-              disabled={isLoading || !canCreate} 
+              disabled={isLoading || !canCreate || !!capacityError} 
               className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400"
             >
               <Save className="h-4 w-4 mr-2" />
@@ -331,7 +386,14 @@ export default function NewOperationPage() {
                   value={formData.estimated_quantity}
                   onChange={(e) => handleInputChange("estimated_quantity", e.target.value)}
                   placeholder="25.5"
+                  className={capacityError ? "border-red-500 focus-visible:ring-red-500" : ""}
                 />
+                {capacityError && (
+                  <div className="flex items-center gap-2 text-red-600 text-sm">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span>{capacityError}</span>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useData } from "@/contexts/data-context"
+import { useToasts } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -29,12 +30,14 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 
 export default function ClientsPage() {
   const { clients = [], operations = [], drivers = [], cereals = [], addClient, updateClient, deleteClient } = useData()
+  const { showSuccess, showError, showProcessing } = useToasts()
 
   const [searchTerm, setSearchTerm] = useState("")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isAccountDialogOpen, setIsAccountDialogOpen] = useState(false)
   const [selectedClient, setSelectedClient] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -99,37 +102,65 @@ export default function ClientsPage() {
       })
   }
 
-  const handleCreateClient = () => {
+  const handleCreateClient = async () => {
     if (formData.name && formData.email && formData.tax_id) {
-      addClient({
-        ...formData,
-        status: "active",
-      })
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        address: "",
-        tax_id: "",
-        contact_person: "",
-      })
-      setIsCreateDialogOpen(false)
+      setIsLoading(true)
+      showProcessing("Creando cliente...")
+      
+      try {
+        await addClient({
+          ...formData,
+          status: "active",
+        })
+        
+        showSuccess("Cliente creado", `${formData.name} ha sido agregado exitosamente`)
+        
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          address: "",
+          tax_id: "",
+          contact_person: "",
+        })
+        setIsCreateDialogOpen(false)
+      } catch (error) {
+        showError("Error al crear cliente", "No se pudo crear el cliente. Intenta nuevamente.")
+      } finally {
+        setIsLoading(false)
+      }
+    } else {
+      showError("Datos incompletos", "Por favor completa todos los campos obligatorios")
     }
   }
 
-  const handleEditClient = () => {
+  const handleEditClient = async () => {
     if (selectedClient && formData.name && formData.email && formData.tax_id) {
-      updateClient(selectedClient.id, formData)
-      setIsEditDialogOpen(false)
-      setSelectedClient(null)
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        address: "",
-        tax_id: "",
-        contact_person: "",
-      })
+      setIsLoading(true)
+      showProcessing("Actualizando cliente...")
+      
+      try {
+        await updateClient(selectedClient.id, formData)
+        
+        showSuccess("Cliente actualizado", `${formData.name} ha sido actualizado exitosamente`)
+        
+        setIsEditDialogOpen(false)
+        setSelectedClient(null)
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          address: "",
+          tax_id: "",
+          contact_person: "",
+        })
+      } catch (error) {
+        showError("Error al actualizar cliente", "No se pudo actualizar el cliente. Intenta nuevamente.")
+      } finally {
+        setIsLoading(false)
+      }
+    } else {
+      showError("Datos incompletos", "Por favor completa todos los campos obligatorios")
     }
   }
 
@@ -151,9 +182,16 @@ export default function ClientsPage() {
     setIsAccountDialogOpen(true)
   }
 
-  const handleDeleteClient = (clientId: string) => {
+  const handleDeleteClient = async (clientId: string) => {
     if (confirm("¿Estás seguro de que quieres eliminar este cliente?")) {
-      deleteClient(clientId)
+      showProcessing("Eliminando cliente...")
+      
+      try {
+        await deleteClient(clientId)
+        showSuccess("Cliente eliminado", "El cliente ha sido eliminado exitosamente")
+      } catch (error) {
+        showError("Error al eliminar cliente", "No se pudo eliminar el cliente. Intenta nuevamente.")
+      }
     }
   }
 
@@ -452,9 +490,9 @@ export default function ClientsPage() {
             <Button
               onClick={handleCreateClient}
               className="w-full bg-green-600 hover:bg-green-700"
-              disabled={!formData.name || !formData.email || !formData.tax_id}
+              disabled={!formData.name || !formData.email || !formData.tax_id || isLoading}
             >
-              Crear Cliente
+              {isLoading ? "Creando..." : "Crear Cliente"}
             </Button>
           </div>
         </DialogContent>
@@ -615,9 +653,9 @@ export default function ClientsPage() {
             <Button
               onClick={handleEditClient}
               className="w-full bg-green-600 hover:bg-green-700"
-              disabled={!formData.name || !formData.email || !formData.tax_id}
+              disabled={!formData.name || !formData.email || !formData.tax_id || isLoading}
             >
-              Guardar Cambios
+              {isLoading ? "Guardando..." : "Guardar Cambios"}
             </Button>
           </div>
         </DialogContent>

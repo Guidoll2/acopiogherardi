@@ -6,21 +6,16 @@ import { SubscriptionService } from "@/lib/subscription-service"
 
 export async function GET(request: NextRequest) {
   try {
-    // TEMPORARY: Deshabilitamos autenticación para desarrollo
-    // TODO: Rehabilitar autenticación cuando el usuario esté logueado correctamente
-    /*
+    // Verificar autenticación
     const user = verifyToken(request)
     if (!user) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
-    */
 
     await connectDB()
 
-    // TEMPORARY: Obtener todas las operaciones sin filtrar por empresa
-    // TODO: Filtrar por empresa cuando la autenticación esté habilitada
-    // const filter = user.role === "system_admin" ? {} : { company_id: user.company_id }
-    const filter = {} // Obtener todas las operaciones temporalmente
+    // Filtrar por empresa (system_admin puede ver todos, otros solo su empresa)
+    const filter = user.role === "system_admin" ? {} : { company_id: user.company_id }
     
     const operations = await Operation.find(filter)
       .sort({ created_at: -1 })
@@ -50,32 +45,19 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // TEMPORARY: Deshabilitamos autenticación para desarrollo
-    // TODO: Rehabilitar autenticación cuando el usuario esté logueado correctamente
-    /*
+    // Verificar autenticación
     const user = verifyToken(request)
     if (!user) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
-    */
 
     await connectDB()
 
     const operationData = await request.json()
 
-    // TEMPORARY: No asignar company_id específico por ahora
-    // TODO: Asignar company_id del usuario autenticado cuando la autenticación esté habilitada
-    // const company_id = user.role === "system_admin" ? operationData.company_id : user.company_id
-    /*
+    // Asignar company_id del usuario autenticado (excepto system_admin que puede especificar)
     if (user.role !== "system_admin") {
       operationData.company_id = user.company_id
-    }
-    */
-
-    // TEMPORARY: Asignar company_id por defecto si no se proporciona
-    if (!operationData.company_id) {
-      operationData.company_id = "default-company-id"
-      console.log("🏢 Asignando company_id por defecto (temporal)")
     }
 
     // Mapear operation_type a type para compatibilidad con el modelo
@@ -95,8 +77,7 @@ export async function POST(request: NextRequest) {
     // Verificar límites de suscripción antes de crear la operación
     const companyId = operationData.company_id
     
-    // TEMPORARY: Omitir verificación de límites para company_id por defecto
-    if (companyId && companyId !== "default-company-id") {
+    if (companyId) {
       console.log(`🔍 Verificando límites para empresa: ${companyId}`)
       
       const subscriptionCheck = await SubscriptionService.checkOperationLimit(companyId)
@@ -116,8 +97,6 @@ export async function POST(request: NextRequest) {
       }
 
       console.log(`✅ Límites OK - Plan: ${subscriptionCheck.plan}, Uso: ${subscriptionCheck.currentCount}/${subscriptionCheck.limit === -1 ? '∞' : subscriptionCheck.limit}`)
-    } else {
-      console.log(`⚠️ Omitiendo verificación de límites para company_id temporal: ${companyId}`)
     }
 
     operationData.created_at = new Date().toISOString()
@@ -127,15 +106,13 @@ export async function POST(request: NextRequest) {
     await newOperation.save()
 
     // Incrementar contador de operaciones después de crear exitosamente
-    if (companyId && companyId !== "default-company-id") {
+    if (companyId) {
       const incrementSuccess = await SubscriptionService.incrementOperationCount(companyId)
       if (incrementSuccess) {
         console.log(`📊 Contador incrementado para empresa ${companyId}`)
       } else {
         console.warn(`⚠️ No se pudo incrementar contador para empresa ${companyId}`)
       }
-    } else {
-      console.log(`⚠️ Omitiendo incremento de contador para company_id temporal: ${companyId}`)
     }
 
     // Mapear _id a id para consistencia con el frontend

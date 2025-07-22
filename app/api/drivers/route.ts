@@ -5,17 +5,16 @@ import { verifyToken } from "@/lib/auth-middleware"
 
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Re-habilitar autenticación después del desarrollo
-    // const user = verifyToken(request)
-    // if (!user) {
-    //   return NextResponse.json({ error: "No autorizado" }, { status: 401 })
-    // }
+    // Verificar autenticación
+    const user = verifyToken(request)
+    if (!user) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+    }
 
     await connectDB()
 
-    // TODO: Filtrar por empresa cuando se re-habilite la autenticación
-    // const filter = user.role === "system_admin" ? {} : { company_id: user.company_id }
-    const filter = {}
+    // Filtrar por empresa (system_admin puede ver todos, otros solo su empresa)
+    const filter = user.role === "system_admin" ? {} : { company_id: user.company_id }
     
     const drivers = await Driver.find(filter).sort({ name: 1 })
 
@@ -36,24 +35,24 @@ export async function POST(request: NextRequest) {
   try {
     console.log("=== DEBUG POST /api/drivers ===")
     
-    // TODO: Re-habilitar autenticación después del desarrollo
-    // const user = verifyToken(request)
-    // console.log("Usuario verificado:", user ? { userId: user.userId, email: user.email, role: user.role } : "null")
+    // Verificar autenticación
+    const user = verifyToken(request)
+    console.log("Usuario verificado:", user ? { userId: user.userId, email: user.email, role: user.role } : "null")
     
-    // if (!user) {
-    //   console.log("Error: Usuario no autorizado")
-    //   return NextResponse.json({ error: "No autorizado" }, { status: 401 })
-    // }
+    if (!user) {
+      console.log("Error: Usuario no autorizado")
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+    }
 
     await connectDB()
 
     const driverData = await request.json()
     console.log("Datos del driver a crear:", driverData)
 
-    // TODO: Asignar company_id cuando se re-habilite la autenticación
-    // if (user.role !== "system_admin") {
-    //   driverData.company_id = user.company_id
-    // }
+    // Asignar company_id del usuario autenticado (excepto system_admin que puede especificar)
+    if (user.role !== "system_admin") {
+      driverData.company_id = user.company_id
+    }
 
     driverData.created_at = new Date().toISOString()
     driverData.updated_at = new Date().toISOString()

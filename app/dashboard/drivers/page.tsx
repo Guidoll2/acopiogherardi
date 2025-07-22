@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useData } from "@/contexts/data-context"
+import { useToasts } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -26,10 +27,12 @@ type Driver = {
 
 export default function DriversPage() {
   const { drivers = [], addDriver, updateDriver, deleteDriver } = useData()
+  const { showSuccess, showError, showProcessing } = useToasts()
   const [searchTerm, setSearchTerm] = useState("")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -48,38 +51,66 @@ export default function DriversPage() {
       driver.transportista?.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  const handleCreateDriver = () => {
+  const handleCreateDriver = async () => {
     if (formData.name && formData.email && formData.license_number) {
-      addDriver({
-        ...formData,
-        is_active: true,
-        status: "active",
-      })
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        license_number: "",
-        license_expiry: "",
-        transportista: "",
-      })
-      setIsCreateDialogOpen(false)
+      setIsLoading(true)
+      showProcessing("Creando conductor...")
+      
+      try {
+        await addDriver({
+          ...formData,
+          is_active: true,
+          status: "active",
+        })
+        
+        showSuccess("Conductor creado", `${formData.name} ha sido agregado exitosamente`)
+        
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          license_number: "",
+          license_expiry: "",
+          transportista: "",
+        })
+        setIsCreateDialogOpen(false)
+      } catch (error) {
+        showError("Error al crear conductor", "No se pudo crear el conductor. Intenta nuevamente.")
+      } finally {
+        setIsLoading(false)
+      }
+    } else {
+      showError("Datos incompletos", "Por favor completa todos los campos obligatorios")
     }
   }
 
-  const handleEditDriver = () => {
+  const handleEditDriver = async () => {
     if (selectedDriver && formData.name && formData.email && formData.license_number) {
-      updateDriver(selectedDriver.id, formData)
-      setIsEditDialogOpen(false)
-      setSelectedDriver(null)
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        license_number: "",
-        license_expiry: "",
-        transportista: "",
-      })
+      setIsLoading(true)
+      showProcessing("Actualizando conductor...")
+      
+      try {
+        await updateDriver(selectedDriver.id, formData)
+        
+        showSuccess("Conductor actualizado", `${formData.name} ha sido actualizado exitosamente`)
+        
+        setIsEditDialogOpen(false)
+        setSelectedDriver(null)
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          license_number: "",
+          license_expiry: "",
+          transportista: "",
+        })
+      } catch (error) {
+        showError("Error al actualizar conductor", "No se pudo actualizar el conductor. Intenta nuevamente.")
+      } finally {
+        setIsLoading(false)
+      }
+    } else {
+      showError("Datos incompletos", "Por favor completa todos los campos obligatorios")
     }
   }
 
@@ -96,9 +127,16 @@ export default function DriversPage() {
     setIsEditDialogOpen(true)
   }
 
-  const handleDeleteDriver = (driverId: string) => {
+  const handleDeleteDriver = async (driverId: string) => {
     if (confirm("¿Estás seguro de que quieres eliminar este conductor?")) {
-      deleteDriver(driverId)
+      showProcessing("Eliminando conductor...")
+      
+      try {
+        await deleteDriver(driverId)
+        showSuccess("Conductor eliminado", "El conductor ha sido eliminado exitosamente")
+      } catch (error) {
+        showError("Error al eliminar conductor", "No se pudo eliminar el conductor. Intenta nuevamente.")
+      }
     }
   }
 
@@ -386,9 +424,9 @@ export default function DriversPage() {
             <Button
               onClick={handleCreateDriver}
               className="w-full bg-green-600 hover:bg-green-700"
-              disabled={!formData.name || !formData.email || !formData.license_number}
+              disabled={!formData.name || !formData.email || !formData.license_number || isLoading}
             >
-              Crear Conductor
+              {isLoading ? "Creando..." : "Crear Conductor"}
             </Button>
           </div>
         </DialogContent>
@@ -454,9 +492,9 @@ export default function DriversPage() {
             <Button
               onClick={handleEditDriver}
               className="w-full bg-green-600 hover:bg-green-700"
-              disabled={!formData.name || !formData.email || !formData.license_number}
+              disabled={!formData.name || !formData.email || !formData.license_number || isLoading}
             >
-              Guardar Cambios
+              {isLoading ? "Guardando..." : "Guardar Cambios"}
             </Button>
           </div>
         </DialogContent>

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useData } from "@/contexts/data-context"
+import { useToasts } from "@/components/ui/toast"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,45 +15,75 @@ import { Plus, Edit, Trash2, Wheat } from "lucide-react"
 
 export default function CerealsPage() {
   const { cereals = [], addCereal, updateCereal, deleteCereal } = useData()
+  const { showSuccess, showError, showProcessing } = useToasts()
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedCereal, setSelectedCereal] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     code: "",
     pricePerTon: "",
   })
 
-  const handleCreateCereal = () => {
+  const handleCreateCereal = async () => {
     if (formData.name && formData.code && formData.pricePerTon) {
-      addCereal({
-        name: formData.name,
-        code: formData.code.toUpperCase(),
-        price_per_ton: Number(formData.pricePerTon),
-      })
-      setFormData({
-        name: "",
-        code: "",
-        pricePerTon: "",
-      })
-      setIsCreateDialogOpen(false)
+      setIsLoading(true)
+      showProcessing("Creando cereal...")
+      
+      try {
+        await addCereal({
+          name: formData.name,
+          code: formData.code.toUpperCase(),
+          price_per_ton: Number(formData.pricePerTon),
+        })
+        
+        showSuccess("Cereal creado", `${formData.name} ha sido agregado exitosamente`)
+        
+        setFormData({
+          name: "",
+          code: "",
+          pricePerTon: "",
+        })
+        setIsCreateDialogOpen(false)
+      } catch (error) {
+        showError("Error al crear cereal", "No se pudo crear el cereal. Intenta nuevamente.")
+      } finally {
+        setIsLoading(false)
+      }
+    } else {
+      showError("Datos incompletos", "Por favor completa todos los campos obligatorios")
     }
   }
 
-  const handleEditCereal = () => {
+  const handleEditCereal = async () => {
     if (selectedCereal && formData.name && formData.code && formData.pricePerTon) {
-      updateCereal(selectedCereal.id, {
-        name: formData.name,
-        code: formData.code.toUpperCase(),
-        price_per_ton: Number(formData.pricePerTon),
-      })
-      setIsEditDialogOpen(false)
-      setSelectedCereal(null)
-      setFormData({
-        name: "",
-        code: "",
-        pricePerTon: "",
-      })
+      setIsLoading(true)
+      showProcessing("Actualizando cereal...")
+      
+      try {
+        await updateCereal(selectedCereal.id, {
+          name: formData.name,
+          code: formData.code.toUpperCase(),
+          price_per_ton: Number(formData.pricePerTon),
+        })
+        
+        showSuccess("Cereal actualizado", `${formData.name} ha sido actualizado exitosamente`)
+        
+        setIsEditDialogOpen(false)
+        setSelectedCereal(null)
+        setFormData({
+          name: "",
+          code: "",
+          pricePerTon: "",
+        })
+      } catch (error) {
+        showError("Error al actualizar cereal", "No se pudo actualizar el cereal. Intenta nuevamente.")
+      } finally {
+        setIsLoading(false)
+      }
+    } else {
+      showError("Datos incompletos", "Por favor completa todos los campos obligatorios")
     }
   }
 
@@ -66,9 +97,16 @@ export default function CerealsPage() {
     setIsEditDialogOpen(true)
   }
 
-  const handleDeleteCereal = (cerealId: string) => {
+  const handleDeleteCereal = async (cerealId: string) => {
     if (confirm("¿Estás seguro de que quieres eliminar este cereal?")) {
-      deleteCereal(cerealId)
+      showProcessing("Eliminando cereal...")
+      
+      try {
+        await deleteCereal(cerealId)
+        showSuccess("Cereal eliminado", "El cereal ha sido eliminado exitosamente")
+      } catch (error) {
+        showError("Error al eliminar cereal", "No se pudo eliminar el cereal. Intenta nuevamente.")
+      }
     }
   }
 
@@ -259,9 +297,9 @@ export default function CerealsPage() {
             <Button
               onClick={handleCreateCereal}
               className="w-full bg-green-600 hover:bg-green-700"
-              disabled={!formData.name || !formData.code || !formData.pricePerTon}
+              disabled={!formData.name || !formData.code || !formData.pricePerTon || isLoading}
             >
-              Crear Cereal
+              {isLoading ? "Creando..." : "Crear Cereal"}
             </Button>
           </div>
         </DialogContent>
@@ -303,9 +341,9 @@ export default function CerealsPage() {
             <Button
               onClick={handleEditCereal}
               className="w-full bg-green-600 hover:bg-green-700"
-              disabled={!formData.name || !formData.code || !formData.pricePerTon}
+              disabled={!formData.name || !formData.code || !formData.pricePerTon || isLoading}
             >
-              Guardar Cambios
+              {isLoading ? "Guardando..." : "Guardar Cambios"}
             </Button>
           </div>
         </DialogContent>

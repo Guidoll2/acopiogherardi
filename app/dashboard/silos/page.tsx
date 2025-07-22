@@ -2,6 +2,8 @@
 
 import { useState } from "react"
 import { useData } from "@/contexts/data-context"
+import { useToasts } from "@/components/ui/toast"
+import { validateSiloCapacity } from "@/lib/silo-validation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,48 +17,83 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 
 export default function SilosPage() {
   const { silos = [], cereals = [], addSilo, updateSilo } = useData()
+  const { showSuccess, showError, showProcessing } = useToasts()
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedSilo, setSelectedSilo] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     capacity: "",
     cereal_type_id: "",
   })
 
-  const handleCreateSilo = () => {
+  const handleCreateSilo = async () => {
     if (formData.name && formData.capacity) {
-      addSilo({
-        name: formData.name,
-        capacity: Number(formData.capacity),
-        current_stock: 0,
-        cereal_type_id: formData.cereal_type_id,
-        is_active: true,
-      })
-      setFormData({
-        name: "",
-        capacity: "",
-        cereal_type_id: "",
-      })
-      setIsCreateDialogOpen(false)
+      setIsLoading(true)
+      showProcessing("Creando silo...")
+      
+      try {
+        await addSilo({
+          name: formData.name,
+          capacity: Number(formData.capacity),
+          current_stock: 0,
+          cereal_type_id: formData.cereal_type_id,
+          is_active: true,
+        })
+        
+        showSuccess("Silo creado", `${formData.name} ha sido agregado exitosamente`)
+        
+        setFormData({
+          name: "",
+          capacity: "",
+          cereal_type_id: "",
+        })
+        setIsCreateDialogOpen(false)
+      } catch (error) {
+        showError("Error al crear silo", "No se pudo crear el silo. Intenta nuevamente.")
+      } finally {
+        setIsLoading(false)
+      }
+    } else {
+      showError("Datos incompletos", "Por favor completa todos los campos obligatorios")
     }
   }
 
-  const handleEditSilo = () => {
+  const handleEditSilo = async () => {
     if (selectedSilo && formData.name && formData.capacity) {
-      updateSilo(selectedSilo.id, {
-        name: formData.name,
-        capacity: Number(formData.capacity),
-        cereal_type_id: formData.cereal_type_id,
-      })
-      setIsEditDialogOpen(false)
-      setSelectedSilo(null)
-      setFormData({
-        name: "",
-        capacity: "",
-        cereal_type_id: "",
-      })
+      setIsLoading(true)
+      showProcessing("Actualizando silo...")
+      
+      try {
+        await updateSilo(selectedSilo.id, {
+          name: formData.name,
+          capacity: Number(formData.capacity),
+          cereal_type_id: formData.cereal_type_id,
+        })
+        
+        showSuccess("Silo actualizado", `${formData.name} ha sido actualizado exitosamente`)
+        
+        setIsEditDialogOpen(false)
+        setSelectedSilo(null)
+        setFormData({
+          name: "",
+          capacity: "",
+          cereal_type_id: "",
+        })
+      } catch (error) {
+        showError("Error al actualizar silo", "No se pudo actualizar el silo. Intenta nuevamente.")
+      } finally {
+        setIsLoading(false)
+      }
+    } else {
+      showError("Datos incompletos", "Por favor completa todos los campos obligatorios")
     }
+  }
+
+  // Función para validar capacidad del silo (local)
+  const validateCapacity = (siloId: string, newQuantity: number) => {
+    return validateSiloCapacity(silos, siloId, newQuantity)
   }
 
   const openEditDialog = (silo: any) => {
@@ -324,9 +361,9 @@ export default function SilosPage() {
             <Button
               onClick={handleCreateSilo}
               className="w-full bg-green-600 hover:bg-green-700"
-              disabled={!formData.name || !formData.capacity}
+              disabled={!formData.name || !formData.capacity || isLoading}
             >
-              Crear Silo
+              {isLoading ? "Creando..." : "Crear Silo"}
             </Button>
           </div>
         </DialogContent>
@@ -377,9 +414,9 @@ export default function SilosPage() {
             <Button
               onClick={handleEditSilo}
               className="w-full bg-green-600 hover:bg-green-700"
-              disabled={!formData.name || !formData.capacity}
+              disabled={!formData.name || !formData.capacity || isLoading}
             >
-              Guardar Cambios
+              {isLoading ? "Guardando..." : "Guardar Cambios"}
             </Button>
           </div>
         </DialogContent>
