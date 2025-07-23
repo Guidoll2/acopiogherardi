@@ -7,11 +7,13 @@ import { PageLoadingSpinner } from "@/components/ui/loading-spinner"
 interface PageTransitionContextType {
   isLoading: boolean
   setLoading: (loading: boolean) => void
+  setPageReady: () => void
 }
 
 const PageTransitionContext = createContext<PageTransitionContextType>({
   isLoading: false,
-  setLoading: () => {}
+  setLoading: () => {},
+  setPageReady: () => {}
 })
 
 export function usePageTransition() {
@@ -21,6 +23,7 @@ export function usePageTransition() {
 export function PageTransitionProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
   const [previousPathname, setPreviousPathname] = useState<string>("")
+  const [pageReady, setPageReady] = useState(false)
   const pathname = usePathname()
 
   // Efecto para manejar cambios de ruta solo en el dashboard
@@ -31,13 +34,14 @@ export function PageTransitionProvider({ children }: { children: React.ReactNode
     // Solo mostrar loading si es cambio entre páginas del dashboard, no carga inicial
     if (isDashboardRoute && !wasInitialLoad && previousPathname !== pathname) {
       setIsLoading(true)
+      setPageReady(false)
       
-      // Tiempo de carga mínimo para transición suave
-      const timer = setTimeout(() => {
+      // Timeout de seguridad: si la página no está lista en 2 segundos, forzar el cierre
+      const safetyTimer = setTimeout(() => {
         setIsLoading(false)
-      }, 200)
+      }, 2000)
 
-      return () => clearTimeout(timer)
+      return () => clearTimeout(safetyTimer)
     }
 
     // Actualizar pathname anterior
@@ -46,12 +50,31 @@ export function PageTransitionProvider({ children }: { children: React.ReactNode
     }
   }, [pathname, previousPathname])
 
+  // Ocultar loading cuando la página esté lista
+  useEffect(() => {
+    if (pageReady && isLoading) {
+      const timer = setTimeout(() => {
+        setIsLoading(false)
+      }, 150) // Pequeño delay para transición suave
+      
+      return () => clearTimeout(timer)
+    }
+  }, [pageReady, isLoading])
+
   const setLoading = (loading: boolean) => {
     setIsLoading(loading)
   }
 
+  const handleSetPageReady = () => {
+    setPageReady(true)
+  }
+
   return (
-    <PageTransitionContext.Provider value={{ isLoading, setLoading }}>
+    <PageTransitionContext.Provider value={{ 
+      isLoading, 
+      setLoading, 
+      setPageReady: handleSetPageReady 
+    }}>
       {children}
     </PageTransitionContext.Provider>
   )

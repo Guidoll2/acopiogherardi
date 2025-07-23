@@ -39,25 +39,34 @@ export function LoginForm() {
         console.log("Datos guardados en localStorage:", saved ? "✅ Sí" : "❌ No")
         
         // Forzar navegación inmediata sin esperar
-        const targetUrl = user.role === "system_admin" ? "/system-admin" : "/dashboard"
+        let targetUrl = "/dashboard" // Por defecto
+        
+        if (user.role === "system_admin") {
+          targetUrl = "/system-admin"
+        } else if (user.role === "garita") {
+          targetUrl = "/garita"
+        } else {
+          targetUrl = "/dashboard"
+        }
+        
         console.log("Redirigiendo a:", targetUrl)
         
         // Usar window.location para forzar navegación completa
         console.log("Ejecutando redirección...")
         window.location.href = targetUrl
         
-        // Evitar que el loading se desactive
+        // Evitar que el loading se desactive cuando hay redirección exitosa
         return
       } else {
         console.log("Login falló - usuario es null")
         setError("Credenciales inválidas")
+        setLoading(false) // Resetear loading cuando fallan las credenciales
       }
     } catch (err) {
       console.error("Error en handleSubmit:", err)
       setError("Error al iniciar sesión")
-      setLoading(false)
+      setLoading(false) // Resetear loading cuando hay error
     }
-    // NO establecer setLoading(false) aquí si hubo redirección exitosa
   }
     
   return (

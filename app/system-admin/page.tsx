@@ -450,8 +450,8 @@ export default function SystemAdminPage() {
         <Card>
           <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <CardTitle>Administradores de Empresa</CardTitle>
-              <CardDescription>Gestión de usuarios administradores por empresa</CardDescription>
+              <CardTitle className="">Administradores de Empresa</CardTitle>
+              <CardDescription >Gestión de usuarios administradores por empresa</CardDescription>
             </div>
             <Button onClick={() => setCreateAdminOpen(true)} size="sm" className="self-start sm:self-auto">
               <UserPlus className="mr-2 h-4 w-4" />

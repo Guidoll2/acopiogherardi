@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useData } from "@/contexts/data-context"
+import { usePageReady } from "@/hooks/use-page-ready"
 import { useToasts } from "@/components/ui/toast"
 import { validateSiloCapacity } from "@/lib/silo-validation"
 import { Button } from "@/components/ui/button"
@@ -18,6 +19,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 export default function SilosPage() {
   const { silos = [], cereals = [], addSilo, updateSilo } = useData()
   const { showSuccess, showError, showProcessing } = useToasts()
+  const { markPageAsReady } = usePageReady()
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedSilo, setSelectedSilo] = useState<any>(null)

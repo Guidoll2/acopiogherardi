@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { DataProvider } from "@/contexts/data-context"
-import { PageTransitionProvider } from "@/contexts/page-transition-context"
+import { PageTransitionProvider, PageTransitionLoader } from "@/contexts/page-transition-context"
 import { ToastProvider, ToastContainer } from "@/components/ui/toast"
 
 export const metadata: Metadata = {
@@ -21,6 +21,7 @@ export default function RootLayout({
           <PageTransitionProvider>
             <DataProvider>
               {children}
+              <PageTransitionLoader />
               <ToastContainer />
             </DataProvider>
           </PageTransitionProvider>

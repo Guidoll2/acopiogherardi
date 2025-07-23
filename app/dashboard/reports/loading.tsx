@@ -1,5 +1,5 @@
-import { PageLoadingSpinner } from "@/components/ui/loading-spinner"
+import { ConditionalLoadingSpinner } from "@/components/ui/conditional-loading-spinner"
 
 export default function ReportsLoading() {
-  return <PageLoadingSpinner text="Cargando reportes..." />
+  return <ConditionalLoadingSpinner text="Cargando reportes..." />
 }

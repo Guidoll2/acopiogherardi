@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { usePageReady } from "@/hooks/use-page-ready"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -29,6 +30,7 @@ import { OperationStatusDialog } from "@/components/operations/operation-status-
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 
 export default function OperationsPage() {
+  const { markPageAsReady } = usePageReady()
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [companyFilter, setCompanyFilter] = useState("all")

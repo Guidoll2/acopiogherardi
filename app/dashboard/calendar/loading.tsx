@@ -1,5 +1,5 @@
-import { PageLoadingSpinner } from "@/components/ui/loading-spinner"
+import { ConditionalLoadingSpinner } from "@/components/ui/conditional-loading-spinner"
 
 export default function CalendarLoading() {
-  return <PageLoadingSpinner text="Cargando calendario..." />
+  return <ConditionalLoadingSpinner text="Cargando calendario..." />
 }

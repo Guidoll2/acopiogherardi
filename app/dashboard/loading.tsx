@@ -1,5 +1,5 @@
-import { PageLoadingSpinner } from "@/components/ui/loading-spinner"
+import { ConditionalLoadingSpinner } from "@/components/ui/conditional-loading-spinner"
 
 export default function DashboardLoading() {
-  return <PageLoadingSpinner text="Cargando dashboard..." />
+  return <ConditionalLoadingSpinner text="Cargando dashboard..." />
 }

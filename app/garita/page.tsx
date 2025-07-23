@@ -8,13 +8,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Truck, LogOut, Wheat, ArrowRight, ArrowLeft, Phone, Clock, Calendar } from "lucide-react"
+import { Truck, LogOut, Wheat, ArrowRight, ArrowLeft, Phone, Clock, Calendar, Plus, Loader2 } from "lucide-react"
+import { CreateSpontaneousEntryDialog } from "@/components/garita/create-spontaneous-entry-dialog"
 
 export default function GaritaPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [currentTime, setCurrentTime] = useState(new Date())
-  const { operations, clients, drivers, updateOperation } = useData()
+  const [loadingAction, setLoadingAction] = useState<string | null>(null) // Para botones de acción
+  const { operations, clients, drivers, updateOperation, isLoading } = useData()
 
   useEffect(() => {
     const currentUser = AuthService.getCurrentUser()
@@ -39,19 +41,38 @@ export default function GaritaPage() {
 
   const handleVehicleAction = async (operationId: string, action: "entrada" | "salida") => {
     try {
+      setLoadingAction(operationId) // Establecer loading para esta operación específica
+      
+      const currentUser = AuthService.getCurrentUser()
+      const timestamp = new Date().toISOString()
+      
       if (action === "entrada") {
-        // Cambiar estado a "balanza_ingreso" para entrada
+        // Cambiar estado a "balanza_ingreso" y registrar autorización de entrada
         await updateOperation(operationId, { 
-          status: "balanza_ingreso"
+          status: "balanza_ingreso",
+          authorized_entry: {
+            timestamp: timestamp,
+            authorized_by: currentUser?.full_name || "Operador Garita",
+            notes: "Ingreso autorizado desde garita"
+          }
         })
       } else {
-        // Cambiar estado a "completado" para salida
+        // Cambiar estado a "completado" y registrar autorización de salida
         await updateOperation(operationId, { 
-          status: "completado"
+          status: "completado",
+          authorized_exit: {
+            timestamp: timestamp,
+            authorized_by: currentUser?.full_name || "Operador Garita",
+            notes: "Egreso autorizado desde garita"
+          }
         })
       }
+      
+      console.log(`✅ ${action === "entrada" ? "Entrada" : "Salida"} autorizada para operación ${operationId}`)
     } catch (error) {
       console.error("Error al actualizar operación:", error)
+    } finally {
+      setLoadingAction(null) // Limpiar loading
     }
   }
 
@@ -101,18 +122,80 @@ export default function GaritaPage() {
     return <Badge className={config.color}>{config.label}</Badge>
   }
 
-  const getClientName = (clientId: string) => {
+  const getClientName = (clientId: string, notes?: string) => {
+    if (clientId === "pending" && notes) {
+      // Extraer el nombre del cliente de las notas
+      const clientMatch = notes.match(/Cliente: ([^-]+)/);
+      if (clientMatch) {
+        return clientMatch[1].trim() + " (No registrado)";
+      }
+    }
     const client = clients?.find(c => c.id === clientId)
     return client?.name || "Cliente Desconocido"
   }
 
-  const getDriverInfo = (driverId: string) => {
+  const getDriverInfo = (driverId: string, notes?: string) => {
+    if (driverId === "pending" && notes) {
+      // Extraer el nombre del conductor de las notas
+      const driverMatch = notes.match(/Conductor: ([^-]+)/);
+      if (driverMatch) {
+        return { 
+          name: driverMatch[1].trim() + " (No registrado)", 
+          phone: "Sin teléfono" 
+        };
+      }
+    }
     const driver = drivers?.find(d => d.id === driverId)
     return driver || { name: "Conductor Desconocido", phone: "Sin teléfono" }
   }
 
   if (!user) {
-    return <div>Cargando...</div>
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Cargando usuario...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 text-gray-700">
+        {/* Header simplificado durante carga */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-4">
+              <div className="flex items-center space-x-3">
+                <div className="bg-blue-600 p-2 rounded-lg">
+                  <Wheat className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-semibold text-gray-900">Control de Garita</h1>
+                  <p className="text-sm text-gray-500">Sistema de Acceso Vehicular</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
+                <p className="text-xs text-gray-500">Operador de Garita</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Spinner de carga principal */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Cargando operaciones...</h3>
+              <p className="text-gray-600">Obteniendo datos del sistema</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -148,7 +231,7 @@ export default function GaritaPage() {
 
               <div className="flex items-center space-x-4">
                 <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">{user.full_name || user.name}</p>
+                  <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
                   <p className="text-xs text-gray-500">Operador de Garita</p>
                 </div>
                 <Button
@@ -175,7 +258,13 @@ export default function GaritaPage() {
               <div className="flex items-center">
                 <Calendar className="h-8 w-8 text-blue-600 mr-3" />
                 <div>
-                  <p className="text-2xl font-bold">{todayOperations.length}</p>
+                  <p className="text-2xl font-bold">
+                    {isLoading ? (
+                      <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                    ) : (
+                      todayOperations.length
+                    )}
+                  </p>
                   <p className="text-sm text-gray-600">Operaciones Hoy</p>
                 </div>
               </div>
@@ -188,7 +277,11 @@ export default function GaritaPage() {
                 <ArrowRight className="h-8 w-8 text-green-600 mr-3" />
                 <div>
                   <p className="text-2xl font-bold">
-                    {todayOperations.filter(op => op.status === "autorizar_acceso").length}
+                    {isLoading ? (
+                      <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                    ) : (
+                      todayOperations.filter(op => op.status === "autorizar_acceso").length
+                    )}
                   </p>
                   <p className="text-sm text-gray-600">Esperando Entrada</p>
                 </div>
@@ -202,7 +295,11 @@ export default function GaritaPage() {
                 <Truck className="h-8 w-8 text-orange-600 mr-3" />
                 <div>
                   <p className="text-2xl font-bold">
-                    {todayOperations.filter(op => ["balanza_ingreso", "en_carga_descarga", "balanza_egreso"].includes(op.status)).length}
+                    {isLoading ? (
+                      <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                    ) : (
+                      todayOperations.filter(op => ["balanza_ingreso", "en_carga_descarga", "balanza_egreso"].includes(op.status)).length
+                    )}
                   </p>
                   <p className="text-sm text-gray-600">En Planta</p>
                 </div>
@@ -216,7 +313,11 @@ export default function GaritaPage() {
                 <ArrowLeft className="h-8 w-8 text-red-600 mr-3" />
                 <div>
                   <p className="text-2xl font-bold">
-                    {todayOperations.filter(op => op.status === "autorizar_egreso").length}
+                    {isLoading ? (
+                      <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                    ) : (
+                      todayOperations.filter(op => op.status === "autorizar_egreso").length
+                    )}
                   </p>
                   <p className="text-sm text-gray-600">Esperando Salida</p>
                 </div>
@@ -227,10 +328,19 @@ export default function GaritaPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Truck className="h-5 w-5 mr-2" />
-              Operaciones del Día ({todayOperations.length})
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center">
+                <Truck className="h-5 w-5 mr-2" />
+                Operaciones del Día ({todayOperations.length})
+              </CardTitle>
+              <CreateSpontaneousEntryDialog 
+                onSuccess={async () => {
+                  // Refrescar datos después de crear una operación
+                  // En lugar de recargar toda la página, podrías refrescar solo los datos
+                  window.location.reload()
+                }}
+              />
+            </div>
           </CardHeader>
           <CardContent>
             {todayOperations.length === 0 ? (
@@ -250,13 +360,14 @@ export default function GaritaPage() {
                       <TableHead className="w-[120px]">Acoplado</TableHead>
                       <TableHead className="w-[100px]">Hora Prog.</TableHead>
                       <TableHead className="w-[140px]">Estado</TableHead>
+                      <TableHead className="w-[160px]">Autorización</TableHead>
                       <TableHead className="w-[140px]">Acción</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {todayOperations.map((operation) => {
-                      const driverInfo = getDriverInfo(operation.driver_id)
-                      const clientName = getClientName(operation.client_id)
+                      const driverInfo = getDriverInfo(operation.driver_id, operation.notes)
+                      const clientName = getClientName(operation.client_id, operation.notes)
                       
                       return (
                         <TableRow key={operation.id} className="hover:bg-gray-50">
@@ -296,26 +407,76 @@ export default function GaritaPage() {
                           </TableCell>
                           <TableCell>
                             {getStatusBadge(operation.status)}
+                            {operation.created_from_garita && (
+                              <Badge variant="secondary" className="ml-1 text-xs bg-blue-100 text-blue-800">
+                                Creado en garita
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-xs space-y-1">
+                              {operation.authorized_entry && (
+                                <div className="bg-green-50 p-1 rounded">
+                                  <div className="font-medium text-green-800">✓ Entrada autorizada</div>
+                                  <div className="text-green-600">
+                                    {new Date(operation.authorized_entry.timestamp).toLocaleString("es-ES")}
+                                  </div>
+                                  <div className="text-green-600">por {operation.authorized_entry.authorized_by}</div>
+                                </div>
+                              )}
+                              {operation.authorized_exit && (
+                                <div className="bg-red-50 p-1 rounded">
+                                  <div className="font-medium text-red-800">✓ Salida autorizada</div>
+                                  <div className="text-red-600">
+                                    {new Date(operation.authorized_exit.timestamp).toLocaleString("es-ES")}
+                                  </div>
+                                  <div className="text-red-600">por {operation.authorized_exit.authorized_by}</div>
+                                </div>
+                              )}
+                              {!operation.authorized_entry && !operation.authorized_exit && (
+                                <span className="text-gray-400">Sin autorizaciones</span>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell>
                             {operation.status === "autorizar_acceso" && (
                               <Button
                                 onClick={() => handleVehicleAction(operation.id, "entrada")}
                                 size="sm"
-                                className="bg-green-600 hover:bg-green-700 text-white font-medium"
+                                disabled={loadingAction === operation.id}
+                                className="bg-green-600 hover:bg-green-700 text-white font-medium disabled:opacity-50"
                               >
-                                <ArrowRight className="h-4 w-4 mr-1" />
-                                ENTRADA
+                                {loadingAction === operation.id ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                    Procesando...
+                                  </>
+                                ) : (
+                                  <>
+                                    <ArrowRight className="h-4 w-4 mr-1" />
+                                    ENTRADA
+                                  </>
+                                )}
                               </Button>
                             )}
                             {operation.status === "autorizar_egreso" && (
                               <Button
                                 onClick={() => handleVehicleAction(operation.id, "salida")}
                                 size="sm"
-                                className="bg-red-600 hover:bg-red-700 text-white font-medium"
+                                disabled={loadingAction === operation.id}
+                                className="bg-red-600 hover:bg-red-700 text-white font-medium disabled:opacity-50"
                               >
-                                <ArrowLeft className="h-4 w-4 mr-1" />
-                                SALIDA
+                                {loadingAction === operation.id ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                    Procesando...
+                                  </>
+                                ) : (
+                                  <>
+                                    <ArrowLeft className="h-4 w-4 mr-1" />
+                                    SALIDA
+                                  </>
+                                )}
                               </Button>
                             )}
                             {!["autorizar_acceso", "autorizar_egreso"].includes(operation.status) && (

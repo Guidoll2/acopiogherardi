@@ -87,6 +87,22 @@ export interface Operation {
   notes: string
   scheduled_date: string
   estimated_duration: number
+  
+  // Campos de autorización de garita
+  authorized_entry?: {
+    timestamp: string
+    authorized_by: string
+    notes?: string
+  }
+  authorized_exit?: {
+    timestamp: string
+    authorized_by: string
+    notes?: string
+  }
+  
+  // Campo para identificar operaciones creadas desde garita
+  created_from_garita?: boolean
+  
   created_at: string
   updated_at: string
   createdAt: string // For backward compatibility

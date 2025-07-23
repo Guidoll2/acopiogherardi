@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { useData } from "@/contexts/data-context"
+import { usePageReady } from "@/hooks/use-page-ready"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -31,6 +32,7 @@ export default function UsersPage() {
   const router = useRouter()
   const { showSuccess, showError } = useToasts()
   const { users, refreshData } = useData()
+  const { markPageAsReady } = usePageReady()
   const [searchTerm, setSearchTerm] = useState("")
   const [createUserOpen, setCreateUserOpen] = useState(false)
   const [editUserOpen, setEditUserOpen] = useState(false)
@@ -53,7 +55,9 @@ export default function UsersPage() {
       router.push("/dashboard")
       return
     }
-  }, [currentUser, router])
+    // Marcar página como lista una vez verificados los permisos
+    markPageAsReady()
+  }, [currentUser, router, markPageAsReady])
 
   // Filtrar usuarios de la misma empresa
   const companyUsers = users?.filter(user => 
@@ -229,7 +233,7 @@ export default function UsersPage() {
                 <span className="sm:hidden">Crear</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md text-gray-700">
               <DialogHeader>
                 <DialogTitle>Crear Nuevo Usuario</DialogTitle>
               </DialogHeader>
@@ -329,7 +333,7 @@ export default function UsersPage() {
         {/* Users Table */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
+            <CardTitle className="flex items-center text-gray-900">
               <User className="h-5 w-5 mr-2" />
               Usuarios ({filteredUsers.length})
             </CardTitle>
@@ -342,7 +346,7 @@ export default function UsersPage() {
                 <p className="text-sm">Crea el primer usuario de tu empresa</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto text-gray-700">
                 <Table>
                   <TableHeader>
                     <TableRow>
