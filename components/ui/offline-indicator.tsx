@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { useNetworkStatus } from '@/hooks/use-network-status'
+import { useOfflineNavigation } from '@/hooks/use-offline-navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Wifi, WifiOff, RefreshCw, AlertTriangle, CheckCircle, Clock } from 'lucide-react'
+import { Wifi, WifiOff, RefreshCw, AlertTriangle, CheckCircle, Clock, Navigation, X } from 'lucide-react'
 
 interface OfflineIndicatorProps {
   showDetails?: boolean
@@ -18,9 +19,11 @@ export function OfflineIndicator({
   onSyncRequested 
 }: OfflineIndicatorProps) {
   const { isOnline, hasBeenOffline, getConnectionQuality, effectiveType } = useNetworkStatus()
+  const { preCacheDashboardRoutes } = useOfflineNavigation()
   const [pendingCount, setPendingCount] = useState(0)
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null)
   const [syncInProgress, setSyncInProgress] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
 
   useEffect(() => {
     // Escuchar eventos de sincronización
@@ -45,8 +48,6 @@ export function OfflineIndicator({
     }
   }, [])
 
-  const connectionQuality = getConnectionQuality()
-
   const handleSyncClick = () => {
     if (onSyncRequested && !syncInProgress) {
       onSyncRequested()
@@ -62,86 +63,108 @@ export function OfflineIndicator({
     const minutes = Math.floor(diff / 60000)
     
     if (minutes < 1) return 'hace un momento'
-    if (minutes === 1) return 'hace 1 minuto'
-    if (minutes < 60) return `hace ${minutes} minutos`
+    if (minutes < 60) return `hace ${minutes}m`
     
     const hours = Math.floor(minutes / 60)
-    if (hours === 1) return 'hace 1 hora'
-    if (hours < 24) return `hace ${hours} horas`
+    if (hours < 24) return `hace ${hours}h`
     
-    return date.toLocaleDateString()
+    const days = Math.floor(hours / 24)
+    return `hace ${days}d`
   }
 
-  if (!hasBeenOffline && isOnline && connectionQuality === 'good') {
-    return null // No mostrar nada si todo está bien
-  }
-
-  const getStatusColor = () => {
-    if (!isOnline) return 'bg-red-500'
-    if (connectionQuality === 'poor') return 'bg-orange-500'
-    if (pendingCount > 0) return 'bg-blue-500'
-    return 'bg-green-500'
-  }
-
-  const getStatusText = () => {
-    if (!isOnline) return 'Sin conexión'
-    if (syncInProgress) return 'Sincronizando...'
-    if (pendingCount > 0) return `${pendingCount} cambios pendientes`
-    if (connectionQuality === 'poor') return 'Conexión lenta'
-    return 'Conectado'
-  }
-
-  const getStatusIcon = () => {
-    if (!isOnline) return <WifiOff className="h-4 w-4" />
-    if (syncInProgress) return <RefreshCw className="h-4 w-4 animate-spin" />
-    if (pendingCount > 0) return <Clock className="h-4 w-4" />
-    if (connectionQuality === 'poor') return <AlertTriangle className="h-4 w-4" />
-    return <CheckCircle className="h-4 w-4" />
-  }
+  // Solo mostrar si está offline
+  if (isOnline) return null
 
   return (
-    <div className={`fixed left-0 right-0 z-50 ${position === 'top' ? 'top-0' : 'bottom-0'}`}>
-      <div className={`${getStatusColor()} text-white px-4 py-2 text-sm`}>
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center space-x-2">
-            {getStatusIcon()}
-            <span className="font-medium">{getStatusText()}</span>
-            
-            {showDetails && (
-              <div className="flex items-center space-x-4 text-xs opacity-90">
-                {effectiveType && (
-                  <Badge variant="secondary" className="text-white border-white/30 bg-white/20">
-                    {effectiveType.toUpperCase()}
-                  </Badge>
-                )}
-                
-                {lastSyncTime && (
-                  <span>Última sync: {formatLastSync(lastSyncTime)}</span>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center space-x-2">
-            {!isOnline && (
-              <span className="text-xs opacity-90">
-                Los cambios se guardarán localmente
+    <div className={`fixed ${position === 'top' ? 'top-4' : 'bottom-4'} right-4 z-50`}>
+      <div 
+        className={`transition-all duration-300 ${
+          isExpanded 
+            ? 'bg-red-600 text-white p-4 rounded-lg shadow-lg min-w-[300px]' 
+            : 'bg-red-600 text-white p-3 rounded-full shadow-lg cursor-pointer hover:scale-110'
+        }`}
+        onMouseEnter={() => setIsExpanded(true)}
+        onMouseLeave={() => setIsExpanded(false)}
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        {!isExpanded ? (
+          // Icono compacto
+          <div className="flex items-center justify-center relative">
+            <WifiOff className="h-5 w-5" />
+            {pendingCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {pendingCount}
               </span>
             )}
+          </div>
+        ) : (
+          // Vista expandida
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <WifiOff className="h-5 w-5" />
+                <span className="font-medium">Modo Offline</span>
+              </div>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsExpanded(false)
+                }}
+                className="hover:bg-red-700 rounded p-1"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
             
-            {isOnline && pendingCount > 0 && !syncInProgress && (
+            <div className="text-sm space-y-2">
+              <p>Sin conexión a internet</p>
+              
+              {pendingCount > 0 && (
+                <div className="flex items-center space-x-2 text-orange-200">
+                  <Clock className="h-4 w-4" />
+                  <span>{pendingCount} cambios pendientes</span>
+                </div>
+              )}
+              
+              {lastSyncTime && (
+                <div className="text-xs opacity-90">
+                  Última sync: {formatLastSync(lastSyncTime)}
+                </div>
+              )}
+            </div>
+            
+            <div className="flex space-x-2">
               <Button
                 size="sm"
                 variant="outline"
                 onClick={handleSyncClick}
-                className="text-white border-white/30 hover:bg-white/10 h-6 px-2 text-xs"
+                disabled={syncInProgress}
+                className="text-white border-white/30 hover:bg-white/10 flex-1"
               >
-                <RefreshCw className="h-3 w-3 mr-1" />
-                Sincronizar
+                {syncInProgress ? (
+                  <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                )}
+                {syncInProgress ? 'Sincronizando...' : 'Reintentar'}
               </Button>
-            )}
+              
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => preCacheDashboardRoutes()}
+                className="text-white border-white/30 hover:bg-white/10"
+                title="Pre-cachear páginas"
+              >
+                <Navigation className="h-3 w-3" />
+              </Button>
+            </div>
+            
+            <div className="text-xs opacity-75">
+              Los cambios se guardan localmente y se sincronizarán cuando vuelva la conexión
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )
@@ -149,27 +172,29 @@ export function OfflineIndicator({
 
 // Componente para mostrar en la esquina (versión compacta)
 export function NetworkStatusBadge() {
-  const { isOnline, getConnectionQuality } = useNetworkStatus()
-  const connectionQuality = getConnectionQuality()
+  const { isOnline } = useNetworkStatus()
+  const [pendingCount, setPendingCount] = useState(0)
 
-  const getColor = () => {
-    if (!isOnline) return 'bg-red-500'
-    if (connectionQuality === 'poor') return 'bg-orange-500'
-    return 'bg-green-500'
-  }
+  useEffect(() => {
+    const handlePendingChange = (event: Event) => {
+      const customEvent = event as CustomEvent
+      setPendingCount(customEvent.detail?.count || 0)
+    }
 
-  const getIcon = () => {
-    if (!isOnline) return <WifiOff className="h-3 w-3" />
-    return <Wifi className="h-3 w-3" />
-  }
+    window.addEventListener('pendingChangesUpdate', handlePendingChange as EventListener)
+    return () => {
+      window.removeEventListener('pendingChangesUpdate', handlePendingChange as EventListener)
+    }
+  }, [])
+
+  // Solo mostrar si hay cambios pendientes cuando está online
+  if (!isOnline || pendingCount === 0) return null
 
   return (
-    <div className="fixed top-4 right-4 z-40">
-      <Badge className={`${getColor()} text-white border-0`}>
-        {getIcon()}
-        <span className="ml-1 text-xs">
-          {!isOnline ? 'Offline' : connectionQuality === 'poor' ? 'Lento' : 'Online'}
-        </span>
+    <div className="fixed top-4 right-20 z-40">
+      <Badge variant="secondary" className="bg-orange-500 text-white border-0">
+        <Clock className="h-3 w-3 mr-1" />
+        {pendingCount} pendientes
       </Badge>
     </div>
   )

@@ -100,7 +100,7 @@ const OfflineDataContext = createContext<OfflineDataContextType | undefined>(und
 export function OfflineDataProvider({ children }: { children: ReactNode }) {
   // Network status
   const { isOnline, hasBeenOffline } = useNetworkStatus()
-  const { cacheApiData } = useServiceWorker()
+  const { cacheApiData, cachePageVisit } = useServiceWorker()
   
   // Original state from data-context
   const [isLoading, setIsLoading] = useState(true)
@@ -140,8 +140,37 @@ export function OfflineDataProvider({ children }: { children: ReactNode }) {
       initComplete.current = true
       loadData()
       setupEventListeners()
+      initializeOfflineNavigation()
     }
   }, [])
+
+  // Pre-cache important pages for offline navigation
+  const initializeOfflineNavigation = () => {
+    if (isOnline && cachePageVisit) {
+      // Cache las páginas principales del dashboard
+      const importantPages = [
+        '/dashboard',
+        '/dashboard/cereals',
+        '/dashboard/clients', 
+        '/dashboard/drivers',
+        '/dashboard/silos',
+        '/dashboard/operations',
+        '/dashboard/offline-settings'
+      ]
+
+      setTimeout(() => {
+        importantPages.forEach(page => {
+          try {
+            const fullUrl = new URL(page, window.location.origin).href
+            cachePageVisit(fullUrl)
+          } catch (error) {
+            console.log('Could not pre-cache page:', page)
+          }
+        })
+        console.log('📱 Pre-cached important dashboard pages for offline navigation')
+      }, 2000) // Delay para no interferir con la carga inicial
+    }
+  }
 
   // Auto-sync when coming back online
   useEffect(() => {

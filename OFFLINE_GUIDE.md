@@ -1,6 +1,21 @@
 # Guía de Funcionalidad Offline - Acopio GH
+### 📋 Operaciones Soportadas Offline
 
-## ✅ Funcionalidades Implementadas
+### ✅ Completamente Soportadas
+- **Navegación**: Todas las páginas del dashboard funcionan offline
+- **Operaciones**: Crear, editar, eliminar
+- **Clientes**: Crear, editar, eliminar
+- **Choferes**: Crear, editar, eliminar
+- **Empresas**: Crear, editar, eliminar
+- **Cereales**: Crear, editar, eliminar
+- **Silos**: Crear, editar, eliminar
+- **Usuarios**: Crear, editar, eliminar
+
+### 📊 Datos Disponibles Offline
+- Todos los datos se mantienen sincronizados localmente
+- Búsquedas y filtros funcionan completamente offline
+- Reportes básicos disponibles con datos locales
+- **Navegación completa** entre todas las secciones sin internetidades Implementadas
 
 ### 🔧 Infraestructura PWA
 - **Service Worker**: Cacheo inteligente de recursos
@@ -21,6 +36,9 @@
 - **Indicador de Estado**: Muestra estado online/offline
 - **Progreso de Sync**: Barra de progreso durante sincronización
 - **Notificaciones**: Alertas de cambios pendientes
+- **Navegación Offline**: Todas las páginas del dashboard disponibles sin internet
+- **Pre-Cache Automático**: Cache inteligente de páginas visitadas
+- **Fallback Páginas**: Navegación fallback para rutas no cacheadas
 
 ## 🚀 Cómo Funciona
 
@@ -34,6 +52,8 @@
 2. Se asignan IDs temporales a nuevos registros
 3. El indicador muestra estado "offline" (rojo)
 4. Las operaciones aparecen como "pendientes de sincronización"
+5. **Navegación completa** disponible entre todas las páginas
+6. **Cache automático** de páginas visitadas
 
 ### Recuperación de Conexión
 1. Detección automática de conexión
@@ -60,22 +80,23 @@
 ## 🎛️ Controles de Usuario
 
 ### Indicador de Estado Offline
-**Ubicación**: Esquina superior derecha de la aplicación
+**Ubicación**: Esquina superior derecha de la aplicación (solo cuando está offline)
 
 **Estados**:
-- 🟢 **Online**: Conectado al servidor
-- 🟡 **Sincronizando**: Enviando cambios pendientes
-- 🔴 **Offline**: Sin conexión
+- � **Icono Compacto**: Aparece solo cuando no hay internet
+- � **Vista Expandida**: Al hacer hover/click muestra detalles completos
+- � **Badge Pendientes**: Muestra cambios pendientes cuando está online
 
 **Acciones Disponibles**:
-- **Forzar Sincronización**: Botón manual para sincronizar
-- **Ver Pendientes**: Lista de cambios por sincronizar
-- **Limpiar Caché**: Resetear datos locales (emergencia)
+- **Reintentar**: Intenta reconectar y sincronizar
+- **Pre-cache**: Cachear páginas para navegación offline
+- **Auto-expandir**: Se expande automáticamente al hacer hover
 
 ### Notificaciones
-- **Cambios Guardados**: Confirmación de operaciones offline
-- **Sync Completado**: Cuando se envían cambios al servidor
-- **Conflictos**: Cuando hay datos duplicados o conflictivos
+- **Indicador Discreto**: Solo aparece cuando hay problemas de conexión
+- **Cambios Guardados**: Badge naranja cuando hay cambios pendientes online
+- **Sync Completado**: Desaparece automáticamente cuando todo está sincronizado
+- **Navegación Offline**: Indicador persiste hasta que vuelva la conexión
 
 ## 🔧 Configuración y Mantenimiento
 
@@ -101,6 +122,8 @@
 - **API Calls**: Network-first con fallback a caché
 - **Recursos Estáticos**: Cache-first para mejor rendimiento
 - **HTML**: Network-first para actualizaciones
+- **Páginas Dashboard**: Cache automático de todas las rutas principales
+- **Navegación Inteligente**: Fallback entre páginas relacionadas
 
 ### Detección de Red
 - **Navigator.onLine**: Detección básica de conectividad
@@ -115,6 +138,9 @@
 ## 🎯 Próximas Mejoras
 
 ### Funcionalidades Avanzadas
+- [x] **Navegación offline completa** ✅ IMPLEMENTADO
+- [x] **Cache inteligente de páginas** ✅ IMPLEMENTADO
+- [x] **Fallback automático de rutas** ✅ IMPLEMENTADO
 - [ ] Sync selectivo por tipo de datos
 - [ ] Compresión de datos locales
 - [ ] Exportación de datos offline

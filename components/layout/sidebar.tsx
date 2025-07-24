@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { useNavigationWithLoading } from "@/hooks/use-navigation"
+import { useOfflineNavigation } from "@/hooks/use-offline-navigation"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
@@ -28,6 +29,7 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const { navigateWithLoading, navigateAndReplace } = useNavigationWithLoading()
+  const { navigateOfflineSafe } = useOfflineNavigation()
   const pathname = usePathname()
   const [user, setUser] = useState<any>(null)
 
@@ -157,7 +159,8 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   }
 
   const handleNavigation = (href: string) => {
-    navigateWithLoading(href)
+    // Usar navegación offline-safe para mejor soporte sin internet
+    navigateOfflineSafe(href)
     onClose?.() // Cerrar el menú móvil después de navegar
   }
 

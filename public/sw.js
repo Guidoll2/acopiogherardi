@@ -1,16 +1,34 @@
-const CACHE_NAME = 'acopio-v1';
-const OFFLINE_CACHE = 'acopio-offline-v1';
-const API_CACHE = 'acopio-api-v1';
+const CACHE_NAME = 'acopio-v2-offline-nav';
+const OFFLINE_CACHE = 'acopio-offline-v2-nav';
+const API_CACHE = 'acopio-api-v2-nav';
 
 // Recursos estáticos a cachear
 const STATIC_ASSETS = [
   '/',
   '/login',
   '/dashboard',
+  '/dashboard/cereals',
+  '/dashboard/clients',
+  '/dashboard/drivers',
+  '/dashboard/silos',
+  '/dashboard/operations',
+  '/dashboard/calendar',
+  '/dashboard/offline-settings',
+  '/dashboard/profile',
+  '/dashboard/system-admin',
   '/garita',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png'
+];
+
+// Rutas dinámicas comunes a pre-cachear
+const DYNAMIC_ROUTES = [
+  '/dashboard/cereals/new',
+  '/dashboard/clients/new',
+  '/dashboard/drivers/new',
+  '/dashboard/silos/new',
+  '/dashboard/operations/new'
 ];
 
 // Patrones de API para cachear
@@ -34,10 +52,29 @@ self.addEventListener('install', (event) => {
   console.log('🔧 Service Worker: Installing...');
   
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('📦 Service Worker: Caching static assets');
-      return cache.addAll(STATIC_ASSETS);
-    })
+    Promise.all([
+      // Cachear assets estáticos
+      caches.open(CACHE_NAME).then((cache) => {
+        console.log('📦 Service Worker: Caching static assets');
+        return cache.addAll(STATIC_ASSETS);
+      }),
+      // Pre-cachear rutas dinámicas comunes
+      caches.open(OFFLINE_CACHE).then(async (cache) => {
+        console.log('📦 Service Worker: Pre-caching dynamic routes');
+        // Intentar cachear rutas dinámicas si están disponibles
+        for (const route of DYNAMIC_ROUTES) {
+          try {
+            const response = await fetch(route);
+            if (response.ok) {
+              await cache.put(route, response);
+              console.log('✅ Pre-cached:', route);
+            }
+          } catch (error) {
+            console.log('⚠️ Could not pre-cache:', route);
+          }
+        }
+      })
+    ])
   );
   
   // Activar inmediatamente el nuevo service worker
@@ -97,8 +134,16 @@ function isStaticAsset(pathname) {
          pathname.endsWith('.css') ||
          pathname.endsWith('.png') ||
          pathname.endsWith('.jpg') ||
+         pathname.endsWith('.jpeg') ||
          pathname.endsWith('.svg') ||
-         pathname.endsWith('.ico');
+         pathname.endsWith('.ico') ||
+         pathname.endsWith('.woff') ||
+         pathname.endsWith('.woff2') ||
+         pathname.endsWith('.ttf') ||
+         pathname.endsWith('.eot') ||
+         pathname.endsWith('.map') ||
+         pathname.includes('/__next/') ||
+         pathname.includes('/chunks/');
 }
 
 // Manejar requests de API
@@ -202,6 +247,7 @@ async function handleStaticAsset(request) {
 // Manejar páginas
 async function handlePageRequest(request) {
   const cache = await caches.open(OFFLINE_CACHE);
+  const url = new URL(request.url);
   
   try {
     // Intentar red primero para páginas
@@ -216,19 +262,80 @@ async function handlePageRequest(request) {
   } catch (error) {
     console.log('🔌 Page request failed, trying cache:', request.url);
     
-    // Fallback a cache
+    // Fallback a cache exacto
     const cachedResponse = await cache.match(request);
     if (cachedResponse) {
+      console.log('📱 Serving exact match from cache:', request.url);
       return cachedResponse;
     }
     
-    // Fallback a página offline si existe
+    // Fallback inteligente para rutas dinámicas del dashboard
+    if (url.pathname.startsWith('/dashboard/')) {
+      // Para rutas como /dashboard/cereals/[id], fallback a /dashboard/cereals
+      const baseRoute = '/' + url.pathname.split('/').slice(1, 3).join('/');
+      const baseResponse = await cache.match(baseRoute);
+      if (baseResponse) {
+        console.log('📱 Serving base route fallback:', baseRoute);
+        return baseResponse;
+      }
+      
+      // Último fallback: dashboard principal
+      const dashboardResponse = await cache.match('/dashboard');
+      if (dashboardResponse) {
+        console.log('📱 Serving dashboard fallback for:', url.pathname);
+        return dashboardResponse;
+      }
+    }
+    
+    // Fallback a página offline si existe (página principal)
     const offlinePage = await cache.match('/');
     if (offlinePage) {
+      console.log('📱 Serving offline fallback for:', url.pathname);
       return offlinePage;
     }
     
-    throw error;
+    // Si todo falla, retornar página de error offline
+    return new Response(`
+      <!DOCTYPE html>
+      <html lang="es">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Sin Conexión - Acopio GH</title>
+        <style>
+          body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f5f5f5; }
+          .container { max-width: 400px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+          .icon { font-size: 64px; margin-bottom: 20px; }
+          h1 { color: #333; margin-bottom: 20px; }
+          p { color: #666; margin-bottom: 30px; }
+          .btn { background: #16a34a; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; display: inline-block; }
+          .btn:hover { background: #15803d; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="icon">📱</div>
+          <h1>Sin Conexión</h1>
+          <p>Esta página no está disponible offline. Verifica tu conexión a internet e intenta nuevamente.</p>
+          <a href="/" class="btn">Ir al Inicio</a>
+          <br><br>
+          <a href="/dashboard" class="btn">Ir al Dashboard</a>
+        </div>
+        <script>
+          // Auto-refresh cuando vuelva la conexión
+          window.addEventListener('online', () => {
+            window.location.reload();
+          });
+        </script>
+      </body>
+      </html>
+    `, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html',
+        'X-Served-By': 'service-worker-offline-fallback'
+      }
+    });
   }
 }
 
@@ -242,7 +349,26 @@ self.addEventListener('message', (event) => {
     // Cachear datos importantes enviados desde el cliente
     cacheApiData(event.data.url, event.data.data);
   }
+  
+  if (event.data && event.data.type === 'CACHE_PAGE_VISIT') {
+    // Cachear páginas que el usuario visita para navegación offline
+    cachePageVisit(event.data.url);
+  }
 });
+
+// Función para cachear páginas visitadas
+async function cachePageVisit(url) {
+  try {
+    const cache = await caches.open(OFFLINE_CACHE);
+    const response = await fetch(url);
+    if (response.ok) {
+      await cache.put(url, response.clone());
+      console.log('📦 Cached visited page:', url);
+    }
+  } catch (error) {
+    console.log('⚠️ Could not cache visited page:', url);
+  }
+}
 
 // Función para cachear datos de API enviados desde el cliente
 async function cacheApiData(url, data) {

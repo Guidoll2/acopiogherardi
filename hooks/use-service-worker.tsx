@@ -85,12 +85,22 @@ export function useServiceWorker() {
     }
   }
 
+  const cachePageVisit = (url: string) => {
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'CACHE_PAGE_VISIT',
+        url
+      })
+    }
+  }
+
   return {
     isSupported,
     isInstalled,
     updateAvailable,
     updateServiceWorker,
     cacheApiData,
+    cachePageVisit,
     registration: swRegistration
   }
 }
