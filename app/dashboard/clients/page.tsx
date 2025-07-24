@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useData } from "@/contexts/data-context"
+import { useData } from "@/contexts/offline-data-context"
 import { useToasts } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"

@@ -24,7 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Save, Clock, CheckCircle, AlertCircle } from "lucide-react"
-import { useData } from "@/contexts/data-context"
+import { useData } from "@/contexts/offline-data-context"
 
 interface OperationStatusDialogProps {
   operationId: string | null

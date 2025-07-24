@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { AuthService } from "@/lib/auth"
-import { useData } from "@/contexts/data-context"
+import { useData } from "@/contexts/offline-data-context"
 import { RefreshCw, Truck, Users, LogIn, LogOut, Clock } from "lucide-react"
 
 export function GaritaDashboard() {

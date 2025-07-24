@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useData } from "@/contexts/data-context"
+import { useData } from "@/contexts/offline-data-context"
 import { useToasts } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,17 +13,8 @@ import { Badge } from "@/components/ui/badge"
 import { Search, Plus, Edit, Trash2, User, Phone, Mail, CreditCard } from "lucide-react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 
-type Driver = {
-  id: string
-  name: string
-  email?: string
-  phone?: string
-  license_number: string
-  license_expiry?: string
-  transportista?: string
-  is_active?: boolean
-  status?: string
-}
+
+import type { Driver } from "@/types"
 
 export default function DriversPage() {
   const { drivers = [], addDriver, updateDriver, deleteDriver } = useData()

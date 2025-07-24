@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Plus, Truck, AlertCircle, X } from "lucide-react"
-import { useData } from "@/contexts/data-context"
+import { useData } from "@/contexts/offline-data-context"
 import { AuthService } from "@/lib/auth"
 
 interface CreateSpontaneousEntryDialogProps {

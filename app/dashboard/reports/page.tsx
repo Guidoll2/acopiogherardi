@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useData } from "@/contexts/data-context"
+import { useData } from "@/contexts/offline-data-context"
 import { useToasts } from "@/components/ui/toast"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -129,7 +129,7 @@ export default function ReportsPage() {
   // Calculate stock data from silos
   const getStockData = () => {
     return silos.map(silo => {
-      const cerealName = getCerealName(silo.cereal_type_id)
+      const cerealName = getCerealName(silo.cereal_type)
       const percentage = silo.capacity > 0 ? Math.round((silo.current_stock / silo.capacity) * 100) : 0
       
       return {

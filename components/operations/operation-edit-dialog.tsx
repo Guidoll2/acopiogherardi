@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Save, X } from "lucide-react"
-import { useData } from "@/contexts/data-context"
+import { useData } from "@/contexts/offline-data-context"
 
 interface OperationEditDialogProps {
   operationId: string | null
@@ -100,7 +100,7 @@ export function OperationEditDialog({ operationId, open, onOpenChange }: Operati
         client_id: formData.client_id,
         driver_id: formData.driver_id,
         silo_id: formData.silo_id,
-        cereal_type_id: formData.cereal_type_id,
+        cereal_type: formData.cereal_type_id,
         operation_type: formData.operation_type,
         chassis_plate: formData.chassis_plate,
         trailer_plate: formData.trailer_plate,
@@ -145,7 +145,7 @@ export function OperationEditDialog({ operationId, open, onOpenChange }: Operati
                 <Label htmlFor="operation_type">Tipo de Operación *</Label>
                 <Select
                   value={formData.operation_type}
-                  onValueChange={(value: "ingreso" | "egreso") => setFormData({ ...formData, operation_type: value })}
+                  onValueChange={(value) => setFormData({ ...formData, operation_type: value as "ingreso" | "egreso" })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -177,6 +177,25 @@ export function OperationEditDialog({ operationId, open, onOpenChange }: Operati
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="cereal_type_id">Tipo de Cereal *</Label>
+                <Select
+                  value={formData.cereal_type_id}
+                  onValueChange={(value) => setFormData({ ...formData, cereal_type_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar cereal" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cerealTypes.map((cereal) => (
+                      <SelectItem key={cereal.id} value={cereal.id}>
+                        {cereal.name} ({cereal.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="driver_id">Conductor *</Label>
                 <Select
                   value={formData.driver_id}
@@ -195,24 +214,6 @@ export function OperationEditDialog({ operationId, open, onOpenChange }: Operati
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="cereal_type_id">Tipo de Cereal *</Label>
-                <Select
-                  value={formData.cereal_type_id}
-                  onValueChange={(value) => setFormData({ ...formData, cereal_type_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar cereal" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cerealTypes.map((cereal) => (
-                      <SelectItem key={cereal.id} value={cereal.id}>
-                        {cereal.name} ({cereal.code})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="silo_id">Silo *</Label>

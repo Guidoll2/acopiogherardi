@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useData } from "@/contexts/data-context"
+import { useData } from "@/contexts/offline-data-context"
 import { usePageReady } from "@/hooks/use-page-ready"
 import { useToasts } from "@/components/ui/toast"
 import { validateSiloCapacity } from "@/lib/silo-validation"
@@ -27,7 +27,7 @@ export default function SilosPage() {
   const [formData, setFormData] = useState({
     name: "",
     capacity: "",
-    cereal_type_id: "",
+    cereal_type: "",
   })
 
   const handleCreateSilo = async () => {
@@ -40,8 +40,9 @@ export default function SilosPage() {
           name: formData.name,
           capacity: Number(formData.capacity),
           current_stock: 0,
-          cereal_type_id: formData.cereal_type_id,
+          cereal_type: formData.cereal_type,
           is_active: true,
+          status: "active",
         })
         
         showSuccess("Silo creado", `${formData.name} ha sido agregado exitosamente`)
@@ -49,7 +50,7 @@ export default function SilosPage() {
         setFormData({
           name: "",
           capacity: "",
-          cereal_type_id: "",
+          cereal_type: "",
         })
         setIsCreateDialogOpen(false)
       } catch (error) {
@@ -71,7 +72,7 @@ export default function SilosPage() {
         await updateSilo(selectedSilo.id, {
           name: formData.name,
           capacity: Number(formData.capacity),
-          cereal_type_id: formData.cereal_type_id,
+          cereal_type: formData.cereal_type,
         })
         
         showSuccess("Silo actualizado", `${formData.name} ha sido actualizado exitosamente`)
@@ -81,7 +82,7 @@ export default function SilosPage() {
         setFormData({
           name: "",
           capacity: "",
-          cereal_type_id: "",
+          cereal_type: "",
         })
       } catch (error) {
         showError("Error al actualizar silo", "No se pudo actualizar el silo. Intenta nuevamente.")
@@ -103,7 +104,7 @@ export default function SilosPage() {
     setFormData({
       name: silo.name || "",
       capacity: silo.capacity?.toString() || "",
-      cereal_type_id: silo.cereal_type_id || "",
+      cereal_type: silo.cereal_type || "",
     })
     setIsEditDialogOpen(true)
   }
@@ -149,7 +150,7 @@ export default function SilosPage() {
                 </TableHeader>
                 <TableBody>
                   {silos.map((silo) => {
-                    const cereal = cereals.find((c) => c.id === silo.cereal_type_id)
+                    const cereal = cereals.find((c) => c.id === silo.cereal_type)
                     const occupancy = silo.capacity > 0 ? (silo.current_stock / silo.capacity) * 100 : 0
 
                     return (
@@ -209,7 +210,7 @@ export default function SilosPage() {
             {/* Mobile Cards - Shown only on small screens */}
             <div className="md:hidden space-y-3 p-4">
               {silos.map((silo) => {
-                const cereal = cereals.find((c) => c.id === silo.cereal_type_id)
+                const cereal = cereals.find((c) => c.id === silo.cereal_type)
                 const occupancy = silo.capacity > 0 ? (silo.current_stock / silo.capacity) * 100 : 0
 
                 return (
@@ -345,8 +346,8 @@ export default function SilosPage() {
             <div>
               <Label htmlFor="cereal_type">Tipo de Cereal</Label>
               <Select
-                value={formData.cereal_type_id}
-                onValueChange={(value) => setFormData({ ...formData, cereal_type_id: value })}
+                value={formData.cereal_type}
+                onValueChange={(value) => setFormData({ ...formData, cereal_type: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar cereal" />
@@ -398,8 +399,8 @@ export default function SilosPage() {
             <div>
               <Label htmlFor="edit-cereal">Tipo de Cereal</Label>
               <Select
-                value={formData.cereal_type_id}
-                onValueChange={(value) => setFormData({ ...formData, cereal_type_id: value })}
+                value={formData.cereal_type}
+                onValueChange={(value) => setFormData({ ...formData, cereal_type: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar cereal" />

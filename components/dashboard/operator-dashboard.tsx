@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { AuthService } from "@/lib/auth"
-import { useData } from "@/contexts/data-context"
+import { useData } from "@/contexts/offline-data-context"
 import { ArrowRight, Clock, RefreshCw, Eye, Printer, CheckCircle, AlertTriangle, Play } from "lucide-react"
 import { OperationViewDialog } from "@/components/operations/operation-view-dialog"
 import { OperationStatusDialog } from "@/components/operations/operation-status-dialog"
@@ -388,7 +388,7 @@ export function OperatorDashboard() {
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {silos.map((silo) => {
-                const cerealType = cerealTypes.find((ct) => ct.id === silo.cereal_type_id)
+                const cerealType = cerealTypes.find((ct) => ct.id === silo.cereal_type)
                 const occupancy = (silo.current_stock / silo.capacity) * 100
 
                 return (

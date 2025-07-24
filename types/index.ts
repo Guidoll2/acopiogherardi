@@ -50,6 +50,10 @@ export interface Driver {
   license_number: string
   phone: string
   license_expiry: string
+  email: string
+  transportista?: string
+  is_active?: boolean
+  status?: string
   created_at: string
   updated_at: string
 }
@@ -60,6 +64,7 @@ export interface Silo {
   capacity: number
   current_stock: number
   cereal_type: string
+  is_active?: boolean
   status: "active" | "inactive" | "maintenance"
   created_at: string
   updated_at: string
@@ -68,6 +73,7 @@ export interface Silo {
 export interface Cereal {
   id: string
   name: string
+  code: string // Nuevo campo para código corto
   variety: string
   harvest_year: number
   quality_grade: string
@@ -102,6 +108,17 @@ export interface Operation {
   updated_at: string
   createdAt: string // For backward compatibility
   amount?: number // For backward compatibility
+  authorized_entry?: {
+    timestamp: string
+    authorized_by: string
+    notes?: string
+  }
+  authorized_exit?: {
+    timestamp: string
+    authorized_by: string
+    notes?: string
+  }
+  created_from_garita?: boolean
   
   // Legacy fields for backward compatibility
   type?: "entrada" | "salida"

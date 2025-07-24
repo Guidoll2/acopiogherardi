@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generador de Iconos PWA</title>
+</head>
+<body>
+    <h2>Generador de Iconos PWA para Acopio GH</h2>
+    <div id="canvases"></div>
+    <button onclick="downloadAll()">Descargar Todos los Iconos</button>
+
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512, 16, 32];
+        
+        function createIcon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Background
+            ctx.fillStyle = '#2563eb';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Border radius simulation
+            ctx.globalCompositeOperation = 'destination-in';
+            ctx.fillStyle = 'black';
+            ctx.roundRect(0, 0, size, size, size * 0.125);
+            ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+            
+            // Wheat/grain icon
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const iconSize = size * 0.6;
+            
+            // Grain body
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY, iconSize * 0.15, iconSize * 0.4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Grain lines
+            ctx.strokeStyle = '#2563eb';
+            ctx.lineWidth = size * 0.01;
+            for (let i = 0; i < 6; i++) {
+                const y = centerY - iconSize * 0.3 + (i * iconSize * 0.12);
+                ctx.beginPath();
+                ctx.moveTo(centerX - iconSize * 0.1, y);
+                ctx.lineTo(centerX + iconSize * 0.1, y);
+                ctx.stroke();
+            }
+            
+            // Text for larger icons
+            if (size >= 128) {
+                ctx.fillStyle = 'white';
+                ctx.font = `bold ${size * 0.08}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.fillText('ACOPIO', centerX, size * 0.9);
+            }
+            
+            return canvas;
+        }
+        
+        function CanvasRoundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+        
+        // Add roundRect method to canvas context
+        CanvasRenderingContext2D.prototype.roundRect = function(x, y, width, height, radius) {
+            CanvasRoundRect(this, x, y, width, height, radius);
+        };
+        
+        function downloadCanvas(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        function downloadAll() {
+            sizes.forEach(size => {
+                const canvas = createIcon(size);
+                downloadCanvas(canvas, `icon-${size}.png`);
+            });
+        }
+        
+        // Generate preview canvases
+        const container = document.getElementById('canvases');
+        sizes.forEach(size => {
+            const canvas = createIcon(size);
+            canvas.style.margin = '10px';
+            canvas.style.border = '1px solid #ccc';
+            container.appendChild(canvas);
+            
+            const label = document.createElement('div');
+            label.textContent = `${size}x${size}`;
+            label.style.textAlign = 'center';
+            label.style.fontSize = '12px';
+            container.appendChild(label);
+        });
+    </script>
+</body>
+</html>

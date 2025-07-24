@@ -1,0 +1,10 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" rx="24" fill="#2563eb"/>
+  <g transform="translate(32, 32)">
+    <!-- Grain/Wheat icon -->
+    <path d="M64 16C75.046 16 84 24.954 84 36V116C84 127.046 75.046 136 64 136C52.954 136 44 127.046 44 116V36C44 24.954 52.954 16 64 16Z" fill="white"/>
+    <path d="M64 8C79.464 8 92 20.536 92 36V100C92 115.464 79.464 128 64 128C48.536 128 36 115.464 36 100V36C36 20.536 48.536 8 64 8Z" fill="#fbbf24"/>
+    <path d="M64 24V112M52 32L76 32M52 48L76 48M52 64L76 64M52 80L76 80M52 96L76 96" stroke="#2563eb" stroke-width="2"/>
+  </g>
+  <text x="96" y="170" font-family="Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="middle" fill="white">ACOPIO</text>
+</svg>

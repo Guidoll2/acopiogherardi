@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Calendar, Clock, User, Truck, Warehouse, Wheat, Scale, Droplets, AlertCircle } from "lucide-react"
-import { useData } from "@/contexts/data-context"
+import { useData } from "@/contexts/offline-data-context"
 
 interface OperationViewDialogProps {
   operationId: string | null

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useData } from "@/contexts/data-context"
+import { useData } from "@/contexts/offline-data-context"
 import { useToasts } from "@/components/ui/toast"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Button } from "@/components/ui/button"
@@ -24,10 +24,13 @@ export default function CerealsPage() {
     name: "",
     code: "",
     pricePerTon: "",
+    variety: "",
+    harvestYear: "",
+    qualityGrade: "",
   })
 
   const handleCreateCereal = async () => {
-    if (formData.name && formData.code && formData.pricePerTon) {
+    if (formData.name && formData.code && formData.pricePerTon && formData.variety && formData.harvestYear && formData.qualityGrade) {
       setIsLoading(true)
       showProcessing("Creando cereal...")
       
@@ -36,6 +39,9 @@ export default function CerealsPage() {
           name: formData.name,
           code: formData.code.toUpperCase(),
           price_per_ton: Number(formData.pricePerTon),
+          variety: formData.variety,
+          harvest_year: Number(formData.harvestYear),
+          quality_grade: formData.qualityGrade,
         })
         
         showSuccess("Cereal creado", `${formData.name} ha sido agregado exitosamente`)
@@ -44,6 +50,9 @@ export default function CerealsPage() {
           name: "",
           code: "",
           pricePerTon: "",
+          variety: "",
+          harvestYear: "",
+          qualityGrade: "",
         })
         setIsCreateDialogOpen(false)
       } catch (error) {
@@ -57,7 +66,7 @@ export default function CerealsPage() {
   }
 
   const handleEditCereal = async () => {
-    if (selectedCereal && formData.name && formData.code && formData.pricePerTon) {
+    if (selectedCereal && formData.name && formData.code && formData.pricePerTon && formData.variety && formData.harvestYear && formData.qualityGrade) {
       setIsLoading(true)
       showProcessing("Actualizando cereal...")
       
@@ -66,6 +75,9 @@ export default function CerealsPage() {
           name: formData.name,
           code: formData.code.toUpperCase(),
           price_per_ton: Number(formData.pricePerTon),
+          variety: formData.variety,
+          harvest_year: Number(formData.harvestYear),
+          quality_grade: formData.qualityGrade,
         })
         
         showSuccess("Cereal actualizado", `${formData.name} ha sido actualizado exitosamente`)
@@ -76,6 +88,9 @@ export default function CerealsPage() {
           name: "",
           code: "",
           pricePerTon: "",
+          variety: "",
+          harvestYear: "",
+          qualityGrade: "",
         })
       } catch (error) {
         showError("Error al actualizar cereal", "No se pudo actualizar el cereal. Intenta nuevamente.")
@@ -93,6 +108,9 @@ export default function CerealsPage() {
       name: cereal.name || "",
       code: cereal.code || "",
       pricePerTon: cereal.price_per_ton?.toString() || "",
+      variety: cereal.variety || "",
+      harvestYear: cereal.harvest_year?.toString() || "",
+      qualityGrade: cereal.quality_grade || "",
     })
     setIsEditDialogOpen(true)
   }
@@ -285,6 +303,36 @@ export default function CerealsPage() {
               />
             </div>
             <div>
+              <Label htmlFor="variety">Variedad *</Label>
+              <Input
+                id="variety"
+                value={formData.variety}
+                onChange={(e) => setFormData({ ...formData, variety: e.target.value })}
+                placeholder="Ej: RR2"
+              />
+            </div>
+            <div>
+              <Label htmlFor="harvestYear">Año de Cosecha *</Label>
+              <Input
+                id="harvestYear"
+                type="number"
+                value={formData.harvestYear}
+                onChange={(e) => setFormData({ ...formData, harvestYear: e.target.value })}
+                placeholder="2025"
+                min={2000}
+                max={2100}
+              />
+            </div>
+            <div>
+              <Label htmlFor="qualityGrade">Calidad *</Label>
+              <Input
+                id="qualityGrade"
+                value={formData.qualityGrade}
+                onChange={(e) => setFormData({ ...formData, qualityGrade: e.target.value })}
+                placeholder="Ej: Premium"
+              />
+            </div>
+            <div>
               <Label htmlFor="price">Precio por Tonelada *</Label>
               <Input
                 id="price"
@@ -327,6 +375,36 @@ export default function CerealsPage() {
                 value={formData.code}
                 onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                 maxLength={3}
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-variety">Variedad *</Label>
+              <Input
+                id="edit-variety"
+                value={formData.variety}
+                onChange={(e) => setFormData({ ...formData, variety: e.target.value })}
+                placeholder="Ej: RR2"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-harvestYear">Año de Cosecha *</Label>
+              <Input
+                id="edit-harvestYear"
+                type="number"
+                value={formData.harvestYear}
+                onChange={(e) => setFormData({ ...formData, harvestYear: e.target.value })}
+                placeholder="2025"
+                min={2000}
+                max={2100}
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-qualityGrade">Calidad *</Label>
+              <Input
+                id="edit-qualityGrade"
+                value={formData.qualityGrade}
+                onChange={(e) => setFormData({ ...formData, qualityGrade: e.target.value })}
+                placeholder="Ej: Premium"
               />
             </div>
             <div>
