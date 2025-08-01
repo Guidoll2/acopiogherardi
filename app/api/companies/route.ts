@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs"
 import connectDB from "@/app/mongoDB/db"
 import Company from "@/app/mongoDB/models/company"
 import User from "@/app/mongoDB/models/user"
-import { generatePassword, sendWelcomeEmail, sendAdminNotification } from "@/lib/email-service"
+import { generatePassword, sendWelcomeEmail, sendAdminNotification } from "@/lib/email-config"
 
 export async function GET(request: NextRequest) {
   try {
@@ -111,12 +111,31 @@ export async function POST(request: NextRequest) {
       updated_at: newCompany.updated_at,
     }
 
-    // Email temporalmente deshabilitado hasta tener dominio personalizado
-    // TODO: Reactivar cuando se configure el dominio y servicio de email
-    console.log(`Empresa "${name}" creada exitosamente.`)
-    console.log(`Email de administrador: ${email}`)
-    console.log(`Contraseña temporal: ${temporaryPassword}`)
-    console.log(`IMPORTANTE: Guarda estas credenciales para entregar manualmente al cliente.`)
+    // Intentar enviar email de bienvenida
+    let emailResult = { success: false }
+    let adminNotificationResult = { success: false }
+
+    try {
+      // Enviar email de bienvenida a la empresa
+      emailResult = await sendWelcomeEmail(email, name, temporaryPassword)
+      
+      // Enviar notificación al administrador del sistema
+      adminNotificationResult = await sendAdminNotification(name, email, subscription_plan || "basic")
+      
+      console.log(`Empresa "${name}" creada exitosamente.`)
+      console.log(`Email de bienvenida enviado: ${emailResult.success ? '✅ Sí' : '❌ No'}`)
+      console.log(`Notificación al admin enviada: ${adminNotificationResult.success ? '✅ Sí' : '❌ No'}`)
+      
+    } catch (error) {
+      console.error('Error enviando emails:', error)
+    }
+
+    // Si no se pudo enviar el email, mostrar credenciales para entrega manual
+    if (!emailResult.success) {
+      console.log(`Email de administrador: ${email}`)
+      console.log(`Contraseña temporal: ${temporaryPassword}`)
+      console.log(`IMPORTANTE: Guarda estas credenciales para entregar manualmente al cliente.`)
+    }
 
     return NextResponse.json({ 
       company: companyData,
@@ -126,8 +145,11 @@ export async function POST(request: NextRequest) {
         role: adminUser.role
       },
       temporaryPassword: temporaryPassword,
-      message: "Empresa creada exitosamente. Credenciales generadas para entrega manual.",
-      emailSent: false // Email deshabilitado temporalmente
+      message: emailResult.success 
+        ? "Empresa creada exitosamente. Email de bienvenida enviado." 
+        : "Empresa creada exitosamente. Email no enviado - credenciales para entrega manual.",
+      emailSent: emailResult.success,
+      adminNotificationSent: adminNotificationResult.success
     })
 
   } catch (error) {

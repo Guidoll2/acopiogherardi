@@ -70,12 +70,25 @@ export function CreateCompanyDialog({ open, onOpenChange, onCompanyCreated }: Cr
           password: data.temporaryPassword
         })
         
+        // Mensaje dinámico basado en si se envió el email o no
+        let successMessage = `Empresa "${formData.name}" creada exitosamente. `
+        
+        if (data.emailSent) {
+          successMessage += "✅ Email de bienvenida enviado automáticamente a la empresa."
+        } else {
+          successMessage += "⚠️ Email no enviado - guarda las credenciales mostradas abajo para entrega manual."
+        }
+        
+        if (data.adminNotificationSent) {
+          successMessage += " 📧 Administrador notificado."
+        }
+        
         setMessage({
           type: "success",
-          text: `Empresa "${formData.name}" creada exitosamente. Guarda las credenciales mostradas abajo para entregar al cliente.`
+          text: successMessage
         })
 
-        // Cerrar diálogo después de 10 segundos para dar tiempo a copiar credenciales
+        // Cerrar diálogo después de 15 segundos para dar tiempo a copiar credenciales si es necesario
         setTimeout(() => {
           onOpenChange(false)
           setMessage(null)
@@ -89,7 +102,7 @@ export function CreateCompanyDialog({ open, onOpenChange, onCompanyCreated }: Cr
             cuit: "",
             subscription_plan: "basic",
           })
-        }, 10000)
+        }, 15000)
         
       } else {
         const errorData = await response.json()
@@ -119,7 +132,7 @@ export function CreateCompanyDialog({ open, onOpenChange, onCompanyCreated }: Cr
             Crear Nueva Empresa
           </DialogTitle>
           <DialogDescription>
-            Complete la información de la nueva empresa. Se creará automáticamente un usuario administrador y se mostrarán las credenciales para entrega manual.
+            Complete la información de la nueva empresa. Se creará automáticamente un usuario administrador y se enviará un email de bienvenida con las credenciales de acceso (o se mostrarán para entrega manual si el email no está configurado).
           </DialogDescription>
         </DialogHeader>
 
@@ -156,7 +169,7 @@ export function CreateCompanyDialog({ open, onOpenChange, onCompanyCreated }: Cr
                     Copiar Credenciales
                   </Button>
                 </div>
-                <p className="text-xs">⚠️ Guarda estas credenciales para entregarlas al cliente. La ventana se cerrará automáticamente en 10 segundos.</p>
+                <p className="text-xs">⚠️ Guarda estas credenciales si no se envió el email automáticamente. La ventana se cerrará en 15 segundos.</p>
               </div>
             </AlertDescription>
           </Alert>
@@ -189,7 +202,7 @@ export function CreateCompanyDialog({ open, onOpenChange, onCompanyCreated }: Cr
               <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             </div>
             <p className="text-xs text-gray-500">
-              📧 Se creará automáticamente un usuario administrador y se enviarán las credenciales de acceso a este email.
+              📧 Se creará automáticamente un usuario administrador. Si el email está configurado, se enviarán las credenciales automáticamente; de lo contrario, se mostrarán aquí para entrega manual.
             </p>
           </div>
 

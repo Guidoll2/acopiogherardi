@@ -17,7 +17,8 @@ export const generatePassword = (length: number = 12): string => {
 export const sendWelcomeEmail = async (
   companyEmail: string,
   companyName: string,
-  tempPassword: string
+  tempPassword: string,
+  originalCompanyEmail?: string // Email original de la empresa (para modo desarrollo)
 ) => {
   try {
     // Si no hay configuración de Resend, simular envío exitoso para desarrollo
@@ -33,8 +34,10 @@ export const sendWelcomeEmail = async (
     const { data, error } = await resend.emails.send({
       from: process.env.EMAIL_FROM || 'noreply@acopiogh.com',
       to: [companyEmail],
-      subject: `¡Bienvenido a 4 Granos! - Credenciales de acceso para ${companyName}`,
-      html: getEmailTemplate(companyEmail, companyName, tempPassword),
+      subject: originalCompanyEmail 
+        ? `[DESARROLLO] Credenciales para empresa ${companyName} (${originalCompanyEmail})`
+        : `¡Bienvenido a 4 Granos! - Credenciales de acceso para ${companyName}`,
+      html: getEmailTemplate(companyEmail, companyName, tempPassword, originalCompanyEmail),
     })
 
     if (error) {
@@ -52,7 +55,9 @@ export const sendWelcomeEmail = async (
 }
 
 // Template del email
-const getEmailTemplate = (companyEmail: string, companyName: string, tempPassword: string) => {
+const getEmailTemplate = (companyEmail: string, companyName: string, tempPassword: string, originalCompanyEmail?: string) => {
+  const isDevMode = !!originalCompanyEmail
+  
   return `
     <!DOCTYPE html>
     <html>
@@ -65,6 +70,7 @@ const getEmailTemplate = (companyEmail: string, companyName: string, tempPasswor
         .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
         .credentials { background-color: #e7f3ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2563eb; }
         .button { display: inline-block; background-color: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+        .dev-notice { background-color: #fef3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b; margin: 20px 0; }
         .warning { background-color: #fef3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b; margin: 20px 0; }
         .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
       </style>
@@ -76,6 +82,15 @@ const getEmailTemplate = (companyEmail: string, companyName: string, tempPasswor
         </div>
         
         <div class="content">
+          ${isDevMode ? `
+          <div class="dev-notice">
+            <h4>🧪 MODO DESARROLLO</h4>
+            <p>Este email contiene las credenciales para la empresa <strong>${companyName}</strong>.</p>
+            <p><strong>Email original de la empresa:</strong> ${originalCompanyEmail}</p>
+            <p>En producción, este email se enviaría directamente a la empresa.</p>
+          </div>
+          ` : ''}
+          
           <h2>Hola, equipo de ${companyName}</h2>
           
           <p>¡Nos complace darte la bienvenida a nuestra plataforma de gestión de acopio de cereales!</p>
@@ -84,7 +99,7 @@ const getEmailTemplate = (companyEmail: string, companyName: string, tempPasswor
           
           <div class="credentials">
             <h3>📋 Credenciales de Acceso</h3>
-            <p><strong>Usuario (Email):</strong> ${companyEmail}</p>
+            <p><strong>Usuario (Email):</strong> ${originalCompanyEmail || companyEmail}</p>
             <p><strong>Contraseña temporal:</strong> <code style="background: #fff; padding: 4px 8px; border-radius: 4px; font-family: monospace;">${tempPassword}</code></p>
             <p><strong>URL de acceso:</strong> <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login">${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login</a></p>
           </div>
