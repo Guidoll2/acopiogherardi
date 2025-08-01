@@ -116,7 +116,7 @@ const getEmailTemplate = (companyEmail: string, companyName: string, tempPasswor
           <h3>🚀 Primeros pasos:</h3>
           <ol>
             <li>Inicia sesión con las credenciales proporcionadas</li>
-            <li>Cambia tu contraseña en el perfil de usuario</li>
+            <li><strong>Cambia tu contraseña inmediatamente</strong> desde tu perfil de usuario o configuración</li>
             <li>Configura los datos básicos de tu empresa</li>
             <li>Crea usuarios adicionales para tu equipo</li>
             <li>Comienza a gestionar tus operaciones de acopio</li>
@@ -131,7 +131,7 @@ const getEmailTemplate = (companyEmail: string, companyName: string, tempPasswor
           <h3>📞 ¿Necesitas ayuda?</h3>
           <p>Si tienes alguna pregunta o necesitas asistencia, no dudes en contactarnos:</p>
           <ul>
-            <li><strong>Email de soporte:</strong> soporte@acopiogh.com</li>
+            <li><strong>Email de soporte:</strong> soporte@cuatrogranos.com</li>
             <li><strong>Teléfono:</strong> +54 11 1234-5678</li>
             <li><strong>Horario de atención:</strong> Lunes a Viernes, 8:00 - 18:00 hs</li>
           </ul>

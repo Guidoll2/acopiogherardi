@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { AuthService } from "@/lib/auth"
 import { User, Building2, Shield, Save, LogOut } from "lucide-react"
+import { ChangePasswordSection } from "./change-password-section"
 
 interface ProfileDialogProps {
   open: boolean
@@ -133,7 +134,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl text-gray-700">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto text-gray-700">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
@@ -242,6 +243,9 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
               </CardContent>
             </Card>
           )}
+
+          {/* Sección de cambio de contraseña */}
+          <ChangePasswordSection userId={user.id} />
 
           {/* Botones de acción */}
           <div className="flex gap-3">

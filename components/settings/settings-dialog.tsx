@@ -10,7 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { AuthService } from "@/lib/auth"
-import { Settings, Building2, CreditCard, Save } from "lucide-react"
+import { Settings, Building2, CreditCard, Save, KeyRound } from "lucide-react"
+import { ChangePasswordSection } from "@/components/profile/change-password-section"
 
 interface SettingsDialogProps {
   open: boolean
@@ -136,8 +137,12 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           <DialogDescription>Gestiona la configuración de la empresa y del sistema</DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue={canManageCompany ? "company" : "system"} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs defaultValue="account" className="w-full">
+          <TabsList className={`grid w-full ${canManageCompany && canManageSystem ? 'grid-cols-3' : canManageCompany || canManageSystem ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            <TabsTrigger value="account" className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4" />
+              Cuenta
+            </TabsTrigger>
             {canManageCompany && (
               <TabsTrigger value="company" className="flex items-center gap-2">
                 <Building2 className="h-4 w-4" />
@@ -151,6 +156,21 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               </TabsTrigger>
             )}
           </TabsList>
+
+          {/* Pestaña de Cuenta - Disponible para todos los usuarios */}
+          <TabsContent value="account" className="space-y-6 text-gray-700">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-medium">Configuración de Cuenta</h3>
+                <p className="text-sm text-muted-foreground">
+                  Gestiona la seguridad y configuración de tu cuenta personal
+                </p>
+              </div>
+              
+              {/* Sección de cambio de contraseña */}
+              {user && <ChangePasswordSection userId={user.id} />}
+            </div>
+          </TabsContent>
 
           {canManageCompany && (
             <TabsContent value="company" className="space-y-6">
