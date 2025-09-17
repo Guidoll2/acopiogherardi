@@ -17,18 +17,27 @@ import { Plus, Edit, Warehouse, AlertTriangle } from "lucide-react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 
 export default function SilosPage() {
-  const { silos = [], cereals = [], addSilo, updateSilo } = useData()
+  const { silos = [], cereals = [], addSilo, updateSilo, deleteSilo, refreshData } = useData()
   const { showSuccess, showError, showProcessing } = useToasts()
   const { markPageAsReady } = usePageReady()
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedSilo, setSelectedSilo] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: "",
     capacity: "",
     cereal_type: "",
   })
+
+  // Filtrar duplicados y asegurar keys únicos
+  const uniqueSilos = silos.filter((silo, index, self) => 
+    index === self.findIndex(s => s.id === silo.id)
+  )
+  const uniqueCereals = cereals.filter((cereal, index, self) => 
+    index === self.findIndex(c => c.id === cereal.id)
+  )
 
   const handleCreateSilo = async () => {
     if (formData.name && formData.capacity) {
@@ -40,12 +49,14 @@ export default function SilosPage() {
           name: formData.name,
           capacity: Number(formData.capacity),
           current_stock: 0,
-          cereal_type: formData.cereal_type,
+          cereal_type_id: formData.cereal_type || "",
           is_active: true,
           status: "active",
         })
         
-        showSuccess("Silo creado", `${formData.name} ha sido agregado exitosamente`)
+  // Refresh canonical data
+  try { await refreshData() } catch (e) { /* ignore */ }
+  showSuccess("Silo creado", `${formData.name} ha sido agregado exitosamente`)
         
         setFormData({
           name: "",
@@ -72,9 +83,11 @@ export default function SilosPage() {
         await updateSilo(selectedSilo.id, {
           name: formData.name,
           capacity: Number(formData.capacity),
-          cereal_type: formData.cereal_type,
+          cereal_type_id: formData.cereal_type || "",
         })
-        
+        // Refresh canonical data
+        try { await refreshData() } catch (e) { /* ignore */ }
+
         showSuccess("Silo actualizado", `${formData.name} ha sido actualizado exitosamente`)
         
         setIsEditDialogOpen(false)
@@ -104,9 +117,25 @@ export default function SilosPage() {
     setFormData({
       name: silo.name || "",
       capacity: silo.capacity?.toString() || "",
-      cereal_type: silo.cereal_type || "",
+      cereal_type: silo.cereal_type_id || "",
     })
     setIsEditDialogOpen(true)
+  }
+
+  const handleDeleteSilo = async (siloId: string) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar este silo?')) return
+
+    showProcessing('Eliminando silo...')
+    try {
+      setDeletingId(siloId)
+      await deleteSilo(siloId)
+      try { await refreshData() } catch (e) { /* ignore */ }
+      showSuccess('Silo eliminado', 'El silo ha sido eliminado exitosamente')
+    } catch (error) {
+      showError('Error al eliminar silo', 'No se pudo eliminar el silo. Intenta nuevamente.')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   return (
@@ -149,8 +178,8 @@ export default function SilosPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {silos.map((silo) => {
-                    const cereal = cereals.find((c) => c.id === silo.cereal_type)
+                  {uniqueSilos.map((silo) => {
+                    const cereal = uniqueCereals.find((c) => c.id === silo.cereal_type_id)
                     const occupancy = silo.capacity > 0 ? (silo.current_stock / silo.capacity) * 100 : 0
 
                     return (
@@ -196,9 +225,21 @@ export default function SilosPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Button variant="outline" size="sm" onClick={() => openEditDialog(silo)} title="Editar Silo">
-                            <Edit className="h-3 w-3" />
-                          </Button>
+                          <div className="flex space-x-2">
+                            <Button variant="outline" size="sm" onClick={() => openEditDialog(silo)} title="Editar Silo">
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteSilo(silo.id)}
+                              title="Eliminar Silo"
+                              disabled={deletingId !== null}
+                              aria-busy={deletingId === silo.id}
+                            >
+                              {deletingId === silo.id ? <span className="text-xs">Eliminando...</span> : <span className="text-xs">Eliminar</span>}
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     )
@@ -209,8 +250,8 @@ export default function SilosPage() {
 
             {/* Mobile Cards - Shown only on small screens */}
             <div className="md:hidden space-y-3 p-4">
-              {silos.map((silo) => {
-                const cereal = cereals.find((c) => c.id === silo.cereal_type)
+              {uniqueSilos.map((silo) => {
+                const cereal = uniqueCereals.find((c) => c.id === silo.cereal_type_id)
                 const occupancy = silo.capacity > 0 ? (silo.current_stock / silo.capacity) * 100 : 0
 
                 return (
@@ -289,6 +330,16 @@ export default function SilosPage() {
                           <Edit className="h-4 w-4 mr-2" />
                           <span>Editar</span>
                         </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 w-24"
+                          onClick={() => handleDeleteSilo(silo.id)}
+                          disabled={deletingId !== null}
+                          aria-busy={deletingId === silo.id}
+                        >
+                          {deletingId === silo.id ? 'Eliminando...' : 'Eliminar'}
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -329,7 +380,7 @@ export default function SilosPage() {
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Ej: Silo A1"
               />
             </div>
@@ -339,7 +390,7 @@ export default function SilosPage() {
                 id="capacity"
                 type="number"
                 value={formData.capacity}
-                onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, capacity: e.target.value })}
                 placeholder="1000"
               />
             </div>
@@ -353,7 +404,7 @@ export default function SilosPage() {
                   <SelectValue placeholder="Seleccionar cereal" />
                 </SelectTrigger>
                 <SelectContent>
-                  {cereals.map((cereal) => (
+                  {uniqueCereals.map((cereal) => (
                     <SelectItem key={cereal.id} value={cereal.id}>
                       {cereal.name} ({cereal.code})
                     </SelectItem>
@@ -384,7 +435,7 @@ export default function SilosPage() {
               <Input
                 id="edit-name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
             <div>
@@ -393,7 +444,7 @@ export default function SilosPage() {
                 id="edit-capacity"
                 type="number"
                 value={formData.capacity}
-                onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, capacity: e.target.value })}
               />
             </div>
             <div>
@@ -406,7 +457,7 @@ export default function SilosPage() {
                   <SelectValue placeholder="Seleccionar cereal" />
                 </SelectTrigger>
                 <SelectContent>
-                  {cereals.map((cereal) => (
+                  {uniqueCereals.map((cereal) => (
                     <SelectItem key={cereal.id} value={cereal.id}>
                       {cereal.name} ({cereal.code})
                     </SelectItem>

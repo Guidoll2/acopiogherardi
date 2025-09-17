@@ -30,6 +30,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 
 export default function ClientsPage() {
   const { clients = [], operations = [], drivers = [], cereals = [], addClient, updateClient, deleteClient } = useData()
+  console.log('ClientsPage render - clients count:', clients?.length)
   const { showSuccess, showError, showProcessing } = useToasts()
 
   const [searchTerm, setSearchTerm] = useState("")
@@ -108,10 +109,12 @@ export default function ClientsPage() {
       showProcessing("Creando cliente...")
       
       try {
-        await addClient({
+        console.log('ClientsPage: creating client', formData)
+        const created = await addClient({
           ...formData,
           status: "active",
         })
+        console.log('ClientsPage: addClient returned', created)
         
         showSuccess("Cliente creado", `${formData.name} ha sido agregado exitosamente`)
         

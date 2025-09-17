@@ -62,9 +62,15 @@ export async function POST(request: NextRequest) {
 
     console.log("Cliente creado exitosamente:", newClient._id)
 
+    // Map _id to id and return a plain object so clients always receive an `id` field
+    const clientObj = {
+      ...newClient.toObject(),
+      id: newClient._id.toString(),
+    }
+
     return NextResponse.json({ 
       success: true, 
-      client: newClient,
+      client: clientObj,
       message: "Cliente creado exitosamente"
     })
   } catch (error) {

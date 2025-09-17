@@ -14,12 +14,13 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Edit, Trash2, Wheat } from "lucide-react"
 
 export default function CerealsPage() {
-  const { cereals = [], addCereal, updateCereal, deleteCereal } = useData()
+  const { cereals = [], addCereal, updateCereal, deleteCereal, refreshData } = useData()
   const { showSuccess, showError, showProcessing } = useToasts()
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedCereal, setSelectedCereal] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: "",
     code: "",
@@ -29,22 +30,35 @@ export default function CerealsPage() {
     qualityGrade: "",
   })
 
+  // Filtrar duplicados y asegurar keys únicos
+  const uniqueCereals = cereals.filter((cereal, index, self) => 
+    index === self.findIndex(c => c.id === cereal.id)
+  )
+
   const handleCreateCereal = async () => {
-    if (formData.name && formData.code && formData.pricePerTon && formData.variety && formData.harvestYear && formData.qualityGrade) {
+    console.log("🚀 Iniciando handleCreateCereal")
+    console.log("📝 FormData:", formData)
+    
+    if (formData.name && formData.code && formData.pricePerTon) {
+      console.log("✅ Validación pasada, iniciando creación...")
       setIsLoading(true)
       showProcessing("Creando cereal...")
       
       try {
-        await addCereal({
+        console.log("📤 Enviando datos al contexto...")
+        const dataToSend = {
           name: formData.name,
           code: formData.code.toUpperCase(),
           price_per_ton: Number(formData.pricePerTon),
-          variety: formData.variety,
-          harvest_year: Number(formData.harvestYear),
-          quality_grade: formData.qualityGrade,
-        })
+        }
+        console.log("📤 Datos a enviar:", dataToSend)
         
-        showSuccess("Cereal creado", `${formData.name} ha sido agregado exitosamente`)
+  await addCereal(dataToSend)
+  // Refresh canonical data from server to avoid any stale/duplicate state
+  try { await refreshData() } catch (e) { /* ignore */ }
+
+  console.log("✅ addCereal completado exitosamente")
+  showSuccess("Cereal creado", `${formData.name} ha sido agregado exitosamente`)
         
         setFormData({
           name: "",
@@ -56,17 +70,23 @@ export default function CerealsPage() {
         })
         setIsCreateDialogOpen(false)
       } catch (error) {
+        console.error("❌ Error en handleCreateCereal:", error)
         showError("Error al crear cereal", "No se pudo crear el cereal. Intenta nuevamente.")
       } finally {
         setIsLoading(false)
+        console.log("🏁 handleCreateCereal finalizado")
       }
     } else {
+      console.log("❌ Validación fallida")
+      console.log("name:", formData.name)
+      console.log("code:", formData.code)
+      console.log("pricePerTon:", formData.pricePerTon)
       showError("Datos incompletos", "Por favor completa todos los campos obligatorios")
     }
   }
 
   const handleEditCereal = async () => {
-    if (selectedCereal && formData.name && formData.code && formData.pricePerTon && formData.variety && formData.harvestYear && formData.qualityGrade) {
+    if (selectedCereal && formData.name && formData.code && formData.pricePerTon) {
       setIsLoading(true)
       showProcessing("Actualizando cereal...")
       
@@ -75,13 +95,12 @@ export default function CerealsPage() {
           name: formData.name,
           code: formData.code.toUpperCase(),
           price_per_ton: Number(formData.pricePerTon),
-          variety: formData.variety,
-          harvest_year: Number(formData.harvestYear),
-          quality_grade: formData.qualityGrade,
         })
-        
+        // Refresh server canonical data
+        try { await refreshData() } catch (e) { /* ignore */ }
+
         showSuccess("Cereal actualizado", `${formData.name} ha sido actualizado exitosamente`)
-        
+
         setIsEditDialogOpen(false)
         setSelectedCereal(null)
         setFormData({
@@ -108,9 +127,9 @@ export default function CerealsPage() {
       name: cereal.name || "",
       code: cereal.code || "",
       pricePerTon: cereal.price_per_ton?.toString() || "",
-      variety: cereal.variety || "",
-      harvestYear: cereal.harvest_year?.toString() || "",
-      qualityGrade: cereal.quality_grade || "",
+      variety: "",
+      harvestYear: "",
+      qualityGrade: "",
     })
     setIsEditDialogOpen(true)
   }
@@ -120,10 +139,15 @@ export default function CerealsPage() {
       showProcessing("Eliminando cereal...")
       
       try {
+        setDeletingId(cerealId)
         await deleteCereal(cerealId)
+        // Refresh canonical data
+        try { await refreshData() } catch (e) { /* ignore */ }
         showSuccess("Cereal eliminado", "El cereal ha sido eliminado exitosamente")
       } catch (error) {
         showError("Error al eliminar cereal", "No se pudo eliminar el cereal. Intenta nuevamente.")
+      } finally {
+        setDeletingId(null)
       }
     }
   }
@@ -150,7 +174,7 @@ export default function CerealsPage() {
         {/* Tabla de Cereales */}
         <Card>
           <CardHeader>
-            <CardTitle>Lista de Cereales ({cereals.length})</CardTitle>
+            <CardTitle>Lista de Cereales ({uniqueCereals.length})</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {/* Desktop Table - Hidden on small screens */}
@@ -165,7 +189,7 @@ export default function CerealsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {cereals.map((cereal) => (
+                  {uniqueCereals.map((cereal) => (
                     <TableRow key={cereal.id}>
                       <TableCell>
                         <div className="flex items-center space-x-2">
@@ -188,8 +212,19 @@ export default function CerealsPage() {
                           <Button variant="outline" size="sm" onClick={() => openEditDialog(cereal)} title="Editar Cereal">
                             <Edit className="h-3 w-3" />
                           </Button>
-                          <Button variant="outline" size="sm" onClick={() => handleDeleteCereal(cereal.id)} title="Eliminar Cereal">
-                            <Trash2 className="h-3 w-3" />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteCereal(cereal.id)}
+                            title="Eliminar Cereal"
+                            disabled={deletingId !== null}
+                            aria-busy={deletingId === cereal.id}
+                          >
+                            {deletingId === cereal.id ? (
+                              <span className="text-xs">Eliminando...</span>
+                            ) : (
+                              <Trash2 className="h-3 w-3" />
+                            )}
                           </Button>
                         </div>
                       </TableCell>
@@ -201,7 +236,7 @@ export default function CerealsPage() {
 
             {/* Mobile Cards - Shown only on small screens */}
             <div className="md:hidden space-y-3 p-4">
-              {cereals.map((cereal) => (
+              {uniqueCereals.map((cereal) => (
                 <Card key={cereal.id} className="border border-gray-200 shadow-sm">
                   <CardContent className="p-4">
                     {/* Header with Cereal Name and Code */}
@@ -246,8 +281,14 @@ export default function CerealsPage() {
                         className="h-9 w-9 p-0 hover:bg-red-50 hover:border-red-200"
                         onClick={() => handleDeleteCereal(cereal.id)}
                         title="Eliminar"
+                        disabled={deletingId !== null}
+                        aria-busy={deletingId === cereal.id}
                       >
-                        <Trash2 className="h-4 w-4 text-red-600" />
+                        {deletingId === cereal.id ? (
+                          <span className="text-xs">...</span>
+                        ) : (
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        )}
                       </Button>
                     </div>
                   </CardContent>
@@ -256,7 +297,7 @@ export default function CerealsPage() {
             </div>
 
             {/* Empty State */}
-            {cereals.length === 0 && (
+            {uniqueCereals.length === 0 && (
               <div className="text-center py-12 px-4">
                 <Wheat className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No hay cereales</h3>
@@ -303,36 +344,6 @@ export default function CerealsPage() {
               />
             </div>
             <div>
-              <Label htmlFor="variety">Variedad *</Label>
-              <Input
-                id="variety"
-                value={formData.variety}
-                onChange={(e) => setFormData({ ...formData, variety: e.target.value })}
-                placeholder="Ej: RR2"
-              />
-            </div>
-            <div>
-              <Label htmlFor="harvestYear">Año de Cosecha *</Label>
-              <Input
-                id="harvestYear"
-                type="number"
-                value={formData.harvestYear}
-                onChange={(e) => setFormData({ ...formData, harvestYear: e.target.value })}
-                placeholder="2025"
-                min={2000}
-                max={2100}
-              />
-            </div>
-            <div>
-              <Label htmlFor="qualityGrade">Calidad *</Label>
-              <Input
-                id="qualityGrade"
-                value={formData.qualityGrade}
-                onChange={(e) => setFormData({ ...formData, qualityGrade: e.target.value })}
-                placeholder="Ej: Premium"
-              />
-            </div>
-            <div>
               <Label htmlFor="price">Precio por Tonelada *</Label>
               <Input
                 id="price"
@@ -375,36 +386,6 @@ export default function CerealsPage() {
                 value={formData.code}
                 onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                 maxLength={3}
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-variety">Variedad *</Label>
-              <Input
-                id="edit-variety"
-                value={formData.variety}
-                onChange={(e) => setFormData({ ...formData, variety: e.target.value })}
-                placeholder="Ej: RR2"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-harvestYear">Año de Cosecha *</Label>
-              <Input
-                id="edit-harvestYear"
-                type="number"
-                value={formData.harvestYear}
-                onChange={(e) => setFormData({ ...formData, harvestYear: e.target.value })}
-                placeholder="2025"
-                min={2000}
-                max={2100}
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-qualityGrade">Calidad *</Label>
-              <Input
-                id="edit-qualityGrade"
-                value={formData.qualityGrade}
-                onChange={(e) => setFormData({ ...formData, qualityGrade: e.target.value })}
-                placeholder="Ej: Premium"
               />
             </div>
             <div>

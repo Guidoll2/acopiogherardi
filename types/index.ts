@@ -63,7 +63,7 @@ export interface Silo {
   name: string
   capacity: number
   current_stock: number
-  cereal_type: string
+  cereal_type_id: string
   is_active?: boolean
   status: "active" | "inactive" | "maintenance"
   created_at: string
@@ -74,13 +74,10 @@ export interface Cereal {
   id: string
   name: string
   code: string // Nuevo campo para código corto
-  variety: string
-  harvest_year: number
-  quality_grade: string
   price_per_ton: number
   created_at: string
   updated_at: string
-  }
+}
 export interface Operation {
   id: string
   client_id: string

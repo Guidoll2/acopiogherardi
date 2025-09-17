@@ -388,7 +388,7 @@ export function OperatorDashboard() {
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {silos.map((silo) => {
-                const cerealType = cerealTypes.find((ct) => ct.id === silo.cereal_type)
+                const cerealType = cerealTypes.find((ct) => ct.id === silo.cereal_type_id)
                 const occupancy = (silo.current_stock / silo.capacity) * 100
 
                 return (

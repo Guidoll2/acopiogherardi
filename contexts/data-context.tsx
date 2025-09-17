@@ -45,9 +45,6 @@ export interface CerealType {
   id: string
   name: string
   code: string
-  variety?: string
-  harvest_year?: number
-  quality_grade?: string
   price_per_ton: number
   created_at: string
   updated_at: string
@@ -304,10 +301,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Load cereal types
   const loadCerealTypes = async () => {
     try {
+      console.log("🌾 Cargando tipos de cereal...")
       const response = await authenticatedFetch("/api/cereals")
+      console.log("🌾 Respuesta de cereales:", response.status, response.statusText)
+      
       if (response.ok) {
         const data = await response.json()
+        console.log("🌾 Datos de cereales recibidos:", data)
+        console.log("🌾 Cereales mapeados:", data.cereals)
         setCerealTypes(data.cereals || [])
+        console.log("🌾 Estado de cereales actualizado")
+      } else {
+        console.error("❌ Error en respuesta de cereales:", response.status, response.statusText)
+        const errorData = await response.json()
+        console.error("❌ Datos de error:", errorData)
       }
     } catch (error) {
       console.error("Error loading cereal types:", error)
@@ -456,15 +463,30 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // CerealType CRUD operations
   const addCerealType = async (cerealData: Omit<CerealType, "id" | "created_at" | "updated_at">) => {
     try {
+      console.log("=== Iniciando creación de cereal ===")
+      console.log("Datos a enviar:", cerealData)
+      
       const response = await authenticatedFetch("/api/cereals", {
         method: "POST",
         body: JSON.stringify(cerealData)
       })
+      
+      console.log("Respuesta del servidor:", response.status, response.statusText)
+      
       if (response.ok) {
+        const responseData = await response.json()
+        console.log("Datos de respuesta:", responseData)
+        console.log("Recargando lista de cereales...")
         await loadCerealTypes()
+        console.log("Lista de cereales recargada")
+      } else {
+        const errorData = await response.json()
+        console.error("Error en respuesta del servidor:", errorData)
+        throw new Error(`Error ${response.status}: ${errorData.error || 'Error desconocido'}`)
       }
     } catch (error) {
       console.error("Error adding cereal type:", error)
+      throw error // Re-lanzar el error para que sea capturado en handleCreateCereal
     }
   }
 

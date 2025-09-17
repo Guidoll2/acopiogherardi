@@ -129,9 +129,9 @@ export default function ReportsPage() {
   // Calculate stock data from silos
   const getStockData = () => {
     return silos.map(silo => {
-      const cerealName = getCerealName(silo.cereal_type)
+      const cerealName = getCerealName(silo.cereal_type_id)
       const percentage = silo.capacity > 0 ? Math.round((silo.current_stock / silo.capacity) * 100) : 0
-      
+
       return {
         silo: silo.name,
         cereal: cerealName,
