@@ -37,10 +37,20 @@ export async function POST(request: NextRequest) {
   try {
     console.log("=== DEBUG POST /api/cereals ===")
     
+    // Diagnostic: log presence of auth cookie/header before verification
+    try {
+      const cookiePresent = !!request.cookies.get("auth-token")?.value
+      const headerPresent = !!request.headers.get("Authorization")
+      console.log("POST /api/cereals - auth cookie present:", cookiePresent, "Authorization header present:", headerPresent)
+    } catch (e) {
+      console.log("POST /api/cereals - could not inspect cookies/headers for diagnostics")
+    }
+
     // Verificar autenticación
     const user = verifyToken(request)
     if (!user) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+      // Return a 401 with a small diagnostic hint (do not include token contents)
+      return NextResponse.json({ error: "No autorizado", diagnostic: "no_token" }, { status: 401 })
     }
 
     await connectDB()
