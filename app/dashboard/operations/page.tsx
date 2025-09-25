@@ -22,7 +22,7 @@ import {
   ArrowRight,
   Clock,
 } from "lucide-react"
-import { useData } from "@/contexts/offline-data-context"
+import { useData } from "@/contexts/data-context"
 import { AuthService } from "@/lib/auth"
 import { OperationViewDialog } from "@/components/operations/operation-view-dialog"
 import { OperationEditDialog } from "@/components/operations/operation-edit-dialog"

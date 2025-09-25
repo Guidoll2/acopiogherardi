@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Save, X } from "lucide-react"
-import { useData } from "@/contexts/offline-data-context"
+import { useData } from "@/contexts/data-context"
 
 interface OperationEditDialogProps {
   operationId: string | null

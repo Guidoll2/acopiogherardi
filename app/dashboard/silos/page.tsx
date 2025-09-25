@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useData } from "@/contexts/offline-data-context"
+import { useData } from "@/contexts/data-context"
 import { usePageReady } from "@/hooks/use-page-ready"
 import { useToasts } from "@/components/ui/toast"
 import { validateSiloCapacity } from "@/lib/silo-validation"
@@ -51,7 +51,6 @@ export default function SilosPage() {
           current_stock: 0,
           cereal_type_id: formData.cereal_type || "",
           is_active: true,
-          status: "active",
         })
         
   // Refresh canonical data

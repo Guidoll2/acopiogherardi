@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
-import { useData } from "@/contexts/offline-data-context"
+import { useData } from "@/contexts/data-context"
 import { useSubscription } from "@/hooks/use-subscription"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"

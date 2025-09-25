@@ -4,7 +4,7 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
-import { useOfflineNavigation } from "@/hooks/use-offline-navigation"
+
 import { Sidebar } from "./sidebar"
 import { Header } from "./header"
 import { PageTransitionLoader } from "@/contexts/page-transition-context"
@@ -18,7 +18,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const router = useRouter()
-  const { preCacheDashboardRoutes } = useOfflineNavigation()
 
   useEffect(() => {
     const user = AuthService.getCurrentUser()
@@ -26,10 +25,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       router.push("/login")
     } else {
       setIsLoading(false)
-      // Pre-cache rutas importantes cuando el usuario se autentica
-      preCacheDashboardRoutes()
     }
-  }, [router, preCacheDashboardRoutes])
+  }, [router])
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)

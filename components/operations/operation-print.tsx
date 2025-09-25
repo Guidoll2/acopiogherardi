@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useData } from "@/contexts/offline-data-context"
+import { useData } from "@/contexts/data-context"
 
 interface OperationPrintProps {
   operationId: string
