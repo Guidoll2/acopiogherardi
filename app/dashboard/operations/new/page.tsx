@@ -186,7 +186,7 @@ export default function NewOperationPage() {
         cereal_type_id: formData.cereal_type_id,
         company_id: "default-company-id", // Valor temporal hasta que se implemente autenticación
         operation_type: formData.operation_type as "ingreso" | "egreso",
-        status: "pending",
+        status: "pendiente",
         chassis_plate: formData.chassis_plate,
         trailer_plate: formData.trailer_plate || "",
         quantity: Number.parseFloat(formData.estimated_quantity) || 0,
@@ -201,7 +201,6 @@ export default function NewOperationPage() {
           ? `${formData.scheduled_date}T${formData.scheduled_time}:00.000Z`
           : new Date().toISOString(),
         estimated_duration: 60, // 60 minutos por defecto
-        createdAt: new Date().toISOString(), // Para compatibilidad hacia atrás
       }
 
       console.log("📤 Enviando operación:", newOperation)

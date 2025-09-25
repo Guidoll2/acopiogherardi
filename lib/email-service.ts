@@ -195,3 +195,178 @@ export const sendAdminNotification = async (
     return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' }
   }
 }
+
+// Nueva clase EmailService para organizar mejor las funciones
+export class EmailService {
+  static async sendCompanyRegistrationNotification({
+    adminEmail,
+    companyName,
+    requestId
+  }: {
+    adminEmail: string
+    companyName: string
+    requestId: string
+  }) {
+    try {
+      const transporter = createTransporter()
+
+      const mailOptions = {
+        from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+        to: adminEmail,
+        subject: `Nueva solicitud de registro - ${companyName}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background-color: #f59e0b; color: white; padding: 20px; text-align: center;">
+              <h1>🔔 Nueva Solicitud de Registro</h1>
+            </div>
+            
+            <div style="padding: 30px; background-color: #f9f9f9;">
+              <h2>Detalles de la solicitud:</h2>
+              <p><strong>Empresa:</strong> ${companyName}</p>
+              <p><strong>ID de solicitud:</strong> ${requestId}</p>
+              <p><strong>Fecha:</strong> ${new Date().toLocaleString('es-AR')}</p>
+              
+              <p style="margin-top: 30px;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/system-admin" 
+                   style="background-color: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
+                  Ver Panel de Administración
+                </a>
+              </p>
+              
+              <p style="margin-top: 20px; color: #666; font-size: 14px;">
+                Esta solicitud requiere tu aprobación antes de que la empresa pueda acceder al sistema.
+              </p>
+            </div>
+          </div>
+        `
+      }
+
+      await transporter.sendMail(mailOptions)
+      return { success: true }
+    } catch (error) {
+      console.error('Error sending registration notification:', error)
+      throw error
+    }
+  }
+
+  static async sendPasswordResetCode({
+    email,
+    resetCode,
+    companyName
+  }: {
+    email: string
+    resetCode: string
+    companyName?: string
+  }) {
+    try {
+      const transporter = createTransporter()
+
+      const mailOptions = {
+        from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+        to: email,
+        subject: 'Código de recuperación de contraseña - 4 Granos',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background-color: #2563eb; color: white; padding: 20px; text-align: center;">
+              <h1>🔐 Recuperación de Contraseña</h1>
+            </div>
+            
+            <div style="padding: 30px; background-color: #f9f9f9;">
+              <h2>Hola${companyName ? `, ${companyName}` : ''}</h2>
+              
+              <p>Recibimos una solicitud para restablecer tu contraseña. Tu código de verificación es:</p>
+              
+              <div style="background-color: #e7f3ff; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
+                <h1 style="font-size: 32px; letter-spacing: 8px; color: #2563eb; margin: 0;">${resetCode}</h1>
+              </div>
+              
+              <p><strong>Importante:</strong></p>
+              <ul>
+                <li>Este código expira en 15 minutos</li>
+                <li>Solo puede usarse una vez</li>
+                <li>Si no solicitaste este cambio, ignora este email</li>
+              </ul>
+              
+              <p style="margin-top: 30px; color: #666; font-size: 14px;">
+                Este email fue enviado automáticamente por 4 Granos. No respondas a este mensaje.
+              </p>
+            </div>
+          </div>
+        `,
+        text: `
+Recuperación de Contraseña - 4 Granos
+
+Tu código de verificación es: ${resetCode}
+
+Este código expira en 15 minutos y solo puede usarse una vez.
+Si no solicitaste este cambio, ignora este email.
+        `
+      }
+
+      await transporter.sendMail(mailOptions)
+      return { success: true }
+    } catch (error) {
+      console.error('Error sending password reset code:', error)
+      throw error
+    }
+  }
+
+  static async sendCompanyApprovalEmail({
+    companyEmail,
+    companyName,
+    tempPassword,
+    approved
+  }: {
+    companyEmail: string
+    companyName: string
+    tempPassword?: string
+    approved: boolean
+  }) {
+    try {
+      const transporter = createTransporter()
+
+      if (approved) {
+        // Email de aprobación con credenciales
+        return await sendWelcomeEmail(companyEmail, companyName, tempPassword!)
+      } else {
+        // Email de rechazo
+        const mailOptions = {
+          from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+          to: companyEmail,
+          subject: `Solicitud de registro - ${companyName}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <div style="background-color: #dc2626; color: white; padding: 20px; text-align: center;">
+                <h1>📝 Estado de Solicitud</h1>
+              </div>
+              
+              <div style="padding: 30px; background-color: #f9f9f9;">
+                <h2>Hola, equipo de ${companyName}</h2>
+                
+                <p>Gracias por tu interés en nuestra plataforma de gestión de acopio.</p>
+                
+                <p>Después de revisar tu solicitud, lamentamos informarte que no podemos aprobar el registro en este momento.</p>
+                
+                <p>Si crees que esto es un error o deseas más información, por favor contáctanos:</p>
+                <ul>
+                  <li><strong>Email:</strong> soporte@acopiogh.com</li>
+                  <li><strong>Teléfono:</strong> +54 11 1234-5678</li>
+                </ul>
+                
+                <p style="margin-top: 30px; color: #666; font-size: 14px;">
+                  Gracias por tu comprensión.
+                </p>
+              </div>
+            </div>
+          `
+        }
+
+        await transporter.sendMail(mailOptions)
+        return { success: true }
+      }
+    } catch (error) {
+      console.error('Error sending approval/rejection email:', error)
+      throw error
+    }
+  }
+}

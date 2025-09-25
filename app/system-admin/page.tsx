@@ -14,6 +14,7 @@ import { CreateCompanyDialog } from "@/components/system-admin/create-company-di
 import { CreateAdminDialog } from "@/components/system-admin/create-admin-dialog"
 import { ViewCompanyDialog } from "@/components/system-admin/view-company-dialog"
 import { EditCompanyDialog } from "@/components/system-admin/edit-company-dialog"
+import { CompanyRequestsManager } from "@/components/system-admin/company-requests-manager"
 
 export default function SystemAdminPage() {
   const { 
@@ -30,6 +31,7 @@ export default function SystemAdminPage() {
   const [viewCompanyOpen, setViewCompanyOpen] = useState(false)
   const [editCompanyOpen, setEditCompanyOpen] = useState(false)
   const [selectedCompany, setSelectedCompany] = useState<any>(null)
+  const [activeView, setActiveView] = useState<"dashboard" | "requests">("dashboard")
   const router = useRouter()
 
   useEffect(() => {
@@ -291,8 +293,30 @@ export default function SystemAdminPage() {
           </div>
         </div>
 
-        {/* Estadísticas principales - responsive grid */}
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 text-gray-700">
+        {/* Navigation Tabs */}
+        <div className="flex space-x-1 border-b border-gray-200">
+          <Button 
+            variant={activeView === "dashboard" ? "default" : "outline"}
+            onClick={() => setActiveView("dashboard")}
+            className="rounded-b-none border-b-0"
+          >
+            <Building2 className="mr-2 h-4 w-4" />
+            Dashboard
+          </Button>
+          <Button 
+            variant={activeView === "requests" ? "default" : "outline"}
+            onClick={() => setActiveView("requests")}
+            className="rounded-b-none border-b-0"
+          >
+            <UserPlus className="mr-2 h-4 w-4" />
+            Solicitudes de Registro
+          </Button>
+        </div>
+
+        {activeView === "dashboard" && (
+          <>
+            {/* Estadísticas principales - responsive grid */}
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 text-gray-700">
           {stats.map((stat, index) => (
             <Card key={index}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -576,7 +600,7 @@ export default function SystemAdminPage() {
                     >
                       {operation.status === "completed" ? "Completado" :
                        operation.status === "in_progress" ? "En Progreso" :
-                       operation.status === "pending" ? "Pendiente" :
+                       operation.status === "pending" || operation.status === "pendiente" ? "Pendiente" :
                        operation.status}
                     </Badge>
                   </div>
@@ -590,6 +614,12 @@ export default function SystemAdminPage() {
             </div>
           </CardContent>
         </Card>
+          </>
+        )}
+
+        {activeView === "requests" && (
+          <CompanyRequestsManager />
+        )}
 
         {/* Diálogos */}
         <CreateCompanyDialog

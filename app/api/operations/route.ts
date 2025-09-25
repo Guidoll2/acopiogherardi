@@ -18,12 +18,12 @@ export async function GET(request: NextRequest) {
     const filter = user.role === "system_admin" ? {} : { company_id: user.company_id }
     
     const operations = await Operation.find(filter)
-      .sort({ created_at: -1 })
+      .sort({ createdAt: -1 })
 
     // Mapear _id a id para que coincida con el tipo TypeScript
     const mappedOperations = operations.map(op => {
       const opObject = op.toObject()
-      return {
+      const result: any = {
         ...opObject,
         id: op._id.toString(),
         client_id: opObject.client_id?.toString() || opObject.client_id,
@@ -34,6 +34,12 @@ export async function GET(request: NextRequest) {
         // Mapear 'type' del modelo a 'operation_type' para el frontend
         operation_type: opObject.type || "ingreso", // Por defecto "ingreso" si no existe
       }
+      
+      // Agregar campos de timestamp para compatibilidad
+      result.created_at = opObject.createdAt?.toISOString()
+      result.updated_at = opObject.updatedAt?.toISOString()
+      
+      return result
     })
 
     return NextResponse.json({ success: true, operations: mappedOperations })
@@ -99,9 +105,6 @@ export async function POST(request: NextRequest) {
       console.log(`✅ Límites OK - Plan: ${subscriptionCheck.plan}, Uso: ${subscriptionCheck.currentCount}/${subscriptionCheck.limit === -1 ? '∞' : subscriptionCheck.limit}`)
     }
 
-    operationData.created_at = new Date().toISOString()
-    operationData.updated_at = new Date().toISOString()
-
     const newOperation = new Operation(operationData)
     await newOperation.save()
 
@@ -116,10 +119,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Mapear _id a id para consistencia con el frontend
-    const operationResponse = {
-      ...newOperation.toObject(),
+    const opObject = newOperation.toObject()
+    const operationResponse: any = {
+      ...opObject,
       id: newOperation._id.toString(),
+      // Mapear 'type' del modelo a 'operation_type' para el frontend
+      operation_type: opObject.type || "ingreso",
     }
+    
+    // Agregar campos de timestamp para compatibilidad
+    operationResponse.created_at = opObject.createdAt?.toISOString()
+    operationResponse.updated_at = opObject.updatedAt?.toISOString()
 
     return NextResponse.json({ 
       success: true, 

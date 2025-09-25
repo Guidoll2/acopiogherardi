@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AuthService } from "@/lib/auth"
 import { Wheat, Eye, EyeOff } from "lucide-react"
+import Link from "next/link"
 
 export function LoginForm() {
   const [email, setEmail] = useState("")
@@ -132,6 +133,15 @@ export function LoginForm() {
               <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={loading}>
                 {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
               </Button>
+              
+              <div className="flex flex-col space-y-2 pt-4 border-t">
+                <Link href="/password-reset" className="text-center text-sm text-blue-600 hover:underline">
+                  ¿Olvidaste tu contraseña?
+                </Link>
+                <Link href="/company-register" className="text-center text-sm text-green-600 hover:underline">
+                  ¿Tu empresa aún no tiene cuenta? Solicita acceso aquí
+                </Link>
+              </div>
             </form>
           </CardContent>
         </Card>

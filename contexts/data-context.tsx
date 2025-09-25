@@ -169,7 +169,7 @@ interface DataContextType {
   deleteCompany: (id: string) => Promise<void>
 
   // Operation CRUD operations
-  addOperation: (operation: Omit<Operation, "id" | "created_at" | "updated_at">) => Promise<void>
+  addOperation: (operation: any) => Promise<void>
   updateOperation: (id: string, operation: Partial<Operation>) => Promise<void>
   deleteOperation: (id: string) => Promise<void>
 
@@ -560,7 +560,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }
 
   // Operation CRUD operations
-  const addOperation = async (operationData: Omit<Operation, "id" | "created_at" | "updated_at">) => {
+  const addOperation = async (operationData: any) => {
     try {
       // Convertir el formato del frontend al formato de la API
       const apiOperation = {
@@ -570,7 +570,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         cereal_type_id: operationData.cereal_type_id,
         company_id: operationData.company_id || "",
         type: operationData.operation_type, // Convertir operation_type a type
-        status: operationData.status || "pending",
+        status: operationData.status || "pendiente",
         chassis_plate: operationData.chassis_plate,
         trailer_plate: operationData.trailer_plate || "",
         quantity: operationData.quantity || 0,
@@ -584,8 +584,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         scheduled_date: operationData.scheduled_date || new Date().toISOString(),
         estimated_duration: operationData.estimated_duration || 60,
         date: new Date().toISOString().split('T')[0], // Para compatibilidad hacia atrás
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
       }
       
       console.log("📤 Enviando a API:", apiOperation)

@@ -101,9 +101,9 @@ export interface Operation {
   estimated_duration: number
   entry_time?: string
   exit_time?: string
-  created_at: string
-  updated_at: string
-  createdAt: string // For backward compatibility
+  created_at: string // For frontend compatibility
+  updated_at: string // For frontend compatibility
+  createdAt: string
   amount?: number // For backward compatibility
   authorized_entry?: {
     timestamp: string
@@ -152,4 +152,32 @@ export interface ClientBalance {
   total_exits: number // total salidas en toneladas
   current_balance: number // saldo actual en toneladas
   last_movement: string
+}
+
+// Nuevos tipos para registro de empresas
+export interface CompanyRegistrationRequest {
+  id: string
+  company_name: string
+  email: string
+  phone: string
+  address: string
+  cuit: string
+  contact_person: string
+  contact_phone: string
+  status: "pending" | "approved" | "rejected"
+  notes?: string
+  created_at: string
+  updated_at: string
+  reviewed_by?: string
+  reviewed_at?: string
+}
+
+// Tipo para reset de contraseña
+export interface PasswordResetRequest {
+  id: string
+  email: string
+  reset_code: string
+  expires_at: string
+  used: boolean
+  created_at: string
 }
