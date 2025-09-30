@@ -185,9 +185,9 @@ export function OperatorDashboard() {
         </div>
 
         {/* Summary cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 text-gray-700">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 text-gray-700">
               <CardTitle className="text-sm font-medium">Operaciones Activas</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -198,7 +198,7 @@ export function OperatorDashboard() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 text-gray-700">
               <CardTitle className="text-sm font-medium">Completadas Hoy</CardTitle>
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -209,7 +209,7 @@ export function OperatorDashboard() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 text-gray-700">
               <CardTitle className="text-sm font-medium">Requieren Atención</CardTitle>
               <AlertTriangle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -220,7 +220,7 @@ export function OperatorDashboard() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 text-gray-700">
               <CardTitle className="text-sm font-medium">En Proceso</CardTitle>
               <Play className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -308,12 +308,12 @@ export function OperatorDashboard() {
 
                     return (
                       <TableRow key={operation.id}>
-                        <TableCell className="font-medium text-sm">#{operation.id}</TableCell>
+                        <TableCell className="font-medium text-sm text-gray-700">#{operation.id}</TableCell>
                         <TableCell>
                           <div>
-                            <div className="font-medium text-sm">{client?.name || "N/A"}</div>
-                            <div className="text-xs text-muted-foreground">{operation.chassis_plate}</div>
-                            <div className="text-xs text-muted-foreground">{cereal?.name || "N/A"}</div>
+                            <div className="font-medium text-sm text-gray-700">{client?.name || "N/A"}</div>
+                            <div className="text-xs text-gray-700">{operation.chassis_plate}</div>
+                            <div className="text-xs text-gray-700">{cereal?.name || "N/A"}</div>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -329,10 +329,10 @@ export function OperatorDashboard() {
                           </Badge>
                         </TableCell>
                         <TableCell>{getStatusBadge(operation.status, operation.operation_type)}</TableCell>
-                        <TableCell className="text-sm">
+                        <TableCell className="text-sm text-gray-700">
                           {operation.quantity > 0 ? `${operation.quantity.toFixed(1)} t` : "-"}
                         </TableCell>
-                        <TableCell className="text-sm">
+                        <TableCell className="text-sm text-gray-700">
                           {new Date(operation.updated_at).toLocaleTimeString("es-AR", {
                             hour: "2-digit",
                             minute: "2-digit",
@@ -344,16 +344,16 @@ export function OperatorDashboard() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-7 w-7 p-0"
+                              className="w-10 p-0"
                               onClick={() => setSelectedOperation(operation.id)}
                               title="Ver detalles"
                             >
-                              <Eye className="h-3 w-3" />
+                              <Eye className="w-6 h-6" />
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-7 w-7 p-0"
+                              className="w-10 p-0"
                               onClick={() => handlePrint(operation.id)}
                               title="Imprimir"
                             >
@@ -381,7 +381,7 @@ export function OperatorDashboard() {
 
         {/* Silo status */}
         <Card>
-          <CardHeader>
+          <CardHeader className="text-gray-700">
             <CardTitle>Estado de Silos</CardTitle>
             <CardDescription>Ocupación actual de cada silo</CardDescription>
           </CardHeader>
@@ -394,7 +394,7 @@ export function OperatorDashboard() {
                 return (
                   <div key={silo.id} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold">{silo.name}</h4>
+                      <h4 className="font-semibold text-gray-700">{silo.name}</h4>
                       <span
                         className={`px-2 py-1 rounded-full text-xs ${
                           silo.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
@@ -403,9 +403,9 @@ export function OperatorDashboard() {
                         {silo.is_active ? "Activo" : "Inactivo"}
                       </span>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-2">{cerealType?.name || "Sin asignar"}</p>
+                    <p className="text-sm text-gray-700 mb-2">{cerealType?.name || "Sin asignar"}</p>
                     <div className="space-y-1">
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-sm text-gray-700">
                         <span>Ocupación</span>
                         <span>{occupancy.toFixed(1)}%</span>
                       </div>
@@ -417,7 +417,7 @@ export function OperatorDashboard() {
                           style={{ width: `${occupancy}%` }}
                         ></div>
                       </div>
-                      <div className="flex justify-between text-xs text-muted-foreground">
+                      <div className="flex justify-between text-xs text-gray-700">
                         <span>{silo.current_stock}t</span>
                         <span>{silo.capacity}t</span>
                       </div>

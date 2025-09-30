@@ -9,7 +9,7 @@ export function ScreenshotsSection() {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Interfaz <span className="text-green-600">Moderna</span> y <span className="text-green-600">Intuitiva</span>
+            Interfaz <span className="text-green-600">Moderna</span> e <span className="text-green-600">Intuitiva</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Diseñado para ser fácil de usar en cualquier dispositivo, 
