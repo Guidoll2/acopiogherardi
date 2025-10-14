@@ -58,7 +58,7 @@ Content-Type: application/json
 - **Ciclo de facturación** configurado correctamente
 
 ### Planes disponibles:
-- **Free**: 250 operaciones/mes, $0
+- **Free**: 50 operaciones/mes, $0
 - **Basic**: 500 operaciones/mes, $29  
 - **Enterprise**: Ilimitadas, $299
 

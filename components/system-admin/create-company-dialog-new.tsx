@@ -152,7 +152,7 @@ export function CreateCompanyDialog({ open, onOpenChange, onCompanyCreated }: Cr
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="free">Free (250 ops/mes)</SelectItem>
+                <SelectItem value="free">Free (50 ops/mes)</SelectItem>
                 <SelectItem value="basic">Básico - $29/mes (500 ops)</SelectItem>
                 <SelectItem value="enterprise">Enterprise - $299/mes (Ilimitado)</SelectItem>
               </SelectContent>

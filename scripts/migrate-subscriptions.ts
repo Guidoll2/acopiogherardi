@@ -17,7 +17,7 @@ async function migrateExistingCompanies() {
       console.log(`\n🏢 Migrando empresa: ${company.name}`)
       
       // Determinar el límite basado en el plan actual
-      let operations_limit = 250 // default free
+  let operations_limit = 50 // default free
       let new_plan = "free"
 
       // Mapear planes antiguos a nuevos

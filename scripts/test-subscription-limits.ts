@@ -2,17 +2,42 @@ import connectDB from "../app/mongoDB/db"
 import Company from "../app/mongoDB/models/company"
 import Operation from "../app/mongoDB/models/operation"
 import { SubscriptionService } from "../lib/subscription-service"
+import { SUBSCRIPTION_PLANS } from "../lib/subscription-config"
 
 async function testSubscriptionLimits() {
   try {
     await connectDB()
     console.log("🔗 Conectado a MongoDB")
 
-    // Obtener primera empresa para probar
-    const company = await Company.findOne({ subscription_plan: "basic" })
+    // Obtener primera empresa para probar (si no existe, crear una temporal)
+    let company = await Company.findOne({ subscription_plan: "basic" })
+    let createdTestCompany = false
     if (!company) {
-      console.log("❌ No se encontró ninguna empresa con plan basic")
-      return
+      console.log("ℹ️ No se encontró ninguna empresa con plan basic, creando una empresa de prueba...")
+      const now = new Date()
+      const nextCycleEnd = new Date(now)
+      nextCycleEnd.setMonth(nextCycleEnd.getMonth() + 1)
+
+      const testData: any = {
+        name: `Test Basic ${Date.now()}`,
+        email: `test-basic-${Date.now()}@example.com`,
+        phone: null,
+        address: null,
+        cuit: `TEST${Date.now()}`,
+        status: "active",
+        subscription_plan: "basic",
+        operations_count_current_month: 0,
+        operations_limit: SUBSCRIPTION_PLANS.basic.operations_limit,
+        billing_cycle_start: now,
+        billing_cycle_end: nextCycleEnd,
+        subscription_status: "active",
+        created_at: now.toISOString(),
+        updated_at: now.toISOString()
+      }
+
+      company = await Company.create(testData)
+      createdTestCompany = true
+      console.log(`✅ Empresa de prueba creada: ${company.email} (id: ${company._id})`)
     }
 
     console.log(`\n🏢 Probando límites para: ${company.name}`)
@@ -65,6 +90,16 @@ async function testSubscriptionLimits() {
     }
 
     console.log("\n✅ Prueba completada exitosamente")
+
+    // Si creamos una empresa de prueba, eliminarla para limpieza
+    if (createdTestCompany && company) {
+      try {
+        await Company.findByIdAndDelete(company._id)
+        console.log(`🧹 Empresa de prueba eliminada: ${company.email}`)
+      } catch (delErr) {
+        console.warn("⚠️ No se pudo eliminar la empresa de prueba:", delErr)
+      }
+    }
 
   } catch (error) {
     console.error("❌ Error durante la prueba:", error)

@@ -64,7 +64,7 @@ export function FooterSection() {
             <div className="text-gray-300 space-y-2">
               <p className="flex items-center gap-2">
                 <span className="text-green-400">✓</span>
-                250 operaciones gratis
+                50 operaciones gratis
               </p>
               <p className="flex items-center gap-2">
                 <span className="text-green-400">✓</span>

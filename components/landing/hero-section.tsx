@@ -48,7 +48,7 @@ export function HeroSection() {
           </div>
           <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6">
             <h3 className="font-semibold text-lg mb-2">Prueba Gratuita</h3>
-            <p className="text-green-100 text-base">Hasta 250 operaciones mensuales sin costo</p>
+            <p className="text-green-100 text-base">Hasta 50 operaciones mensuales sin costo</p>
           </div>
         </div>
 

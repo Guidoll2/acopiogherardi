@@ -18,7 +18,7 @@ const CompanySchema = new mongoose.Schema({
   },
   // Campos para control de suscripción
   operations_count_current_month: { type: Number, default: 0 },
-  operations_limit: { type: Number, default: 250 }, // límite según el plan
+  operations_limit: { type: Number, default: 50 }, // límite según el plan
   billing_cycle_start: { type: Date, default: Date.now },
   billing_cycle_end: { type: Date, default: () => new Date(Date.now() + 30*24*60*60*1000) },
   subscription_status: {

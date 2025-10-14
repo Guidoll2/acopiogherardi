@@ -2,10 +2,10 @@
 export const SUBSCRIPTION_PLANS = {
   free: {
     name: "Gratis",
-    operations_limit: 250,
+  operations_limit: 50,
     price: 0,
     features: [
-      "Hasta 250 operaciones por mes",
+  "Hasta 50 operaciones por mes",
       "Gestión básica de clientes",
       "Soporte por email"
     ]

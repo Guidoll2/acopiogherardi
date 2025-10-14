@@ -136,7 +136,7 @@ export function FeaturesSection() {
             Prueba Gratuita Sin Compromiso
           </h3>
           <p className="text-xl text-green-100 mb-6">
-            Comienza con hasta 250 operaciones mensuales completamente gratis
+            Comienza con hasta 50 operaciones mensuales completamente gratis
           </p>
           <div className="grid md:grid-cols-3 gap-6 max-w-2xl mx-auto">
             <div className="flex items-center justify-center gap-2">
