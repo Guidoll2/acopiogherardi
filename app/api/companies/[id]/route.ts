@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import connectDB from "@/app/mongoDB/db"
 import Company from "@/app/mongoDB/models/company"
 import User from "@/app/mongoDB/models/user"
+import Client from "@/app/mongoDB/models/client"
+import Driver from "@/app/mongoDB/models/driver"
+import DeletedCompany from "@/app/mongoDB/models/deleted-company"
 
 // GET /api/companies/[id] - Obtener empresa por ID
 export async function GET(
@@ -150,20 +153,43 @@ export async function DELETE(
     }
 
     // Si force=true, eliminar primero todos los usuarios asociados
+    let deletedUsersCount = 0
     if (force && users.length > 0) {
-      await User.deleteMany({ company_id: resolvedParams.id })
-      console.log(`Eliminados ${users.length} usuarios asociados a la empresa ${company.name}`)
+      const delUsers = await User.deleteMany({ company_id: resolvedParams.id })
+      deletedUsersCount = delUsers.deletedCount || users.length
+      console.log(`Eliminados ${deletedUsersCount} usuarios asociados a la empresa ${company.name}`)
     }
 
-    // Eliminar empresa
+    // Also remove clients and drivers linked to the company to avoid residual emails
+    const delClients = await Client.deleteMany({ company_id: resolvedParams.id })
+    const delDrivers = await Driver.deleteMany({ company_id: resolvedParams.id })
+    console.log(`Eliminados ${delClients.deletedCount || 0} clients y ${delDrivers.deletedCount || 0} drivers asociados a la empresa ${company.name}`)
+
+    // Archive the company snapshot before deletion so we keep a record
+    try {
+      await DeletedCompany.create({
+        original_id: resolvedParams.id,
+        snapshot: company.toObject ? company.toObject() : company,
+        deleted_by: request.headers.get('x-deleted-by') || 'system',
+        reason: force ? 'force-delete' : 'manual-delete'
+      })
+      console.log('Company archived in deleted_companies')
+    } catch (archiveErr) {
+      console.error('Failed to archive deleted company:', archiveErr)
+      // proceed with deletion even if archive fails
+    }
+
+    // Remove the company document
     await Company.findByIdAndDelete(resolvedParams.id)
 
     return NextResponse.json({ 
-      message: force && users.length > 0 
-        ? `Empresa eliminada exitosamente junto con ${users.length} usuario(s) asociado(s)`
+      message: force && (deletedUsersCount>0 || delClients.deletedCount || delDrivers.deletedCount) 
+        ? `Empresa eliminada exitosamente junto con ${deletedUsersCount} usuario(s) y referencias asociadas.`
         : "Empresa eliminada exitosamente",
       deletedCompany: company,
-      deletedUsers: force ? users.length : 0
+      deletedUsers: deletedUsersCount,
+      deletedClients: delClients.deletedCount || 0,
+      deletedDrivers: delDrivers.deletedCount || 0
     })
   } catch (error) {
     console.error("Error deleting company:", error)

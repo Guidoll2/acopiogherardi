@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { useData } from "@/contexts/data-context"
 import { useToasts } from "@/components/ui/toast"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
@@ -14,7 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Edit, Trash2, Wheat } from "lucide-react"
 
 export default function CerealsPage() {
-  const { cereals = [], addCereal, updateCereal, deleteCereal, refreshData } = useData()
+  const { cereals = [], silos = [], addCereal, updateCereal, deleteCereal, refreshData } = useData()
   const { showSuccess, showError, showProcessing } = useToasts()
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -60,6 +61,7 @@ export default function CerealsPage() {
   console.log("✅ addCereal completado exitosamente")
   showSuccess("Cereal creado", `${formData.name} ha sido agregado exitosamente`)
         
+        const createdCode = formData.code?.toUpperCase()
         setFormData({
           name: "",
           code: "",
@@ -69,6 +71,15 @@ export default function CerealsPage() {
           qualityGrade: "",
         })
         setIsCreateDialogOpen(false)
+
+        // If there are no silos, redirect to silos page and preselect the created cereal by code
+        if (!hasAnySilo && createdCode) {
+          try {
+            router.push(`/dashboard/silos?openCreate=1&preselectCerealCode=${encodeURIComponent(createdCode)}`)
+          } catch (e) {
+            console.error("Error navegando a silos tras crear cereal:", e)
+          }
+        }
       } catch (error) {
         console.error("❌ Error en handleCreateCereal:", error)
         showError("Error al crear cereal", "No se pudo crear el cereal. Intenta nuevamente.")
@@ -152,6 +163,9 @@ export default function CerealsPage() {
     }
   }
 
+  const hasAnySilo = Array.isArray(silos) && silos.length > 0
+  const router = useRouter()
+
   return (
     <DashboardLayout>
       <div className="space-y-6 text-gray-700">
@@ -163,7 +177,15 @@ export default function CerealsPage() {
           </div>
           <Button 
             className="bg-green-600 hover:bg-green-700 self-start sm:self-auto"
-            onClick={() => setIsCreateDialogOpen(true)}
+            onClick={() => {
+              if (!hasAnySilo) {
+                showError("Crear cereal no disponible", "Primero debes crear al menos un silo para alojar el cereal.")
+                return
+              }
+              setIsCreateDialogOpen(true)
+            }}
+            disabled={!hasAnySilo}
+            title={!hasAnySilo ? "Primero crea un silo" : "Nuevo Cereal"}
           >
             <Plus className="h-4 w-4 mr-2" />
             <span className="hidden xs:inline">Nuevo Cereal</span>
@@ -306,7 +328,15 @@ export default function CerealsPage() {
                 </p>
                 <Button 
                   className="bg-green-600 hover:bg-green-700"
-                  onClick={() => setIsCreateDialogOpen(true)}
+                  onClick={() => {
+                    if (!hasAnySilo) {
+                      showError("Crear cereal no disponible", "Primero debes crear al menos un silo para alojar el cereal.")
+                      return
+                    }
+                    setIsCreateDialogOpen(true)
+                  }}
+                  disabled={!hasAnySilo}
+                  title={!hasAnySilo ? "Primero crea un silo" : "Crear Primer Cereal"}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Crear Primer Cereal

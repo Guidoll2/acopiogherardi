@@ -13,10 +13,11 @@ export async function POST(request: NextRequest) {
   try {
     await connectDB()
     
-    const { email, password, full_name, phone, role, company_id } = await request.json()
+  const { email: rawEmail, password, full_name, phone, role, company_id } = await request.json()
+  const email = rawEmail ? String(rawEmail).trim().toLowerCase() : rawEmail
 
     // Verificar si el usuario ya existe
-    const existingUser = await User.findOne({ email })
+  const existingUser = await User.findOne({ email }).collation({ locale: 'en', strength: 2 })
     if (existingUser) {
       return NextResponse.json(
         { error: "El usuario ya existe" },

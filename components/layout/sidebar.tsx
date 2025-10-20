@@ -6,6 +6,8 @@ import { AuthService } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { useNavigationWithLoading } from "@/hooks/use-navigation"
 import { cn } from "@/lib/utils"
+import { useData } from "@/contexts/data-context"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   LayoutDashboard,
   Users,
@@ -30,6 +32,8 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const { navigateWithLoading, navigateAndReplace } = useNavigationWithLoading()
   const pathname = usePathname()
   const [user, setUser] = useState<any>(null)
+  const { silos = [] } = useData()
+  const [isCerealsSilosDialogOpen, setIsCerealsSilosDialogOpen] = useState(false)
 
   useEffect(() => {
     const currentUser = AuthService.getCurrentUser()
@@ -95,15 +99,15 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         roles: ["admin", "company_admin", "supervisor"],
       },
       {
-        name: "Cereales",
-        href: "/dashboard/cereals",
-        icon: Wheat,
-        roles: ["admin", "company_admin", "supervisor"],
-      },
-      {
         name: "Silos",
         href: "/dashboard/silos",
         icon: Warehouse,
+        roles: ["admin", "company_admin", "supervisor"],
+      },
+      {
+        name: "Cereales",
+        href: "/dashboard/cereals",
+        icon: Wheat,
         roles: ["admin", "company_admin", "supervisor"],
       },
       {
@@ -157,9 +161,21 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   }
 
   const handleNavigation = (href: string) => {
+    // If user clicked Cereales and there are no silos, show info dialog with CTA
+    if (href === "/dashboard/cereals") {
+      const hasAnySilo = Array.isArray(silos) && silos.length > 0
+      if (!hasAnySilo) {
+        setIsCerealsSilosDialogOpen(true)
+        return
+      }
+    }
+
     navigateWithLoading(href)
     onClose?.() // Cerrar el menú móvil después de navegar
   }
+
+  // Sidebar width: default responsive classes
+  const sidebarWidthClass = 'w-80 md:w-64'
 
   return (
     <>
@@ -174,7 +190,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       {/* Sidebar */}
       <div className={`
         fixed top-0 left-0 z-50
-        w-80 md:w-64 bg-white shadow-lg 
+        ${sidebarWidthClass} bg-white shadow-lg 
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         flex flex-col h-screen
@@ -257,6 +273,31 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           </Button>
         </div>
       </div>
+      <CerealsNoSilosDialog
+        open={isCerealsSilosDialogOpen}
+        onOpenChange={setIsCerealsSilosDialogOpen}
+        onGoToSilos={() => { navigateWithLoading("/dashboard/silos"); onClose?.(); }}
+      />
     </>
+  )
+}
+
+// Dialog placed outside to avoid conditional rendering issues
+function CerealsNoSilosDialog({ open, onOpenChange, onGoToSilos }: { open: boolean, onOpenChange: (v:boolean)=>void, onGoToSilos: ()=>void }) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-gray-700">Primero crea un silo</DialogTitle>
+        </DialogHeader>
+        <div className="text-gray-700 mt-2">
+          Para poder crear un cereal necesitas al menos un silo donde alojarlo.
+        </div>
+        <div className="mt-4 flex gap-2 justify-end">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={() => { onGoToSilos(); onOpenChange(false) }} className="bg-green-600 hover:bg-green-700">Ir a Silos</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

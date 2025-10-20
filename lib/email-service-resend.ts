@@ -32,7 +32,7 @@ export const sendWelcomeEmail = async (
     }
 
     const { data, error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM || 'noreply@acopiogh.com',
+  from: process.env.EMAIL_FROM || 'noresponder@cuatrogranos.com',
       to: [companyEmail],
       subject: originalCompanyEmail 
         ? `[DESARROLLO] Credenciales para empresa ${companyName} (${originalCompanyEmail})`
@@ -171,7 +171,7 @@ export const sendAdminNotification = async (
     }
 
     const { data, error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM || 'noreply@acopiogh.com',
+  from: process.env.EMAIL_FROM || 'noresponder@cuatrogranos.com',
       to: [adminEmail],
       subject: `Nueva empresa registrada: ${companyName}`,
       html: `

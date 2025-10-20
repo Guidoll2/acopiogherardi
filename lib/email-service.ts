@@ -46,7 +46,7 @@ export const sendWelcomeEmail = async (
     const transporter = createTransporter()
 
     const mailOptions = {
-      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      from: process.env.EMAIL_FROM || 'noresponder@cuatrogranos.com',
       to: companyEmail,
       subject: `¡Bienvenido a 4 Granos! - Credenciales de acceso para ${companyName}`,
       html: `
@@ -173,7 +173,7 @@ export const sendAdminNotification = async (
     }
 
     const mailOptions = {
-      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      from: process.env.EMAIL_FROM || 'noresponder@cuatrogranos.com',
       to: adminEmail,
       subject: `Nueva empresa registrada: ${companyName}`,
       html: `
@@ -211,7 +211,7 @@ export class EmailService {
       const transporter = createTransporter()
 
       const mailOptions = {
-        from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+        from: process.env.EMAIL_FROM || 'noresponder@cuatrogranos.com',
         to: adminEmail,
         subject: `Nueva solicitud de registro - ${companyName}`,
         html: `

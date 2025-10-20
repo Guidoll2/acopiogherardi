@@ -1,5 +1,6 @@
 import React from "react"
 import { cn } from "@/lib/utils"
+import Animated from "@/components/ui/animated"
 
 interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg"
@@ -15,27 +16,28 @@ export function LoadingSpinner({ size = "md", className, text }: LoadingSpinnerP
   }
 
   return (
-    <div className={cn("flex flex-col items-center justify-center", className)}>
+    <Animated animation="fade" className={cn("flex flex-col items-center justify-center", className)}>
       <div className={cn(
-        "animate-spin rounded-full border-2 border-gray-300 border-t-green-600",
-        sizeClasses[size]
+        "rounded-full border-2 border-gray-300 border-t-green-600",
+        sizeClasses[size],
+        "spin-slow"
       )} />
       {text && (
-        <p className="mt-3 text-sm text-gray-600 animate-pulse">{text}</p>
+        <p className="mt-3 text-sm text-gray-600 pulse-soft">{text}</p>
       )}
-    </div>
+    </Animated>
   )
 }
 
 // Componente para loading de página completa
 export function PageLoadingSpinner({ text = "Cargando..." }: { text?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center w-full">
+    <Animated animation="fade-up" className="flex flex-col items-center justify-center w-full">
       <div className="text-center space-y-6">
         {/* Spinner principal con efecto glass */}
         <div className="relative">
-          <div className="w-16 h-16 animate-spin rounded-full border-4 border-white/30 border-t-green-500 shadow-lg"></div>
-          <div className="absolute inset-2 w-12 h-12 animate-pulse rounded-full bg-gradient-to-tr from-green-400/20 to-green-600/20 backdrop-blur-sm"></div>
+          <div className="w-16 h-16 rounded-full border-4 border-white/30 border-t-green-500 shadow-lg spin-slow"></div>
+          <div className="absolute inset-2 w-12 h-12 pulse-soft rounded-full bg-gradient-to-tr from-green-400/20 to-green-600/20 backdrop-blur-sm"></div>
         </div>
         
         {/* Texto con efecto glass sutil */}
@@ -48,7 +50,7 @@ export function PageLoadingSpinner({ text = "Cargando..." }: { text?: string }) 
           </div>
         </div>
       </div>
-    </div>
+    </Animated>
   )
 }
 
@@ -64,7 +66,7 @@ export function InlineLoadingSpinner({ text }: { text?: string }) {
 // Componente para loading de pantalla completa con efecto glass
 export function FullScreenLoadingSpinner({ text = "Cargando..." }: { text?: string }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md">
+    <Animated animation="pop" className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md">
       {/* Background glass que ocupa toda la pantalla */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/20 to-white/30 backdrop-blur-lg"></div>
       
@@ -74,8 +76,8 @@ export function FullScreenLoadingSpinner({ text = "Cargando..." }: { text?: stri
           <div className="space-y-6">
             {/* Spinner mejorado */}
             <div className="relative mx-auto w-20 h-20">
-              <div className="absolute inset-0 animate-spin rounded-full border-4 border-white/40 border-t-green-500 shadow-lg"></div>
-              <div className="absolute inset-3 animate-pulse rounded-full bg-gradient-to-tr from-green-400/30 to-green-600/30 backdrop-blur-sm"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-white/40 border-t-green-500 shadow-lg spin-slow"></div>
+              <div className="absolute inset-3 pulse-soft rounded-full bg-gradient-to-tr from-green-400/30 to-green-600/30 backdrop-blur-sm"></div>
             </div>
             
             {/* Texto estilizado */}
@@ -90,6 +92,6 @@ export function FullScreenLoadingSpinner({ text = "Cargando..." }: { text?: stri
           </div>
         </div>
       </div>
-    </div>
+    </Animated>
   )
 }

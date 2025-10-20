@@ -91,7 +91,7 @@ export function LoginSection() {
       if (result.success) {
         setRegisterMessage({
           type: "success",
-          text: result.message || "Solicitud enviada exitosamente"
+          text: result.message || "Registro exitoso. Recibirás un email de bienvenida con tus credenciales y podrás acceder de inmediato."
         })
         // Limpiar formulario
         setRegisterData({
@@ -392,12 +392,12 @@ export function LoginSection() {
                     {loading ? (
                       <div className="flex items-center justify-center gap-2">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        Enviando solicitud...
+                        Enviando registro...
                       </div>
                     ) : (
                       <div className="flex items-center justify-center gap-2">
                         <Building2 className="h-4 w-4" />
-                        Enviar Solicitud
+                        Registrar
                       </div>
                     )}
                   </Button>

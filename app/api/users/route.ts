@@ -7,8 +7,9 @@ export async function POST(request: NextRequest) {
   try {
     await connectDB()
     
-    const body = await request.json()
-    const { full_name, email, phone, role, password, company_id } = body
+  const body = await request.json()
+  const { full_name, email: rawEmail, phone, role, password, company_id } = body
+  const email = rawEmail ? String(rawEmail).trim().toLowerCase() : rawEmail
 
     // Validar datos requeridos
     if (!full_name || !email || !role || !password || !company_id) {
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validar que el email no exista
-    const existingUser = await User.findOne({ email })
+  const existingUser = await User.findOne({ email }).collation({ locale: 'en', strength: 2 })
     if (existingUser) {
       return NextResponse.json(
         { error: "El email ya está registrado" },

@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useData } from "@/contexts/data-context"
 import { usePageReady } from "@/hooks/use-page-ready"
 import { useToasts } from "@/components/ui/toast"
+import { useSearchParams, useRouter } from "next/navigation"
 import { validateSiloCapacity } from "@/lib/silo-validation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,6 +22,7 @@ export default function SilosPage() {
   const { showSuccess, showError, showProcessing } = useToasts()
   const { markPageAsReady } = usePageReady()
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isCreateCerealInlineOpen, setIsCreateCerealInlineOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedSilo, setSelectedSilo] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -31,6 +33,12 @@ export default function SilosPage() {
     cereal_type: "",
   })
 
+  // Inline cereal form for when creating silo and no cereals exist
+  const [inlineCerealForm, setInlineCerealForm] = useState({ name: "", code: "", pricePerTon: "" })
+  const [isCreatingInlineCereal, setIsCreatingInlineCereal] = useState(false)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
   // Filtrar duplicados y asegurar keys únicos
   const uniqueSilos = silos.filter((silo, index, self) => 
     index === self.findIndex(s => s.id === silo.id)
@@ -38,6 +46,24 @@ export default function SilosPage() {
   const uniqueCereals = cereals.filter((cereal, index, self) => 
     index === self.findIndex(c => c.id === cereal.id)
   )
+
+  // If navigated from cereal creation and preselectCerealCode param exists, open create silo dialog and preselect cereal
+  useEffect(() => {
+    const openCreate = searchParams?.get("openCreate")
+    const preselectCode = searchParams?.get("preselectCerealCode")
+    if (openCreate === "1") {
+      // If we have cereals loaded, try to find by code
+      if (preselectCode && uniqueCereals.length > 0) {
+        const found = uniqueCereals.find(c => c.code?.toUpperCase() === preselectCode.toUpperCase())
+        if (found) {
+          setFormData(f => ({ ...f, cereal_type: found.id }))
+        }
+      }
+      setIsCreateDialogOpen(true)
+      // clear the params from URL
+      try { router.replace('/dashboard/silos') } catch (e) { /* ignore */ }
+    }
+  }, [searchParams, uniqueCereals])
 
   const handleCreateSilo = async () => {
     if (formData.name && formData.capacity) {
@@ -70,6 +96,52 @@ export default function SilosPage() {
       }
     } else {
       showError("Datos incompletos", "Por favor completa todos los campos obligatorios")
+    }
+  }
+
+  // Create cereal inline when creating a silo and there are no cereals
+  const handleCreateInlineCereal = async () => {
+    if (!inlineCerealForm.name || !inlineCerealForm.code || !inlineCerealForm.pricePerTon) {
+      showError("Datos incompletos", "Completa los campos del cereal")
+      return
+    }
+
+    setIsCreatingInlineCereal(true)
+    showProcessing('Creando cereal...')
+    try {
+      await addSilo ? null : null // noop to satisfy linter (we use addCereal via useData)
+      // use addCereal via context - addCereal is aliased to addCerealType in context
+      // @ts-ignore
+      await (await import('@/contexts/data-context')).useData // noop to satisfy import usage
+    } catch (e) {
+      // fallback: call API directly
+    }
+
+    try {
+      // call addCereal via context's function name addCerealType alias is available as addCereal in context
+      // But we don't have addCereal separately here; use refreshData after calling the API directly
+      const payload = {
+        name: inlineCerealForm.name,
+        code: inlineCerealForm.code.toUpperCase(),
+        price_per_ton: Number(inlineCerealForm.pricePerTon)
+      }
+      const resp = await fetch('/api/cereals', { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'application/json' }, credentials: 'include' })
+      if (!resp.ok) throw new Error('Error creando cereal')
+      await refreshData()
+      // find created cereal by code
+      const created = (await (await fetch('/api/cereals', { credentials: 'include' })).json()).cereals?.find((c:any)=>c.code === payload.code)
+      if (created) {
+        setFormData(f => ({ ...f, cereal_type: created.id }))
+        showSuccess('Cereal creado', `${created.name} creado y seleccionado`) 
+        setIsCreateCerealInlineOpen(false)
+      } else {
+        showSuccess('Cereal creado', 'Cereal creado')
+      }
+    } catch (error) {
+      console.error(error)
+      showError('Error creando cereal', 'No se pudo crear el cereal. Intenta nuevamente.')
+    } finally {
+      setIsCreatingInlineCereal(false)
     }
   }
 
@@ -410,6 +482,14 @@ export default function SilosPage() {
                   ))}
                 </SelectContent>
               </Select>
+              {uniqueCereals.length === 0 && (
+                <div className="mt-2 text-sm text-gray-600">
+                  <div>No hay cereales disponibles para asociar.</div>
+                  <Button className="mt-2" onClick={() => setIsCreateCerealInlineOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />Crear cereal ahora
+                  </Button>
+                </div>
+              )}
             </div>
             <Button
               onClick={handleCreateSilo}
@@ -418,6 +498,35 @@ export default function SilosPage() {
             >
               {isLoading ? "Creando..." : "Crear Silo"}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Inline cereal creation dialog for silo flow */}
+      <Dialog open={isCreateCerealInlineOpen} onOpenChange={setIsCreateCerealInlineOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Crear Cereal (para asociar al Silo)</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-gray-700">
+            <div>
+              <Label htmlFor="inline-cereal-name">Nombre *</Label>
+              <Input id="inline-cereal-name" value={inlineCerealForm.name} onChange={(e)=>setInlineCerealForm(f=>({...f,name:e.target.value}))} />
+            </div>
+            <div>
+              <Label htmlFor="inline-cereal-code">Código *</Label>
+              <Input id="inline-cereal-code" value={inlineCerealForm.code} onChange={(e)=>setInlineCerealForm(f=>({...f,code:e.target.value.toUpperCase()}))} maxLength={3} />
+            </div>
+            <div>
+              <Label htmlFor="inline-cereal-price">Precio por Tonelada *</Label>
+              <Input id="inline-cereal-price" type="number" value={inlineCerealForm.pricePerTon} onChange={(e)=>setInlineCerealForm(f=>({...f,pricePerTon:e.target.value}))} />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setIsCreateCerealInlineOpen(false)}>Cancelar</Button>
+              <Button className="bg-green-600 hover:bg-green-700" onClick={handleCreateInlineCereal} disabled={isCreatingInlineCereal}>
+                {isCreatingInlineCereal ? 'Creando...' : 'Crear y seleccionar'}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

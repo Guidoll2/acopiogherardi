@@ -102,7 +102,7 @@ export const checkEmailConfiguration = () => {
       config.details = {
         provider: 'Resend',
         apiKey: process.env.RESEND_API_KEY ? '✅ Configurado' : '❌ No configurado',
-        fromEmail: process.env.EMAIL_FROM || 'noreply@acopiogh.com',
+  fromEmail: process.env.EMAIL_FROM || 'noresponder@cuatrogranos.com',
         adminEmail: process.env.ADMIN_EMAIL || 'No configurado'
       }
       break
@@ -111,7 +111,7 @@ export const checkEmailConfiguration = () => {
         provider: 'Gmail (Nodemailer)',
         user: process.env.EMAIL_USER || 'No configurado',
         password: process.env.EMAIL_PASS ? '✅ Configurado' : '❌ No configurado',
-        fromEmail: process.env.EMAIL_FROM || process.env.EMAIL_USER || 'No configurado',
+  fromEmail: process.env.EMAIL_FROM || process.env.EMAIL_USER || 'noresponder@cuatrogranos.com',
         adminEmail: process.env.ADMIN_EMAIL || 'No configurado'
       }
       break

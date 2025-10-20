@@ -51,7 +51,7 @@ export function CompanyRegistrationForm() {
       if (result.success) {
         setMessage({
           type: "success",
-          text: result.message || "Solicitud enviada exitosamente"
+          text: result.message || "Registro exitoso. Recibirás un email de bienvenida con tus credenciales y podrás acceder de inmediato."
         })
         // Limpiar formulario
         setFormData({
@@ -98,7 +98,7 @@ export function CompanyRegistrationForm() {
             <CardTitle className="text-gray-700">Datos de la Empresa</CardTitle>
             <CardDescription className="text-gray-700">
               Complete todos los campos para solicitar acceso al sistema. 
-              Recibirá una respuesta por email una vez que su solicitud sea revisada.
+              Recibirás un email de bienvenida con tu contraseña y podrás acceder inmediatamente al sistema.
             </CardDescription>
           </CardHeader>
           
@@ -244,7 +244,7 @@ export function CompanyRegistrationForm() {
                   className="flex-1 bg-green-600 hover:bg-green-700" 
                   disabled={loading}
                 >
-                  {loading ? "Enviando..." : "Enviar Solicitud"}
+                  {loading ? "Enviando..." : "Registrar"}
                 </Button>
               </div>
             </form>

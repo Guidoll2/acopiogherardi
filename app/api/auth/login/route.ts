@@ -23,10 +23,11 @@ export async function POST(request: NextRequest) {
 
     await connectDB()
     
-    const { email, password } = await request.json()
+  const { email: rawEmail, password } = await request.json()
+  const email = rawEmail ? String(rawEmail).trim().toLowerCase() : rawEmail
 
-    // Buscar usuario en la base de datos
-    const user = await User.findOne({ email })
+  // Buscar usuario en la base de datos (case-insensitive)
+  const user = await User.findOne({ email }).collation({ locale: 'en', strength: 2 })
     if (!user) {
       return NextResponse.json(
         { error: "Credenciales inválidas" },

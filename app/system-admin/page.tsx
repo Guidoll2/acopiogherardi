@@ -31,7 +31,8 @@ export default function SystemAdminPage() {
   const [viewCompanyOpen, setViewCompanyOpen] = useState(false)
   const [editCompanyOpen, setEditCompanyOpen] = useState(false)
   const [selectedCompany, setSelectedCompany] = useState<any>(null)
-  const [activeView, setActiveView] = useState<"dashboard" | "requests">("dashboard")
+  const [activeView, setActiveView] = useState<'dashboard' | 'requests' | 'deleted'>('dashboard')
+  const [deletedCompanies, setDeletedCompanies] = useState<any[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -46,6 +47,25 @@ export default function SystemAdminPage() {
       // Los datos se cargan automáticamente a través del DataProvider
     }
   }, [router])
+
+  // Fetch deleted companies when view changes
+  useEffect(() => {
+    const fetchDeletedCompanies = async () => {
+      if (activeView === 'deleted') {
+        try {
+          const res = await fetch('/api/deleted-companies')
+          if (res.ok) {
+            const json = await res.json()
+            setDeletedCompanies(json.data || [])
+          }
+        } catch (e) {
+          console.error('Error fetching deleted companies', e)
+        }
+      }
+    }
+
+    fetchDeletedCompanies()
+  }, [activeView])
 
   if (isLoading) {
     return (
@@ -134,6 +154,8 @@ export default function SystemAdminPage() {
       setViewCompanyOpen(true)
     }
   }
+
+  
 
   const handleDeleteCompany = async (companyId: string) => {
     const company = companiesList?.find((c: any) => c.id === companyId)
@@ -310,6 +332,14 @@ export default function SystemAdminPage() {
           >
             <UserPlus className="mr-2 h-4 w-4" />
             Solicitudes de Registro
+          </Button>
+          <Button 
+            variant={activeView === "deleted" ? "default" : "outline"}
+            onClick={() => setActiveView("deleted")}
+            className="rounded-b-none border-b-0"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Eliminadas
           </Button>
         </div>
 
@@ -619,6 +649,38 @@ export default function SystemAdminPage() {
 
         {activeView === "requests" && (
           <CompanyRequestsManager />
+        )}
+
+        {activeView === "deleted" && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Empresas Eliminadas</CardTitle>
+              <CardDescription>Histórico de empresas eliminadas (archivadas)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {deletedCompanies.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">No hay empresas eliminadas</div>
+              ) : (
+                <div className="space-y-3">
+                  {deletedCompanies.map(dc => (
+                    <div key={dc._id} className="p-3 border rounded-lg">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold">{dc.snapshot?.name || 'Sin nombre'}</p>
+                          <p className="text-sm text-muted-foreground">{dc.snapshot?.email} • CUIT: {dc.snapshot?.cuit}</p>
+                          <p className="text-xs text-muted-foreground">Eliminada: {new Date(dc.deleted_at).toLocaleString()}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs">Eliminado por: {dc.deleted_by}</p>
+                          <p className="text-xs text-muted-foreground">Motivo: {dc.reason}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         {/* Diálogos */}
