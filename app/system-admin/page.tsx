@@ -15,6 +15,7 @@ import { CreateAdminDialog } from "@/components/system-admin/create-admin-dialog
 import { ViewCompanyDialog } from "@/components/system-admin/view-company-dialog"
 import { EditCompanyDialog } from "@/components/system-admin/edit-company-dialog"
 import { CompanyRequestsManager } from "@/components/system-admin/company-requests-manager"
+import { DeleteCompanyModal } from "@/components/system-admin/delete-company-modal"
 
 export default function SystemAdminPage() {
   const { 
@@ -31,6 +32,7 @@ export default function SystemAdminPage() {
   const [viewCompanyOpen, setViewCompanyOpen] = useState(false)
   const [editCompanyOpen, setEditCompanyOpen] = useState(false)
   const [selectedCompany, setSelectedCompany] = useState<any>(null)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [activeView, setActiveView] = useState<'dashboard' | 'requests' | 'deleted'>('dashboard')
   const [deletedCompanies, setDeletedCompanies] = useState<any[]>([])
   const router = useRouter()
@@ -155,59 +157,6 @@ export default function SystemAdminPage() {
     }
   }
 
-  
-
-  const handleDeleteCompany = async (companyId: string) => {
-    const company = companiesList?.find((c: any) => c.id === companyId)
-    if (!company) return
-
-    if (confirm(`¿Está seguro de que desea eliminar la empresa "${company.name}"? Esta acción no se puede deshacer.`)) {
-      try {
-        const response = await fetch(`/api/companies/${companyId}`, {
-          method: 'DELETE',
-        })
-
-        if (response.ok) {
-          await refreshData()
-          alert('Empresa eliminada exitosamente')
-        } else {
-          const error = await response.json()
-          if (error.users && error.users.length > 0 && error.canForceDelete) {
-            const userList = error.users.map((u: any) => `• ${u.name} (${u.email})`).join('\n')
-            const forceDelete = confirm(
-              `No se puede eliminar la empresa "${company.name}" porque tiene usuarios asociados:\n\n${userList}\n\n¿Desea eliminar la empresa Y todos sus usuarios asociados? Esta acción es irreversible.`
-            )
-            
-            if (forceDelete) {
-              try {
-                const forceResponse = await fetch(`/api/companies/${companyId}?force=true`, {
-                  method: 'DELETE',
-                })
-                
-                if (forceResponse.ok) {
-                  const result = await forceResponse.json()
-                  await refreshData()
-                  alert(result.message)
-                } else {
-                  const forceError = await forceResponse.json()
-                  alert(`Error al eliminar empresa: ${forceError.error || 'Error desconocido'}`)
-                }
-              } catch (forceErr) {
-                console.error('Error:', forceErr)
-                alert('Error al eliminar empresa')
-              }
-            }
-          } else {
-            alert(`Error al eliminar empresa: ${error.error || 'Error desconocido'}`)
-          }
-        }
-      } catch (error) {
-        console.error('Error:', error)
-        alert('Error al eliminar empresa')
-      }
-    }
-  }
-
   const handleDeleteUser = async (userId: string) => {
     const user = usersList?.find(u => u.id === userId)
     if (!user) return
@@ -264,6 +213,12 @@ export default function SystemAdminPage() {
       console.error('Error:', error)
       alert('Error al resetear contraseña')
     }
+  }
+  const handleDeleteCompany = async (companyId: string) => {
+    const company = companiesList?.find((c: any) => c.id === companyId)
+    if (!company) return
+    setSelectedCompany(company)
+    setDeleteModalOpen(true)
   }
 
   const getPlanBadgeColor = (plan: string) => {
@@ -707,6 +662,13 @@ export default function SystemAdminPage() {
           onOpenChange={setEditCompanyOpen}
           company={selectedCompany}
           onCompanyUpdated={handleCompanyUpdated}
+        />
+        
+        <DeleteCompanyModal
+          open={deleteModalOpen}
+          onOpenChange={(open) => setDeleteModalOpen(open)}
+          company={selectedCompany}
+          onDeleted={async () => { setDeleteModalOpen(false); await refreshData() }}
         />
       </div>
     </DashboardLayout>
