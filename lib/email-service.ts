@@ -50,100 +50,100 @@ export const sendWelcomeEmail = async (
       to: companyEmail,
       subject: `¡Bienvenido a 4 Granos! - Credenciales de acceso para ${companyName}`,
       html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background-color: #16a34a; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-            .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
-            .credentials { background-color: #e7f3ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2563eb; }
-            .button { display: inline-block; background-color: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
-            .warning { background-color: #fef3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b; margin: 20px 0; }
-            .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>🌾 ¡Bienvenido a 4 Granos!</h1>
-            </div>
-            
-            <div class="content">
-              <h2>Hola, equipo de ${companyName}</h2>
-              
-              <p>¡Nos complace darte la bienvenida a nuestra plataforma de gestión de acopio de cereales!</p>
-              
-              <p>Tu empresa <strong>${companyName}</strong> ha sido registrada exitosamente en nuestro sistema. A continuación, encontrarás tus credenciales de acceso:</p>
-              
-              <div class="credentials">
-                <h3>📋 Credenciales de Acceso</h3>
-                <p><strong>Usuario (Email):</strong> ${companyEmail}</p>
-                <p><strong>Contraseña temporal:</strong> <code style="background: #fff; padding: 4px 8px; border-radius: 4px; font-family: monospace;">${tempPassword}</code></p>
-                <p><strong>URL de acceso:</strong> <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login">${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login</a></p>
-              </div>
-              
-              <div class="warning">
-                <h4>⚠️ Importante - Seguridad</h4>
-                <ul>
-                  <li><strong>Cambia tu contraseña inmediatamente</strong> después del primer inicio de sesión</li>
-                  <li>No compartas estas credenciales por email o medios no seguros</li>
-                  <li>Utiliza una contraseña fuerte y única para tu cuenta</li>
-                </ul>
-              </div>
-              
-              <h3>🚀 Primeros pasos:</h3>
-              <ol>
-                <li>Inicia sesión con las credenciales proporcionadas</li>
-                <li>Cambia tu contraseña en el perfil de usuario</li>
-                <li>Configura los datos básicos de tu empresa</li>
-                <li>Crea usuarios adicionales para tu equipo</li>
-                <li>Comienza a gestionar tus operaciones de acopio</li>
-              </ol>
-              
-              <div style="text-align: center;">
-                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login" class="button">
-                  Acceder a la Plataforma
-                </a>
-              </div>
-              
-              <h3>📞 ¿Necesitas ayuda?</h3>
-              <p>Si tienes alguna pregunta o necesitas asistencia, no dudes en contactarnos:</p>
-              <ul>
-                <li><strong>Email de soporte:</strong> soporte@acopiogh.com</li>
-                <li><strong>Teléfono:</strong> +54 11 1234-5678</li>
-                <li><strong>Horario de atención:</strong> Lunes a Viernes, 8:00 - 18:00 hs</li>
-              </ul>
-            </div>
-            
-            <div class="footer">
-              <p>Este email fue enviado automáticamente por 4 Granos</p>
-              <p>© ${new Date().getFullYear()} 4 Granos. Todos los derechos reservados.</p>
-            </div>
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #16a34a; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+        .credentials { background-color: #e7f3ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2563eb; }
+        .button { display: inline-block; background-color: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+        .warning { background-color: #fef3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+        <div class="header">
+          <h1>🌾 ¡Bienvenido a 4 Granos!</h1>
+        </div>
+        
+        <div class="content">
+          <h2>Hola, equipo de ${companyName}</h2>
+          
+          <p>¡Nos complace darte la bienvenida a nuestra plataforma de gestión de acopio de cereales!</p>
+          
+          <p>Tu empresa <strong>${companyName}</strong> ha sido registrada exitosamente en nuestro sistema. A continuación, encontrarás tus credenciales de acceso:</p>
+          
+          <div class="credentials">
+          <h3>📋 Credenciales de Acceso</h3>
+          <p><strong>Usuario (Email):</strong> ${companyEmail}</p>
+          <p><strong>Contraseña temporal:</strong> <code style="background: #fff; padding: 4px 8px; border-radius: 4px; font-family: monospace;">${tempPassword}</code></p>
+          <p><strong>URL de acceso:</strong> <a href="https://www.cuatrogranos.com/login">www.cuatrogranos.com/login</a></p>
           </div>
-        </body>
-        </html>
+          
+          <div class="warning">
+          <h4>⚠️ Importante - Seguridad</h4>
+          <ul>
+            <li><strong>Cambia tu contraseña inmediatamente</strong> después del primer inicio de sesión</li>
+            <li>No compartas estas credenciales por email o medios no seguros</li>
+            <li>Utiliza una contraseña fuerte y única para tu cuenta</li>
+          </ul>
+          </div>
+          
+          <h3>🚀 Primeros pasos:</h3>
+          <ol>
+          <li>Inicia sesión con las credenciales proporcionadas</li>
+          <li>Cambia tu contraseña en el perfil de usuario</li>
+          <li>Configura los datos básicos de tu empresa</li>
+          <li>Crea usuarios adicionales para tu equipo</li>
+          <li>Comienza a gestionar tus operaciones de acopio</li>
+          </ol>
+          
+          <div style="text-align: center;">
+          <a href="https://www.cuatrogranos.com/login" class="button">
+            Acceder a la Plataforma
+          </a>
+          </div>
+          
+          <h3>📞 ¿Necesitas ayuda?</h3>
+          <p>Si tienes alguna pregunta o necesitas asistencia, no dudes en contactarnos:</p>
+          <ul>
+          <li><strong>Email de soporte:</strong> soporte@acopiogh.com</li>
+          <li><strong>Teléfono:</strong> +54 11 1234-5678</li>
+          <li><strong>Horario de atención:</strong> Lunes a Viernes, 8:00 - 18:00 hs</li>
+          </ul>
+        </div>
+        
+        <div class="footer">
+          <p>Este email fue enviado automáticamente por 4 Granos</p>
+          <p>© ${new Date().getFullYear()} 4 Granos. Todos los derechos reservados.</p>
+        </div>
+        </div>
+      </body>
+      </html>
       `,
       // Versión en texto plano como fallback
       text: `
-¡Bienvenido a 4 Granos!
+  ¡Bienvenido a 4 Granos!
 
-Hola, equipo de ${companyName}
+  Hola, equipo de ${companyName}
 
-Tu empresa ${companyName} ha sido registrada exitosamente.
+  Tu empresa ${companyName} ha sido registrada exitosamente.
 
-Credenciales de acceso:
-- Usuario: ${companyEmail}
-- Contraseña temporal: ${tempPassword}
-- URL: ${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login
+  Credenciales de acceso:
+  - Usuario: ${companyEmail}
+  - Contraseña temporal: ${tempPassword}
+  - URL: https://www.cuatrogranos.com/login
 
-IMPORTANTE: Cambia tu contraseña inmediatamente después del primer inicio de sesión.
+  IMPORTANTE: Cambia tu contraseña inmediatamente después del primer inicio de sesión.
 
-¿Necesitas ayuda? Contáctanos en soporte@acopiogh.com
+  ¿Necesitas ayuda? Contáctanos en soporte@acopiogh.com
 
-© ${new Date().getFullYear()} 4 Granos
+  © ${new Date().getFullYear()} 4 Granos
       `
     }
 
