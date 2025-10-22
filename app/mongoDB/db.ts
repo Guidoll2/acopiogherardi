@@ -1,6 +1,8 @@
 import mongoose, { Mongoose } from "mongoose";
 
-const connectionString = `mongodb+srv://guidoll:Ellesar33.@emplearg.mongocluster.cosmos.azure.com/acopiogh?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000`;
+// Prefer environment variable for the MongoDB connection (allows switching DBs in deployment)
+const DEFAULT_CONNECTION = `mongodb+srv://guidoll:Ellesar33.@emplearg.mongocluster.cosmos.azure.com/acopiogh?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000`;
+const connectionString = process.env.MONGODB_URI || DEFAULT_CONNECTION;
 
 // Definimos una variable "globalForMongoose" para evitar errores de tipos
 const globalForMongoose = globalThis as typeof globalThis & {
