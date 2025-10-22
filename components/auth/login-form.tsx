@@ -19,6 +19,8 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [resettingPassword, setResettingPassword] = useState(false)
+  const [resetMessage, setResetMessage] = useState("")
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,13 +62,48 @@ export function LoginForm() {
         return
       } else {
         console.log("Login falló - usuario es null")
-        setError("Credenciales inválidas")
+        setError("Contraseña inválida")
         setLoading(false) // Resetear loading cuando fallan las credenciales
       }
     } catch (err) {
       console.error("Error en handleSubmit:", err)
       setError("Error al iniciar sesión")
       setLoading(false) // Resetear loading cuando hay error
+    }
+  }
+
+  const handleSendNewPassword = async () => {
+    if (!email) {
+      setError("Por favor ingresa tu email primero")
+      return
+    }
+
+    setResettingPassword(true)
+    setError("")
+    setResetMessage("")
+
+    try {
+      const response = await fetch("/api/password-reset/reset", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setResetMessage("Nueva contraseña enviada al email. Por favor revisa tu bandeja de entrada.")
+        setPassword("")
+      } else {
+        setError(data.error || "No se pudo enviar la nueva contraseña")
+      }
+    } catch (err) {
+      console.error("Error al resetear contraseña:", err)
+      setError("Error al procesar la solicitud")
+    } finally {
+      setResettingPassword(false)
     }
   }
     
@@ -130,8 +167,24 @@ export function LoginForm() {
                 </Alert>
               )}
 
+              {resetMessage && (
+                <Alert className="bg-green-50 border-green-200">
+                  <AlertDescription className="text-green-800">{resetMessage}</AlertDescription>
+                </Alert>
+              )}
+
               <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={loading}>
                 {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
+                onClick={handleSendNewPassword}
+                disabled={resettingPassword || !email}
+              >
+                {resettingPassword ? "Enviando..." : "Enviar nueva contraseña"}
               </Button>
               
               <div className="flex flex-col space-y-2 pt-4 border-t">

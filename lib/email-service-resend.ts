@@ -197,3 +197,129 @@ export const sendAdminNotification = async (
     return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' }
   }
 }
+
+// Función para enviar email con nueva contraseña
+export const sendPasswordResetEmail = async (
+  userEmail: string,
+  userName: string,
+  newPassword: string
+) => {
+  try {
+    // Si no hay configuración de Resend, simular envío exitoso para desarrollo
+    if (!process.env.RESEND_API_KEY) {
+      console.log('📧 MODO DESARROLLO - Email de reseteo que se enviaría:')
+      console.log('📨 Para:', userEmail)
+      console.log('👤 Usuario:', userName)
+      console.log('🔑 Nueva contraseña:', newPassword)
+      console.log('💌 Email simulado enviado exitosamente!')
+      return { success: true, messageId: 'dev-mode-reset-' + Date.now() }
+    }
+
+    const { data, error } = await resend.emails.send({
+      from: process.env.EMAIL_FROM || 'noresponder@cuatrogranos.com',
+      to: [userEmail],
+      subject: '🔐 Tu nueva contraseña - 4 Granos',
+      html: getPasswordResetEmailTemplate(userName, newPassword),
+    })
+
+    if (error) {
+      console.error('Error enviando email de reseteo con Resend:', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log('✅ Email de reseteo enviado exitosamente con Resend:', data?.id)
+    return { success: true, messageId: data?.id }
+    
+  } catch (error) {
+    console.error('Error enviando email de reseteo:', error)
+    return { success: false, error: error instanceof Error ? error.message : 'Error desconocido' }
+  }
+}
+
+// Template del email de reseteo de contraseña
+const getPasswordResetEmailTemplate = (userName: string, newPassword: string) => {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #2563eb; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+        .password-box { background-color: #e7f3ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2563eb; text-align: center; }
+        .password-code { background: #fff; padding: 12px 20px; border-radius: 6px; font-family: monospace; font-size: 18px; font-weight: bold; color: #2563eb; letter-spacing: 2px; display: inline-block; margin: 10px 0; }
+        .button { display: inline-block; background-color: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+        .warning { background-color: #fef3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b; margin: 20px 0; }
+        .security-tips { background-color: #e0f2fe; padding: 15px; border-radius: 6px; border-left: 4px solid #0284c7; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🔐 Nueva Contraseña</h1>
+        </div>
+        
+        <div class="content">
+          <h2>Hola ${userName},</h2>
+          
+          <p>Has solicitado una nueva contraseña para tu cuenta en <strong>4 Granos</strong>.</p>
+          
+          <p>Tu contraseña ha sido restablecida exitosamente. A continuación encontrarás tu nueva contraseña temporal:</p>
+          
+          <div class="password-box">
+            <h3>🔑 Tu Nueva Contraseña</h3>
+            <div class="password-code">${newPassword}</div>
+            <p style="margin-top: 15px; font-size: 14px; color: #666;">
+              Copia esta contraseña exactamente como se muestra (respetando mayúsculas, minúsculas y caracteres especiales)
+            </p>
+          </div>
+          
+          <div class="warning">
+            <h4>⚠️ Importante - Seguridad</h4>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+              <li><strong>Cambia esta contraseña inmediatamente</strong> después de iniciar sesión</li>
+              <li>Esta es una contraseña temporal y debe ser reemplazada por una de tu elección</li>
+              <li>No compartas esta contraseña con nadie</li>
+              <li>Si no solicitaste este cambio, contacta al administrador de inmediato</li>
+            </ul>
+          </div>
+          
+          <div style="text-align: center;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login" class="button">
+              Iniciar Sesión Ahora
+            </a>
+          </div>
+          
+          <div class="security-tips">
+            <h4>💡 Consejos de Seguridad</h4>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+              <li>Usa una contraseña única que no utilices en otros sitios</li>
+              <li>Combina letras mayúsculas, minúsculas, números y símbolos</li>
+              <li>Elige una contraseña de al menos 8 caracteres</li>
+              <li>Evita usar información personal fácilmente identificable</li>
+              <li>Considera usar un gestor de contraseñas</li>
+            </ul>
+          </div>
+          
+          <h3>📞 ¿Necesitas ayuda?</h3>
+          <p>Si tienes alguna pregunta o no solicitaste este cambio, contactanos de inmediato:</p>
+          <ul>
+            <li><strong>Email de soporte:</strong> soporte@cuatrogranos.com</li>
+            <li><strong>Teléfono:</strong> +54 11 1234-5678</li>
+            <li><strong>Horario de atención:</strong> Lunes a Viernes, 8:00 - 18:00 hs</li>
+          </ul>
+        </div>
+        
+        <div class="footer">
+          <p>Este email fue enviado automáticamente por 4 Granos</p>
+          <p>Si no solicitaste este cambio, por favor ignora este mensaje y contacta al administrador</p>
+          <p>© ${new Date().getFullYear()} 4 Granos. Todos los derechos reservados.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}

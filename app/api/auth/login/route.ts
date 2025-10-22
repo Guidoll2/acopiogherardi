@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
   const user = await User.findOne({ email }).collation({ locale: 'en', strength: 2 })
     if (!user) {
       return NextResponse.json(
-        { error: "Credenciales inválidas" },
+        { error: "Email no encontrado" },
         { status: 401 }
       )
     }
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     const isPasswordValid = await bcrypt.compare(password, user.password)
     if (!isPasswordValid) {
       return NextResponse.json(
-        { error: "Credenciales inválidas" },
+        { error: "Contraseña inválida" },
         { status: 401 }
       )
     }
