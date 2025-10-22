@@ -25,6 +25,7 @@ import {
   Eye,
   TrendingUp,
   TrendingDown,
+  Printer,
 } from "lucide-react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 
@@ -78,6 +79,59 @@ export default function ClientsPage() {
     }
   }
 
+  const formatDate = (dateString: string | Date | undefined) => {
+    if (!dateString) return "N/A"
+
+    try {
+      const date = typeof dateString === "string" ? new Date(dateString) : dateString
+      if (isNaN(date.getTime())) return "N/A"
+
+      return date.toLocaleDateString("es-AR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+    } catch (error) {
+      return "N/A"
+    }
+  }
+
+  const handlePrintOperation = (operation: any) => {
+    // Crear contenido para imprimir
+    const printWindow = window.open('', '', 'height=600,width=800')
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Operación #${operation.id}</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; }
+              h1 { text-align: center; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+              th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+              th { background-color: #f0f0f0; }
+            </style>
+          </head>
+          <body>
+            <h1>Detalle de Operación #${operation.id}</h1>
+            <table>
+              <tr><th>Cliente</th><td>${selectedClient?.name || 'N/A'}</td></tr>
+              <tr><th>Fecha</th><td>${formatDate(operation.display_date)}</td></tr>
+              <tr><th>Transportista</th><td>${operation.driver_name}</td></tr>
+              <tr><th>Cereal</th><td>${operation.cereal_name}</td></tr>
+              <tr><th>Peso Total (Bruto)</th><td>${formatNumber(operation.gross_weight)} kg</td></tr>
+              <tr><th>Tara</th><td>${formatNumber(operation.tare_weight)} kg</td></tr>
+              <tr><th>Peso Final (Neto)</th><td>${formatNumber(operation.net_weight_kg)} kg</td></tr>
+              <tr><th>Tipo de Operación</th><td>${operation.type === 'ingreso' ? 'INGRESO' : 'EGRESO'}</td></tr>
+            </table>
+          </body>
+        </html>
+      `)
+      printWindow.document.close()
+      printWindow.print()
+    }
+  }
+
   // También actualizar la función getClientOperations para manejar fechas correctamente:
 
   const getClientOperations = (clientId: string) => {
@@ -98,6 +152,9 @@ export default function ClientsPage() {
           driver_name: driver?.name || "N/A",
           cereal_name: cereal?.name || "N/A",
           net_weight_tons: operation.net_weight ? operation.net_weight / 1000 : 0,
+          net_weight_kg: operation.net_weight || 0, // Peso en kilos
+          gross_weight: operation.gross_weight || 0, // Peso total
+          tare_weight: operation.tare_weight || 0, // Tara
           display_date: operation.created_at || new Date().toISOString(),
         }
       })
@@ -503,8 +560,8 @@ export default function ClientsPage() {
 
       {/* Dialog de Cuenta Corriente */}
       <Dialog open={isAccountDialogOpen} onOpenChange={setIsAccountDialogOpen}>
-        <DialogContent className="text-gray-700 max-w-7xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="text-gray-700 max-w-[98vw] w-[98vw] h-[95vh] max-h-[95vh] overflow-hidden flex flex-col p-6">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center space-x-2">
               <Scale className="h-5 w-5" />
               <span>Cuenta Corriente - {selectedClient?.name}</span>
@@ -512,76 +569,85 @@ export default function ClientsPage() {
           </DialogHeader>
 
           {selectedClient && (
-            <Card>
-              <CardHeader>
+            <Card className="flex-1 flex flex-col overflow-hidden">
+              <CardHeader className="flex-shrink-0">
                 <CardTitle>Historial de Operaciones</CardTitle>
               </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nº Operación</TableHead>
-                      <TableHead>Fecha y Hora</TableHead>
-                      <TableHead>Cereal</TableHead>
-                      <TableHead>Ingreso (Tn)</TableHead>
-                      <TableHead>Salida (Tn)</TableHead>
-                      <TableHead>Chofer</TableHead>
-                      <TableHead>Ver Operación</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {getClientOperations(selectedClient.id).map((operation) => (
-                      <TableRow key={operation.id}>
-                        <TableCell className="font-mono text-sm">
-                          <Badge variant="secondary">#{operation.id}</Badge>
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">{formatDateTime(operation.display_date)}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">{operation.cereal_name}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          {operation.type === "ingreso" ? (
-                            <div className="flex items-center space-x-1 text-green-600 font-bold">
-                              <TrendingUp className="h-4 w-4" />
-                              <span>{formatNumber(operation.net_weight_tons)}</span>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {operation.type === "egreso" ? (
-                            <div className="flex items-center space-x-1 text-red-600 font-bold">
-                              <TrendingDown className="h-4 w-4" />
-                              <span>{formatNumber(operation.net_weight_tons)}</span>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center">
-                              <span className="text-xs font-medium">
-                                {operation.driver_name
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")
-                                  .toUpperCase()}
-                              </span>
-                            </div>
-                            <span className="text-sm">{operation.driver_name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
+              <CardContent className="flex-1 overflow-auto">
+                <div className="overflow-x-auto h-full">
+                  <Table className="w-full border-collapse">
+                    <TableHeader>
+                      <TableRow className="bg-blue-300">
+                        <TableHead className="text-white font-bold border border-gray-300 text-center">Operación</TableHead>
+                        <TableHead className="text-white font-bold border border-gray-300 text-center">Fecha</TableHead>
+                        <TableHead className="text-white font-bold border border-gray-300 text-center">Transportista</TableHead>
+                        <TableHead className="text-white font-bold border border-gray-300 text-center">Peso TOTAL (kg)</TableHead>
+                        <TableHead className="text-white font-bold border border-gray-300 text-center">TARA (kg)</TableHead>
+                        <TableHead className="text-white font-bold border border-gray-300 text-center">PESO FINAL (kg)</TableHead>
+                        <TableHead className="text-white font-bold border border-gray-300 text-center">INGRESO (kg)</TableHead>
+                        <TableHead className="text-white font-bold border border-gray-300 text-center">EGRESO (kg)</TableHead>
+                        <TableHead className="text-white font-bold border border-gray-300 text-center">Imprimir</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {getClientOperations(selectedClient.id).map((operation, index) => (
+                        <TableRow 
+                          key={operation.id}
+                          className={index % 2 === 0 ? "bg-white hover:bg-gray-50" : "bg-gray-50 hover:bg-gray-100"}
+                        >
+                          <TableCell className="border border-gray-300 text-center font-mono text-sm">
+                            #{operation.id}
+                          </TableCell>
+                          <TableCell className="border border-gray-300 text-center font-mono text-sm">
+                            {formatDate(operation.display_date)}
+                          </TableCell>
+                          <TableCell className="border border-gray-300 text-sm">
+                            {operation.driver_name}
+                          </TableCell>
+                          <TableCell className="border border-gray-300 text-right font-mono">
+                            {formatNumber(operation.gross_weight)}
+                          </TableCell>
+                          <TableCell className="border border-gray-300 text-right font-mono">
+                            {formatNumber(operation.tare_weight)}
+                          </TableCell>
+                          <TableCell className="border border-gray-300 text-right font-mono font-bold">
+                            {formatNumber(operation.net_weight_kg)}
+                          </TableCell>
+                          <TableCell className="border border-gray-300 text-right">
+                            {operation.type === "ingreso" ? (
+                              <div className="flex items-center justify-end space-x-1 text-green-600 font-bold">
+                                <TrendingUp className="h-4 w-4" />
+                                <span className="font-mono">{formatNumber(operation.net_weight_kg)}</span>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="border border-gray-300 text-right">
+                            {operation.type === "egreso" ? (
+                              <div className="flex items-center justify-end space-x-1 text-red-600 font-bold">
+                                <TrendingDown className="h-4 w-4" />
+                                <span className="font-mono">{formatNumber(operation.net_weight_kg)}</span>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="border border-gray-300 text-center">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handlePrintOperation(operation)}
+                              className="hover:bg-blue-50"
+                            >
+                              <Printer className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
 
                 {getClientOperations(selectedClient.id).length === 0 && (
                   <div className="text-center py-8">
