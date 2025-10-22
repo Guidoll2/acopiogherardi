@@ -5,6 +5,12 @@ import User from "@/app/mongoDB/models/user"
 
 export async function GET() {
   try {
+    // Protegemos este endpoint: solo permitir en entornos no-production o si se habilita explícitamente
+    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_SETUP_ADMIN !== 'true') {
+      console.warn('Acceso denegado a setup-admin: ALLOW_SETUP_ADMIN no está habilitado en producción')
+      return NextResponse.json({ error: 'Not allowed' }, { status: 403 })
+    }
+
     await connectDB()
     console.log("Conectado a MongoDB")
 
