@@ -23,6 +23,7 @@ export function CompanyRegistrationForm() {
   
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error", text: string } | null>(null)
+  const [credentials, setCredentials] = useState<{ email: string, password: string } | null>(null)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -36,6 +37,7 @@ export function CompanyRegistrationForm() {
     e.preventDefault()
     setLoading(true)
     setMessage(null)
+    setCredentials(null)
 
     try {
       const response = await fetch("/api/company-requests", {
@@ -53,6 +55,15 @@ export function CompanyRegistrationForm() {
           type: "success",
           text: result.message || "Registro exitoso. Recibirás un email de bienvenida con tus credenciales y podrás acceder de inmediato."
         })
+        
+        // Si el email no se envió, mostrar las credenciales
+        if (result.data?.temporaryPassword && !result.data?.emailSent) {
+          setCredentials({
+            email: result.data.adminUser.email,
+            password: result.data.temporaryPassword
+          })
+        }
+        
         // Limpiar formulario
         setFormData({
           company_name: "",
@@ -228,6 +239,21 @@ export function CompanyRegistrationForm() {
               {message && (
                 <Alert variant={message.type === "error" ? "destructive" : "default"}>
                   <AlertDescription>{message.text}</AlertDescription>
+                </Alert>
+              )}
+
+              {credentials && (
+                <Alert className="bg-yellow-50 border-yellow-200">
+                  <AlertDescription>
+                    <div className="space-y-2">
+                      <p className="font-semibold text-yellow-900">⚠️ IMPORTANTE - Guarda estas credenciales:</p>
+                      <div className="bg-white p-3 rounded border border-yellow-300 space-y-2">
+                        <p className="text-sm"><strong>Email:</strong> {credentials.email}</p>
+                        <p className="text-sm"><strong>Contraseña temporal:</strong> <span className="font-mono bg-gray-100 px-2 py-1 rounded">{credentials.password}</span></p>
+                      </div>
+                      <p className="text-sm text-yellow-800">Por favor, anota esta información. Podrás cambiar tu contraseña después de iniciar sesión.</p>
+                    </div>
+                  </AlertDescription>
                 </Alert>
               )}
 

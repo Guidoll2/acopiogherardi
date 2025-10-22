@@ -3,7 +3,7 @@ import { MongoClient } from "mongodb"
 import { EmailService, generatePassword } from "@/lib/email-service"
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017"
-const DB_NAME = process.env.MONGODB_DB || "grain_management"
+const DB_NAME = process.env.MONGODB_DB || "cuatrogranos"
 
 // PATCH - Aprobar o rechazar solicitud
 export async function PATCH(

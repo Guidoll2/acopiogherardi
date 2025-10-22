@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { MongoClient } from "mongodb"
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017"
-const DB_NAME = process.env.MONGODB_DB || "grain_management"
+const DB_NAME = process.env.MONGODB_DB || "cuatrogranos"
 
 // POST - Verificar código y cambiar contraseña
 export async function POST(request: NextRequest) {

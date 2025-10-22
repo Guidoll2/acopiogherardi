@@ -8,7 +8,7 @@ import Driver from "@/app/mongoDB/models/driver"
 import DeletedCompany from "@/app/mongoDB/models/deleted-company"
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017"
-const DB_NAME = process.env.MONGODB_DB || "grain_management"
+const DB_NAME = process.env.MONGODB_DB || "cuatrogranos"
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const client = new MongoClient(MONGODB_URI)

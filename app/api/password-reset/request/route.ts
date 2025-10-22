@@ -3,7 +3,7 @@ import { MongoClient } from "mongodb"
 import { EmailService } from "@/lib/email-service"
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017"
-const DB_NAME = process.env.MONGODB_DB || "grain_management"
+const DB_NAME = process.env.MONGODB_DB || "cuatrogranos"
 
 // Generar código aleatorio de 6 dígitos
 function generateResetCode(): string {

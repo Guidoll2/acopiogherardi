@@ -6,7 +6,7 @@ import Company from "@/app/mongoDB/models/company"
 import { EmailService } from "@/lib/email-service"
 
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017"
-const DB_NAME = process.env.MONGODB_DB || "grain_management"
+const DB_NAME = process.env.MONGODB_DB || "cuatrogranos"
 
 function generateCode() {
   return Math.floor(100000 + Math.random() * 900000).toString()
