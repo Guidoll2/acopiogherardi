@@ -31,12 +31,19 @@ export const sendWelcomeEmail = async (
   
   switch (service) {
     case 'resend':
-      // En modo desarrollo de Resend, solo podemos enviar a emails verificados
-      // Así que notificamos al admin en lugar de a la empresa
-  const adminEmail = process.env.ADMIN_EMAIL || 'ignacio.gherardi@gmail.com'
-      console.log(`📧 Resend modo desarrollo: enviando credenciales al admin (${adminEmail}) en lugar de a la empresa (${companyEmail})`)
+      // Intentar enviar directamente a la empresa
+      console.log(`📧 Resend: enviando email de bienvenida a ${companyEmail}`)
       
-      return sendWelcomeEmailResend(adminEmail, companyName, tempPassword, companyEmail)
+      const result = await sendWelcomeEmailResend(companyEmail, companyName, tempPassword)
+      
+      // Si falla (por restricciones de sandbox), enviar al admin como respaldo
+      if (!result.success) {
+        const adminEmail = process.env.ADMIN_EMAIL || 'ignacio.gherardi@gmail.com'
+        console.log(`⚠️ No se pudo enviar a ${companyEmail}. Enviando al admin (${adminEmail}) como respaldo`)
+        return sendWelcomeEmailResend(adminEmail, companyName, tempPassword, companyEmail)
+      }
+      
+      return result
     case 'gmail':
       return sendWelcomeEmailNodemailer(companyEmail, companyName, tempPassword)
     case 'development':
