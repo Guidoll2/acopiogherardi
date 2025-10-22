@@ -13,7 +13,7 @@
 
     const RESEND_API_KEY = process.env.RESEND_API_KEY || env.RESEND_API_KEY
     const EMAIL_FROM = process.env.EMAIL_FROM || env.EMAIL_FROM || 'no-reply@acopiogh.com'
-    const to = 'guido.llaurado@gmail.com'
+  const to = 'ignacio.gherardi@gmail.com'
 
     if (!RESEND_API_KEY) {
       console.log('No RESEND_API_KEY configured, aborting test')

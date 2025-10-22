@@ -20,7 +20,7 @@ async function main() {
   const env = readEnvLocal()
   const uri = process.env.MONGODB_URI || env.MONGODB_URI || 'mongodb://localhost:27017'
   const dbName = process.env.MONGODB_DB || env.MONGODB_DB || 'grain_management'
-  const email = 'guido.llaurado@gmail.com'
+  const email = 'ignacio.gherardi@gmail.com'
   const cuit = '1231253513123'
 
   console.log('Using URI:', uri)

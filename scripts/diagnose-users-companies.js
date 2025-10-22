@@ -4,7 +4,7 @@
 const { MongoClient } = require('mongodb')
 const bcrypt = require('bcryptjs')
 
-const TARGET_EMAIL = 'guido.llaurado@gmail.com'
+  const TARGET_EMAIL = 'ignacio.gherardi@gmail.com'
 const checkPassword = 'Caprichoso'
 
 async function main() {

@@ -99,7 +99,7 @@ export function FooterSection() {
             
             <div className="flex gap-4">
               <a 
-                href="mailto:guido.llaurado@gmail.com" 
+                href="mailto:ignacio.gherardi@gmail.com" 
                 className="bg-gray-800 hover:bg-green-600 p-3 rounded-lg transition-colors duration-300 group"
                 title="Contacto por Email"
               >

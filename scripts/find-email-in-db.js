@@ -6,7 +6,7 @@ const { MongoClient } = require('mongodb')
 const uri = 'mongodb+srv://guidoll:Ellesar33.@emplearg.mongocluster.cosmos.azure.com/acopiogh?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000'
 
 async function run() {
-  const target = 'guido.llaurado@gmail.com'
+  const target = 'ignacio.gherardi@gmail.com'
   const client = new MongoClient(uri)
 
   try {

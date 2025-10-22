@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs')
 
 const emailsToCheck = [
   'ignacio.gherardi@gmail.com',
-  'guido.llaurado@gmail.com'
+  'ignacio.gherardi@gmail.com'
 ]
 
 const passwords = ['Caprichoso', 'cuatrogranos1234']
@@ -42,8 +42,8 @@ async function main() {
     }
   }
 
-  console.log('\n--- Company lookup for guido.llaurado@gmail.com ---')
-  const comp = await companies.findOne({ email: 'guido.llaurado@gmail.com' })
+  console.log('\n--- Company lookup for ignacio.gherardi@gmail.com ---')
+  const comp = await companies.findOne({ email: 'ignacio.gherardi@gmail.com' })
   if (!comp) {
     console.log('Company not found')
   } else {

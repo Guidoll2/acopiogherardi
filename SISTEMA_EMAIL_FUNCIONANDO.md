@@ -9,7 +9,7 @@ Tu sistema de emails automáticos con Resend está configurado y funcionando.
 #### ✅ **Para empresas nuevas:**
 1. **Admin crea empresa** en `/system-admin`
 2. **Sistema genera credenciales** automáticamente
-3. **Sistema envía email** a tu email admin (`guido.llaurado@gmail.com`)
+3. **Sistema envía email** a tu email admin (`ignacio.gherardi@gmail.com`)
 4. **El email contiene las credenciales** de la nueva empresa
 5. **Tú reenvías manualmente** las credenciales a la empresa
 
@@ -44,7 +44,7 @@ URL: http://localhost:3000/login
 
 ### 🔧 **Configuración actual:**
 - ✅ **Resend API Key:** Configurado
-- ✅ **Email Admin:** `guido.llaurado@gmail.com`
+- ✅ **Email Admin:** `ignacio.gherardi@gmail.com`
 - ✅ **Email From:** `onboarding@resend.dev`
 - ✅ **Modo:** Desarrollo (emails van al admin)
 
@@ -52,6 +52,6 @@ URL: http://localhost:3000/login
 1. Inicia el servidor: `npm run dev`
 2. Ve a `/system-admin`
 3. Crea una nueva empresa
-4. Revisa tu email: `guido.llaurado@gmail.com`
+4. Revisa tu email: `ignacio.gherardi@gmail.com`
 
 ¡El sistema está funcionando perfectamente!

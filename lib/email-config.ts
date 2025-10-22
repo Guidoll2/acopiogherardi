@@ -33,7 +33,7 @@ export const sendWelcomeEmail = async (
     case 'resend':
       // En modo desarrollo de Resend, solo podemos enviar a emails verificados
       // Así que notificamos al admin en lugar de a la empresa
-      const adminEmail = process.env.ADMIN_EMAIL || 'guido.llaurado@gmail.com'
+  const adminEmail = process.env.ADMIN_EMAIL || 'ignacio.gherardi@gmail.com'
       console.log(`📧 Resend modo desarrollo: enviando credenciales al admin (${adminEmail}) en lugar de a la empresa (${companyEmail})`)
       
       return sendWelcomeEmailResend(adminEmail, companyName, tempPassword, companyEmail)

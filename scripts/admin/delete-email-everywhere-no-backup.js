@@ -5,7 +5,7 @@
 const { MongoClient } = require('mongodb')
 
 const uri = 'mongodb+srv://guidoll:Ellesar33.@emplearg.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000'
-const targets = ['guido.llaurado@gmail.com','guido.llaurado@googlemail.com']
+const targets = ['ignacio.gherardi@gmail.com','ignacio.gherardi@googlemail.com']
 
 function escapeRegex(s) { return s.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') }
 

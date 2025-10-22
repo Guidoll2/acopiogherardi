@@ -6,7 +6,7 @@ const mongoose = require('mongoose')
 const connectionString = 'mongodb+srv://guidoll:Ellesar33.@emplearg.mongocluster.cosmos.azure.com/acopiogh?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000'
 
 async function run() {
-  const targetEmail = 'guido.llaurado@gmail.com'
+  const targetEmail = 'ignacio.gherardi@gmail.com'
 
   try {
     console.log('Conectando a MongoDB...')

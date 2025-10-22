@@ -4,7 +4,7 @@ async function main() {
   const url = 'http://localhost:3000/api/company-requests'
   const payload = {
     company_name: 'Test 19 10',
-    email: 'guido.llaurado@gmail.com',
+  email: 'ignacio.gherardi@gmail.com',
     phone: '+542226524466',
     address: 'qwqe',
     cuit: '1231253513123',
