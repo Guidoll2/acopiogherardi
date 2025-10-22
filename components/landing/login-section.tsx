@@ -18,6 +18,8 @@ export function LoginSection() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [resettingPassword, setResettingPassword] = useState(false)
+  const [resetMessage, setResetMessage] = useState("")
   const router = useRouter()
 
   // Estados para el formulario de registro
@@ -54,13 +56,48 @@ export function LoginSection() {
         window.location.href = targetUrl
         return
       } else {
-        setError("Credenciales inválidas")
+        setError("Contraseña inválida")
         setLoading(false)
       }
     } catch (err) {
       console.error("Error en login:", err)
       setError("Error al iniciar sesión")
       setLoading(false)
+    }
+  }
+
+  const handleSendNewPassword = async () => {
+    if (!email) {
+      setError("Por favor ingresa tu email primero")
+      return
+    }
+
+    setResettingPassword(true)
+    setError("")
+    setResetMessage("")
+
+    try {
+      const response = await fetch("/api/password-reset/reset", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setResetMessage("Nueva contraseña enviada al email. Por favor revisa tu bandeja de entrada.")
+        setPassword("")
+      } else {
+        setError(data.error || "No se pudo enviar la nueva contraseña")
+      }
+    } catch (err) {
+      console.error("Error al resetear contraseña:", err)
+      setError("Error al procesar la solicitud")
+    } finally {
+      setResettingPassword(false)
     }
   }
 
@@ -228,6 +265,12 @@ export function LoginSection() {
                     </Alert>
                   )}
 
+                  {resetMessage && (
+                    <Alert className="bg-green-50 border-green-200">
+                      <AlertDescription className="text-green-800">{resetMessage}</AlertDescription>
+                    </Alert>
+                  )}
+
                   <Button 
                     type="submit" 
                     className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-105" 
@@ -244,6 +287,16 @@ export function LoginSection() {
                         Iniciar Sesión
                       </div>
                     )}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold py-3 rounded-lg transition-all duration-300"
+                    onClick={handleSendNewPassword}
+                    disabled={resettingPassword || !email}
+                  >
+                    {resettingPassword ? "Enviando..." : "Enviar nueva contraseña"}
                   </Button>
                 </form>
               ) : (
